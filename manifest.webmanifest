@@ -1,0 +1,15 @@
+{
+  "name": "Dry Season",
+  "short_name": "Dry Season",
+  "description": "Log tonight's drinks and see when your body should be clear of alcohol.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#17212F",
+  "theme_color": "#17212F",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

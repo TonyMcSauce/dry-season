@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dry Season</title>
+<meta name="description" content="Log tonight's drinks and see when your body should be clear of alcohol.">
+<meta name="theme-color" content="#17212F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dry Season">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky-top:#17212F; --sky-mid:#2D2926; --sky-low:#7A3F1F; --horizon:#C8742E;
+  --ground:#16120E; --sheet:#211B16;
+  --amber:#F2A93B; --amber-deep:#B8651A; --foam:#F6EDDA; --ink:#2A1A0F;
+  --acacia:#A7B57E; --russet:#E46F48;
+  --text:#F6EDDA; --muted:rgba(246,237,218,.64); --line:rgba(246,237,218,.16);
+  --field:rgba(246,237,218,.07); --receipt:#F6EDDA;
+  --stars:1;
+  --display:'Alfa Slab One', Rockwell, Georgia, serif;
+  --body:'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --gutter:16px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --sky-top:#E9D9BB; --sky-mid:#EFD3A2; --sky-low:#E2A563; --horizon:#C9763A;
+    --ground:#F5EEE1; --sheet:#FBF6EC;
+    --text:#2A1A0F; --muted:rgba(42,26,15,.64); --line:rgba(42,26,15,.15);
+    --field:rgba(42,26,15,.05); --receipt:#FFFBF3; --stars:0;
+    color-scheme:light;
+  }
+  :root:not([data-theme="dark"]) .hero{ --text:#2A1A0F; --muted:rgba(42,26,15,.7); }
+  :root:not([data-theme="dark"]) .glass{ color:#2A1A0F; }
+}
+:root[data-theme="dark"]{ color-scheme:dark; }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--ground); color:var(--text);
+  font-family:var(--body); font-size:16px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:50; opacity:.07; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:6px}
+.wrap{max-width:560px;margin:0 auto}
+
+/* Hero */
+.hero{
+  position:relative; overflow:hidden;
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 42%,var(--sky-low) 80%,var(--horizon) 100%);
+  padding:calc(env(safe-area-inset-top) + 14px) var(--gutter) 0;
+}
+.stars{position:absolute;inset:0 0 45% 0;opacity:var(--stars);pointer-events:none;
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%,#fff8 50%,transparent 51%),
+    radial-gradient(1px 1px at 28% 8%,#fff7 50%,transparent 51%),
+    radial-gradient(1.4px 1.4px at 47% 22%,#fffa 50%,transparent 51%),
+    radial-gradient(1px 1px at 63% 12%,#fff6 50%,transparent 51%),
+    radial-gradient(1.2px 1.2px at 78% 30%,#fff8 50%,transparent 51%),
+    radial-gradient(1px 1px at 90% 9%,#fff7 50%,transparent 51%),
+    radial-gradient(1px 1px at 36% 36%,#fff5 50%,transparent 51%),
+    radial-gradient(1.3px 1.3px at 6% 42%,#fff6 50%,transparent 51%),
+    radial-gradient(1px 1px at 55% 44%,#fff4 50%,transparent 51%);
+}
+.hero-top{position:relative;display:flex;justify-content:space-between;align-items:center;max-width:560px;margin:0 auto}
+.brand{font-family:var(--display);font-size:1.05rem;letter-spacing:.01em;color:var(--text)}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:7px 14px;font-size:.9rem;font-weight:600}
+.hero-body{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;gap:8px;max-width:560px;margin:22px auto 0;min-height:290px}
+.readout{padding-bottom:84px;min-width:0}
+.kicker{margin:0;font-weight:600;color:var(--muted);font-size:1rem}
+.clear-time{
+  margin:2px 0 6px;font-family:var(--display);font-weight:400;line-height:.88;
+  font-size:clamp(3.2rem,15.5vw,5.8rem);letter-spacing:-.01em;color:var(--text);
+  ;white-space:nowrap;
+  text-shadow:0 2px 24px rgba(242,169,59,.25);
+}
+.clear-day{margin:0;font-size:1rem;color:var(--text);white-space:pre-line}
+.stats{display:flex;gap:22px;margin:18px 0 0}
+.stats div{min-width:0}
+.stats dt{font-size:.82rem;color:var(--muted)}
+.stats dd{margin:0;font-weight:700;font-size:1.15rem}
+.glass{width:min(31vw,150px);height:auto;margin-bottom:30px;position:relative;z-index:1;overflow:visible;color:var(--foam);filter:drop-shadow(0 10px 18px rgba(0,0,0,.25))}
+.liquid{transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
+.bubble{animation:rise 3.2s linear infinite;opacity:.0}
+.bubble:nth-child(2){animation-delay:.8s;animation-duration:2.6s}
+.bubble:nth-child(3){animation-delay:1.7s;animation-duration:3.6s}
+.bubble:nth-child(4){animation-delay:2.3s;animation-duration:2.9s}
+@keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-150px);opacity:0}}
+.horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:78px;display:block;color:var(--ground)}
+
+/* Sections */
+.block{padding:30px var(--gutter) 6px}
+h2{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;margin:0 0 14px;letter-spacing:.005em}
+.hint{color:var(--muted);font-size:.92rem;margin:6px 0 0}
+.times{display:grid;grid-template-columns:1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:.88rem;color:var(--muted);min-width:0}
+.field input{
+  width:100%;min-width:0;background:var(--field);border:1px solid var(--line);border-radius:12px;
+  padding:12px;font-size:16px;color:var(--text);-webkit-appearance:none;appearance:none;min-height:48px;
+}
+.field input:disabled{opacity:.55}
+.switch{display:flex;align-items:center;gap:12px;margin-top:16px;font-weight:500}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.track{width:48px;height:28px;border-radius:999px;background:var(--field);border:1px solid var(--line);position:relative;flex:none;transition:background .25s}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--text);transition:transform .25s}
+.switch input:checked + .track{background:var(--amber);border-color:var(--amber)}
+.switch input:checked + .track::after{transform:translateX(20px);background:var(--ink)}
+.switch input:focus-visible + .track{outline:2px solid var(--amber);outline-offset:3px}
+.warn{color:var(--russet);font-size:.9rem;margin:10px 0 0;font-weight:600}
+
+/* Tab receipt */
+.tab-wrap{padding:30px var(--gutter) 0}
+.tab{
+  background:var(--receipt);color:var(--ink);padding:22px 18px 30px;border-radius:6px 6px 0 0;
+  transform:rotate(-.6deg);box-shadow:0 18px 30px -18px rgba(0,0,0,.55);
+  -webkit-mask:linear-gradient(#000 0 0) top/100% calc(100% - 10px) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 10px repeat-x;
+  mask:linear-gradient(#000 0 0) top/100% calc(100% - 10px) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 10px repeat-x;
+}
+.tab h2{color:var(--ink);margin-bottom:4px}
+.tab-sub{margin:0 0 14px;font-size:.9rem;color:rgba(42,26,15,.62)}
+.tab ul{list-style:none;margin:0;padding:0}
+.tab li{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:12px 0;border-top:1.5px dashed rgba(42,26,15,.22)}
+.tab li:last-child{border-bottom:1.5px dashed rgba(42,26,15,.22)}
+.li-name{font-weight:700;line-height:1.25}
+.li-meta{font-size:.86rem;color:rgba(42,26,15,.62)}
+.li-g{font-weight:700;white-space:nowrap}
+.rm{width:34px;height:34px;border-radius:50%;border:1px solid rgba(42,26,15,.2);background:transparent;color:var(--ink);font-size:1.1rem;line-height:1;display:grid;place-items:center}
+.tab-empty{margin:6px 0 0;padding:14px 0;border-top:1.5px dashed rgba(42,26,15,.22);border-bottom:1.5px dashed rgba(42,26,15,.22);color:rgba(42,26,15,.62)}
+.tab-total{margin-top:14px}
+.tab-total span{display:block}
+.tab-total span:first-child{font-size:.86rem;color:rgba(42,26,15,.62)}
+.tab-total span:last-child{font-weight:700;font-size:1.05rem}
+.btn{
+  display:block;width:100%;border:0;border-radius:999px;padding:16px 20px;font-weight:700;font-size:1.02rem;
+  background:var(--amber);color:var(--ink);transition:transform .15s,background .2s;min-height:52px;
+}
+.btn:active{transform:scale(.97)}
+.btn.quiet{background:var(--field);color:var(--text);border:1px solid var(--line)}
+.add-row{padding:20px var(--gutter) 0}
+
+/* Chart */
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
+.chart .peak-label{fill:var(--text);font-weight:700}
+.chart-empty{border:1px dashed var(--line);border-radius:14px;padding:26px 16px;color:var(--muted);text-align:center}
+
+/* Settings */
+details.block summary{list-style:none;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+details.block summary::-webkit-details-marker{display:none}
+details.block summary h2{margin:0}
+.chev{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:transform .25s}
+details[open] .chev{transform:rotate(180deg)}
+.settings-body{display:grid;gap:18px;padding-top:18px}
+.seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:10px;font-weight:600;color:var(--muted);min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--text);color:var(--ground)}
+.range-row{display:flex;justify-content:space-between;align-items:baseline}
+.range-row b{}
+input[type=range]{width:100%;accent-color:var(--amber);margin:8px 0 0}
+
+/* Safety */
+.safety{margin:30px var(--gutter) 0;padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--field);display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+.safety svg{width:28px;height:28px;color:var(--acacia)}
+.safety p{margin:0;font-size:.95rem}
+.safety strong{display:block;margin-bottom:4px}
+
+/* History */
+.history{list-style:none;padding:0;margin:0}
+.history li{padding:12px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
+.history li:last-child{border-bottom:1px solid var(--line)}
+.history .h-date{font-weight:700}
+.history .h-meta{color:var(--muted);font-size:.9rem;text-align:right}
+.actions{display:grid;gap:10px;padding:22px var(--gutter) 0}
+footer{padding:36px var(--gutter) 40px;color:var(--muted);font-size:.85rem;text-align:center}
+
+/* Sheet */
+dialog.sheet{
+  margin:auto auto 0;width:100%;max-width:560px;border:0;padding:0;border-radius:24px 24px 0 0;
+  background:var(--sheet);color:var(--text);max-height:88svh;overflow:auto;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+dialog.sheet[open]{animation:sheetUp .34s cubic-bezier(.2,.8,.2,1)}
+dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet-head{position:sticky;top:0;background:var(--sheet);display:flex;align-items:center;justify-content:space-between;padding:12px var(--gutter);border-bottom:1px solid var(--line);z-index:2}
+.sheet-head h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.2rem}
+.grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:8px auto 0}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;display:grid;place-items:center;font-size:1.2rem}
+.pick-group{padding:14px var(--gutter) 4px}
+.pick-group h4{margin:0 0 6px;font-size:.88rem;color:var(--muted);font-weight:600}
+.pick{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 2px;min-height:56px}
+.pick-name{font-weight:600}
+.pick-meta{color:var(--muted);font-size:.86rem}
+.abv-pill{font-weight:700;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.9rem}
+.cfg{padding:18px var(--gutter) 22px;display:grid;gap:18px}
+.cfg-note{margin:-8px 0 0;color:var(--amber);font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:9px 14px;font-weight:600;font-size:.95rem;min-height:42px}
+.chip[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.label{font-size:.88rem;color:var(--muted);margin:0 0 8px}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--field);font-size:1.4rem;line-height:1}
+.stepper output{font-family:var(--display);font-size:2rem;min-width:2ch;text-align:center}
+.preview{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed var(--line);padding-top:14px}
+.preview b{font-size:1.25rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;background:var(--text);color:var(--ground);padding:12px 18px;border-radius:999px;font-weight:600;transition:all .3s;z-index:60;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="stars" aria-hidden="true"></div>
+  <div class="hero-top">
+    <span class="brand">Dry Season</span>
+    <button class="ghost" id="shareBtn" type="button">Share</button>
+  </div>
+
+  <div class="hero-body">
+    <div class="readout" aria-live="polite">
+      <p class="kicker" id="kicker">Clear by</p>
+      <p class="clear-time" id="clearTime">--:--</p>
+      <p class="clear-day" id="clearDay">Add your first drink to start the clock.</p>
+      <dl class="stats">
+        <div><dt>Right now</dt><dd id="nowBac">0.000%</dd></div>
+        <div><dt>Peak</dt><dd id="peakBac">0.000%</dd></div>
+      </dl>
+    </div>
+
+    <svg class="glass" viewBox="0 0 120 230" aria-hidden="true">
+      <defs>
+        <clipPath id="inside"><path d="M15 16 H105 L95 206 Q94 214 86 214 H34 Q26 214 25 206 Z"/></clipPath>
+        <linearGradient id="beer" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#F7B94A"/><stop offset=".55" stop-color="#E8962C"/><stop offset="1" stop-color="#B8651A"/>
+        </linearGradient>
+        <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".32"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g clip-path="url(#inside)">
+        <rect x="0" y="0" width="120" height="230" fill="currentColor" opacity=".06"/>
+        <g class="liquid" id="liquid" style="transform:translateY(198px)">
+          <rect x="0" y="20" width="120" height="210" fill="url(#beer)"/>
+          <g fill="#FFE7B0">
+            <circle class="bubble" cx="40" cy="200" r="1.6"/>
+            <circle class="bubble" cx="62" cy="205" r="1.2"/>
+            <circle class="bubble" cx="78" cy="198" r="1.8"/>
+            <circle class="bubble" cx="52" cy="206" r="1.1"/>
+          </g>
+          <path id="foam" fill="#F6EDDA" d="M0 26 Q10 14 22 20 Q32 10 44 18 Q56 8 68 17 Q80 9 92 18 Q104 12 120 20 V30 H0 Z"/>
+        </g>
+      </g>
+      <path d="M15 16 H105 L95 206 Q94 214 86 214 H34 Q26 214 25 206 Z" fill="none" stroke="currentColor" stroke-opacity=".75" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M30 30 L36 196" stroke="url(#shine)" stroke-width="7" stroke-linecap="round" opacity=".7"/>
+    </svg>
+  </div>
+
+  <svg class="horizon" viewBox="0 0 400 78" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <g fill="currentColor">
+      <path d="M0 62 Q90 52 200 58 T400 55 V78 H0 Z"/>
+      <path d="M58 60 L61 40 L48 30 L50 29 L62 37 L63 26 L65 26 L65 37 L80 28 L82 30 L67 41 L66 60 Z"/>
+      <ellipse cx="64" cy="25" rx="30" ry="5.5"/>
+      <ellipse cx="46" cy="28" rx="16" ry="4.5"/>
+      <ellipse cx="84" cy="27" rx="17" ry="4.5"/>
+      <ellipse cx="66" cy="21" rx="18" ry="4"/>
+      <path d="M318 57 L320 50 L322 57 Z"/><ellipse cx="320" cy="49" rx="9" ry="2.2"/>
+    </g>
+  </svg>
+</header>
+
+<main class="wrap">
+  <section class="block" aria-labelledby="nightH">
+    <h2 id="nightH">The night</h2>
+    <div class="times">
+      <label class="field">Started
+        <input type="datetime-local" id="startAt">
+      </label>
+      <label class="field">Stopped
+        <input type="datetime-local" id="endAt">
+      </label>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="stillGoing">
+      <span class="track" aria-hidden="true"></span>
+      I'm still drinking
+    </label>
+    <p class="warn" id="timeWarn" hidden>Your stop time is before your start time. Move one of them.</p>
+  </section>
+
+  <div class="tab-wrap">
+    <section class="tab" aria-labelledby="tabH">
+      <h2 id="tabH">Tonight's tab</h2>
+      <p class="tab-sub" id="tabSub">Drinks are spread evenly between your start and stop times.</p>
+      <ul id="tabList"></ul>
+      <p class="tab-empty" id="tabEmpty">Nothing on the tab yet.</p>
+      <div class="tab-total" id="tabTotal" hidden><span>Pure alcohol</span><span id="tabTotalVal"></span></div>
+    </section>
+  </div>
+  <div class="add-row"><button class="btn" id="openPicker" type="button">Add a drink</button></div>
+
+  <section class="block" aria-labelledby="curveH">
+    <h2 id="curveH">How the night plays out</h2>
+    <div id="chartBox"></div>
+    <p class="hint">Estimated blood alcohol from your first sip until your body is clear.</p>
+  </section>
+
+  <details class="block" id="bodyDetails">
+    <summary><h2>Your body</h2><span class="chev" aria-hidden="true">&#8964;</span></summary>
+    <div class="settings-body">
+      <label class="field">Weight in kg
+        <input type="number" id="kg" inputmode="decimal" min="35" max="250" step="1">
+      </label>
+      <div>
+        <p class="label">Body type used in the formula</p>
+        <div class="seg" role="group" aria-label="Body type">
+          <button type="button" data-sex="m">Male</button>
+          <button type="button" data-sex="f">Female</button>
+        </div>
+      </div>
+      <div>
+        <div class="range-row"><span class="label" style="margin:0">How fast your body clears alcohol</span><b id="betaVal"></b></div>
+        <input type="range" id="beta" min="0.010" max="0.020" step="0.001">
+        <p class="hint">Most people clear between 0.010% and 0.020% per hour. 0.015% is a typical average.</p>
+      </div>
+    </div>
+  </details>
+
+  <aside class="safety">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.4-3.4 8.2-8 9-4.6-.8-8-4.6-8-9V6l8-3z"/><path d="M12 8v5"/><path d="M12 16.5v.01"/></svg>
+    <p><strong>An estimate, not a breathalyser.</strong>Food, health, medication and your own metabolism all change the real number. Never use this to decide whether you can drive. Get a lift, take a cab, or stay over.</p>
+  </aside>
+
+  <section class="block" aria-labelledby="histH" id="histSection" hidden>
+    <h2 id="histH">Past nights</h2>
+    <ul class="history" id="historyList"></ul>
+  </section>
+
+  <div class="actions">
+    <button class="btn quiet" id="saveNight" type="button">Save this night</button>
+    <button class="btn quiet" id="newNight" type="button">Start a new night</button>
+  </div>
+
+  <footer>Dry Season. Built by Anthony. Drink water between rounds.</footer>
+</main>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-head">
+    <button class="icon-btn" id="sheetBack" type="button" aria-label="Back to the drinks list" hidden>&#8249;</button>
+    <h3 id="sheetTitle">Pick a drink</h3>
+    <button class="icon-btn" id="sheetClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div id="pickList"></div>
+  <div id="pickCfg" class="cfg" hidden>
+    <label class="field" id="nameField">Drink name
+      <input type="text" id="cfgName" autocomplete="off" placeholder="e.g. Gin and tonic">
+    </label>
+    <p class="cfg-note" id="cfgNote" hidden></p>
+    <div class="two">
+      <label class="field">Strength (% ABV)
+        <input type="number" id="cfgAbv" inputmode="decimal" min="0" max="80" step="0.1">
+      </label>
+      <label class="field">Size (ml)
+        <input type="number" id="cfgMl" inputmode="numeric" min="10" max="3000" step="5">
+      </label>
+    </div>
+    <div>
+      <p class="label">Common sizes</p>
+      <div class="chips" id="sizeChips"></div>
+    </div>
+    <div>
+      <p class="label">How many</p>
+      <div class="stepper">
+        <button type="button" id="qtyMinus" aria-label="One fewer">&#8722;</button>
+        <output id="qty" aria-live="polite">1</output>
+        <button type="button" id="qtyPlus" aria-label="One more">+</button>
+      </div>
+    </div>
+    <div>
+      <p class="label">How much of each was yours</p>
+      <div class="chips" id="shareChips"></div>
+    </div>
+    <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
+    <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+  const KEY = 'dryseason.v1';
+  const ETHANOL = 0.789;   // g per ml
+  const STD_G = 10;        // grams in one standard drink (WHO)
+  const ABSORB_HALF_MIN = 15;
+
+  const DRINKS = [
+    { group: 'Brewed in Botswana', items: [
+      { id: 'stl',   name: 'St Louis Lager',      abv: 3.5, ml: 340 },
+      { id: 'stlx',  name: 'St Louis Export',     abv: 4.7, ml: 340 },
+      { id: 'bl',    name: 'Carling Black Label', abv: 5.5, ml: 750 },
+      { id: 'cl',    name: 'Castle Lager',        abv: 5.0, ml: 340 },
+      { id: 'clt',   name: 'Castle Lite',         abv: 4.0, ml: 340 },
+      { id: 'lion',  name: 'Lion Lager',          abv: 5.0, ml: 340 },
+      { id: 'chib',  name: 'Chibuku',             abv: 3.5, ml: 1000, note: 'Chibuku keeps fermenting in the carton, so it gets stronger the longer it sits. Adjust the strength if yours is old.' }
+    ]},
+    { group: 'From across the border', items: [
+      { id: 'wl',    name: 'Windhoek Lager',      abv: 4.0, ml: 340 },
+      { id: 'wd',    name: 'Windhoek Draught',    abv: 4.0, ml: 440 },
+      { id: 'hansa', name: 'Hansa Pilsener',      abv: 4.2, ml: 340 },
+      { id: 'hein',  name: 'Heineken',            abv: 5.0, ml: 330 },
+      { id: 'sav',   name: 'Savanna Dry',         abv: 6.0, ml: 330 },
+      { id: 'bf',    name: 'Brutal Fruit',        abv: 4.5, ml: 275, note: 'Strength varies by flavour. Check the label.' }
+    ]},
+    { group: 'Anything else', items: [
+      { id: 'custom', name: 'Something else', abv: 5.0, ml: 330, custom: true }
+    ]}
+  ];
+  const SIZES = [275, 330, 340, 440, 500, 750, 1000];
+  const SHARES = [[1, 'All mine'], [0.5, 'Half'], [1/3, 'A third'], [0.25, 'A quarter']];
+
+  const $ = (s) => document.querySelector(s);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmtBac = (b) => b.toFixed(3) + '%';
+  const fmtTime = (ms) => { const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const round5 = (ms) => Math.floor(ms / 300000) * 300000;
+
+  function newSession() {
+    const now = Date.now();
+    return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, drinks: [] };
+  }
+  function defaults() {
+    return { profile: { kg: 75, sex: 'm', beta: 0.015 }, session: newSession(), history: [] };
+  }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (s && s.profile && s.session && Array.isArray(s.session.drinks)) return Object.assign(defaults(), s);
+    } catch (e) {}
+    return defaults();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  let state = load();
+
+  const gramsOf = (d) => d.ml * (d.abv / 100) * ETHANOL * d.qty * d.share;
+  const effectiveEnd = () => state.session.still ? Date.now() : state.session.end;
+
+  // Widmark model with first-order absorption and zero-order elimination, stepped per minute.
+  function simulate() {
+    const { kg, sex, beta } = state.profile;
+    const s = state.session;
+    const r = sex === 'f' ? 0.55 : 0.68;
+    const vd = r * kg * 10;                       // grams of alcohol that raise BAC by 1%
+    const G = s.drinks.reduce((a, d) => a + gramsOf(d), 0);
+    const start = s.start;
+    const end = Math.max(effectiveEnd(), start);
+    const out = { G, start, points: [], clear: null, peak: 0, peakAt: start };
+    if (G <= 0 || !isFinite(G)) return out;
+
+    const durMin = Math.max(1, Math.round((end - start) / 60000));
+    const rate = G / durMin;
+    const ka = 1 - Math.exp(-Math.LN2 / ABSORB_HALF_MIN);
+    const elim = beta / 60;
+    let pool = 0, B = 0;
+    for (let m = 0; m < 60 * 96; m++) {
+      if (m < durMin) pool += rate;
+      const abs = pool * ka;
+      pool -= abs;
+      B = Math.max(0, B + abs / vd - elim);
+      const t = start + (m + 1) * 60000;
+      out.points.push(B);
+      if (B > out.peak) { out.peak = B; out.peakAt = t; }
+      if (m >= durMin && pool < 0.01 && B <= 0) { out.clear = t; return out; }
+    }
+    out.clear = start + out.points.length * 60000;
+    return out;
+  }
+  function bacAt(sim, t) {
+    const i = Math.floor((t - sim.start) / 60000) - 1;
+    if (i < 0 || i >= sim.points.length) return 0;
+    return sim.points[i];
+  }
+
+  function dayLabel(ms) {
+    const d = new Date(ms), n = new Date();
+    const strip = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diff = Math.round((strip(d) - strip(n)) / 864e5);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    if (diff === -1) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { weekday: 'long' });
+  }
+  function dur(ms) {
+    const t = Math.max(0, Math.round(ms / 1000));
+    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+    return { h, m, s };
+  }
+
+  // Hero
+  const els = {
+    kicker: $('#kicker'), time: $('#clearTime'), day: $('#clearDay'),
+    nowBac: $('#nowBac'), peakBac: $('#peakBac'), liquid: $('#liquid')
+  };
+  let lastSim = null;
+  function renderHero(sim) {
+    const now = Date.now();
+    const bNow = bacAt(sim, now);
+    let frac = 0;
+    if (!sim.G) {
+      els.kicker.textContent = 'Clear by';
+      els.time.textContent = '--:--';
+      els.day.textContent = 'Add your first drink to start the clock.';
+    } else if (now < sim.start) {
+      els.kicker.textContent = 'Clear by';
+      els.time.textContent = fmtTime(sim.clear);
+      els.day.textContent = dayLabel(sim.clear) + '. Your start time is still ahead.';
+    } else if (now >= sim.clear) {
+      els.kicker.textContent = "You're";
+      els.time.textContent = 'Clear';
+      els.day.textContent = 'Clear since ' + fmtTime(sim.clear) + ' ' + dayLabel(sim.clear).toLowerCase() + '. Still worth a glass of water.';
+    } else {
+      const { h, m, s } = dur(sim.clear - now);
+      els.kicker.textContent = 'Clear by';
+      els.time.textContent = fmtTime(sim.clear);
+      els.day.textContent = dayLabel(sim.clear) + '\n' + h + ' h ' + pad(m) + ' m ' + pad(s) + ' s to go';
+      frac = sim.peak > 0 ? Math.min(1, bNow / sim.peak) : 0;
+      if (bNow === 0 && now < sim.clear) frac = 0.04;
+    }
+    els.nowBac.textContent = fmtBac(bNow);
+    els.peakBac.textContent = fmtBac(sim.peak);
+    const y = 198 - frac * 182;               // 198 = empty, 16 = brim
+    els.liquid.style.transform = 'translateY(' + y.toFixed(1) + 'px)';
+  }
+
+  // Chart
+  function renderChart(sim) {
+    const box = $('#chartBox');
+    if (!sim.G) { box.innerHTML = '<div class="chart-empty">Your curve appears once there is something on the tab.</div>'; return; }
+    const W = 340, H = 180, pl = 6, pr = 10, pt = 26, pb = 26;
+    const t0 = sim.start, t1 = sim.clear, span = Math.max(t1 - t0, 60000);
+    const maxB = Math.max(sim.peak, 0.005) * 1.12;
+    const x = (t) => pl + (t - t0) / span * (W - pl - pr);
+    const y = (b) => pt + (1 - b / maxB) * (H - pt - pb);
+    const n = sim.points.length, step = Math.max(1, Math.floor(n / 180));
+    let d = 'M' + x(t0).toFixed(1) + ' ' + y(0).toFixed(1);
+    for (let i = 0; i < n; i += step) d += ' L' + x(t0 + (i + 1) * 60000).toFixed(1) + ' ' + y(sim.points[i]).toFixed(1);
+    d += ' L' + x(t1).toFixed(1) + ' ' + y(0).toFixed(1);
+    const area = d + ' Z';
+
+    const hrs = span / 3600e3;
+    const stepH = hrs <= 6 ? 1 : hrs <= 14 ? 2 : hrs <= 30 ? 4 : 8;
+    const first = new Date(t0); first.setMinutes(0, 0, 0);
+    let ticks = '';
+    for (let t = first.getTime() + 3600e3; t < t1; t += 3600e3) {
+      const hr = new Date(t).getHours();
+      if (hr % stepH !== 0) continue;
+      const xx = x(t);
+      if (xx < 40 || xx > W - 44) continue;
+      ticks += '<line x1="' + xx + '" x2="' + xx + '" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--line)" stroke-dasharray="2 4"/>'
+             + '<text x="' + xx + '" y="' + (H - 8) + '" text-anchor="middle">' + pad(hr) + ':00</text>';
+    }
+    const now = Date.now();
+    let nowMark = '';
+    if (now > t0 && now < t1) {
+      const nx = x(now), ny = y(bacAt(sim, now));
+      nowMark = '<line x1="' + nx + '" x2="' + nx + '" y1="' + (pt - 8) + '" y2="' + (H - pb) + '" stroke="var(--text)" stroke-width="1.5"/>'
+              + '<circle cx="' + nx + '" cy="' + ny + '" r="5" fill="var(--text)"/>'
+              + '<text x="' + nx + '" y="' + (pt - 12) + '" text-anchor="middle" class="peak-label">Now</text>';
+    }
+    const px = x(sim.peakAt), py = y(sim.peak);
+    const anchor = px > W * 0.72 ? 'end' : px < W * 0.2 ? 'start' : 'middle';
+    box.innerHTML =
+      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Blood alcohol peaks at ' + fmtBac(sim.peak) + ' around ' + fmtTime(sim.peakAt) + ' and reaches zero at ' + fmtTime(t1) + '">'
+      + '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A93B" stop-opacity=".55"/><stop offset="1" stop-color="#F2A93B" stop-opacity="0"/></linearGradient></defs>'
+      + ticks
+      + '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="var(--line)"/>'
+      + '<path d="' + area + '" fill="url(#ag)"/>'
+      + '<path d="' + d + '" fill="none" stroke="#F2A93B" stroke-width="2.5" stroke-linejoin="round"/>'
+      + '<circle cx="' + px + '" cy="' + py + '" r="4" fill="#F2A93B"/>'
+      + (nowMark ? '' : '<text x="' + px + '" y="' + (py - 10) + '" text-anchor="' + anchor + '" class="peak-label">Peak ' + fmtBac(sim.peak) + '</text>')
+      + nowMark
+      + '<text x="' + pl + '" y="' + (H - 8) + '">' + fmtTime(t0) + '</text>'
+      + '<text x="' + (W - pr) + '" y="' + (H - 8) + '" text-anchor="end">' + fmtTime(t1) + '</text>'
+      + '</svg>';
+  }
+
+  // Tab
+  function shareLabel(v) { const f = SHARES.find((s) => Math.abs(s[0] - v) < 1e-6); return f ? f[1].toLowerCase() : Math.round(v * 100) + '%'; }
+  function renderTab() {
+    const list = $('#tabList');
+    const drinks = state.session.drinks;
+    list.innerHTML = '';
+    drinks.forEach((d, i) => {
+      const li = document.createElement('li');
+      const share = d.share < 1 ? ', ' + shareLabel(d.share) + ' each' : '';
+      li.innerHTML = '<div><div class="li-name"></div><div class="li-meta"></div></div><span class="li-g"></span><button class="rm" type="button">&#215;</button>';
+      li.querySelector('.li-name').textContent = d.qty + ' × ' + d.name;
+      li.querySelector('.li-meta').textContent = d.ml + ' ml at ' + d.abv + '%' + share;
+      li.querySelector('.li-g').textContent = gramsOf(d).toFixed(1) + ' g';
+      const rm = li.querySelector('.rm');
+      rm.setAttribute('aria-label', 'Remove ' + d.name);
+      rm.addEventListener('click', () => { state.session.drinks.splice(i, 1); save(); renderAll(); toast('Removed from the tab'); });
+      list.appendChild(li);
+    });
+    const G = drinks.reduce((a, d) => a + gramsOf(d), 0);
+    $('#tabEmpty').hidden = drinks.length > 0;
+    $('#tabTotal').hidden = drinks.length === 0;
+    $('#tabTotalVal').textContent = G.toFixed(1) + ' g, about ' + (G / STD_G).toFixed(1) + ' standard drinks';
+  }
+
+  // Times
+  function toLocalInput(ms) { const d = new Date(ms); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function fromLocalInput(v) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || '');
+    return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : null;
+  }
+  function renderTimes() {
+    const s = state.session;
+    $('#startAt').value = toLocalInput(s.start);
+    $('#endAt').value = toLocalInput(effectiveEnd());
+    $('#endAt').disabled = s.still;
+    $('#stillGoing').checked = s.still;
+    $('#timeWarn').hidden = s.still || s.end >= s.start;
+  }
+  $('#startAt').addEventListener('change', (e) => { const v = fromLocalInput(e.target.value); if (v) { state.session.start = v; save(); renderAll(); } });
+  $('#endAt').addEventListener('change', (e) => { const v = fromLocalInput(e.target.value); if (v) { state.session.end = v; save(); renderAll(); } });
+  $('#stillGoing').addEventListener('change', (e) => {
+    state.session.still = e.target.checked;
+    if (!e.target.checked) state.session.end = Date.now();
+    save(); renderAll();
+  });
+
+  // Body settings
+  function renderBody() {
+    $('#kg').value = state.profile.kg;
+    document.querySelectorAll('[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.profile.sex)));
+    $('#beta').value = state.profile.beta;
+    $('#betaVal').textContent = state.profile.beta.toFixed(3) + '% per hour';
+  }
+  $('#kg').addEventListener('input', (e) => { const v = parseFloat(e.target.value); if (v >= 35 && v <= 250) { state.profile.kg = v; save(); renderLive(); } });
+  document.querySelectorAll('[data-sex]').forEach((b) => b.addEventListener('click', () => { state.profile.sex = b.dataset.sex; save(); renderBody(); renderLive(); }));
+  $('#beta').addEventListener('input', (e) => { state.profile.beta = parseFloat(e.target.value); save(); renderBody(); renderLive(); });
+
+  // History
+  function renderHistory() {
+    const h = state.history || [];
+    $('#histSection').hidden = h.length === 0;
+    const ul = $('#historyList'); ul.innerHTML = '';
+    h.slice().reverse().forEach((n) => {
+      const li = document.createElement('li');
+      const { h: hh, m } = dur(n.clear - n.start);
+      const date = new Date(n.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+      li.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
+      li.querySelector('.h-date').textContent = date;
+      li.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
+      li.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
+      ul.appendChild(li);
+    });
+  }
+  $('#saveNight').addEventListener('click', () => {
+    const sim = simulate();
+    if (!sim.G) { toast('Add a drink before saving'); return; }
+    state.history = (state.history || []).concat([{
+      start: sim.start, clear: sim.clear, G: sim.G, peak: sim.peak,
+      count: state.session.drinks.reduce((a, d) => a + d.qty, 0)
+    }]).slice(-20);
+    save(); renderHistory(); toast('Night saved');
+  });
+  $('#newNight').addEventListener('click', () => {
+    if (state.session.drinks.length && !confirm('Clear the tab and start a new night?')) return;
+    state.session = newSession(); save(); renderAll(); toast('Fresh tab, fresh night');
+  });
+
+  // Share
+  $('#shareBtn').addEventListener('click', async () => {
+    const sim = simulate();
+    let text = 'Tracking my night with Dry Season.';
+    if (sim.G && Date.now() < sim.clear) text = "I'll be clear of alcohol by " + fmtTime(sim.clear) + ' ' + dayLabel(sim.clear).toLowerCase() + '. Tracked with Dry Season.';
+    else if (sim.G) text = 'Officially clear. Tracked with Dry Season.';
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Dry Season', text, url: location.href }); return; }
+      await navigator.clipboard.writeText(text + ' ' + location.href); toast('Copied to clipboard');
+    } catch (e) { /* share dismissed */ }
+  });
+
+  // Drink picker
+  const sheet = $('#sheet');
+  let pick = null;
+  function buildList() {
+    const box = $('#pickList'); box.innerHTML = '';
+    DRINKS.forEach((g) => {
+      const wrap = document.createElement('div'); wrap.className = 'pick-group';
+      const h = document.createElement('h4'); h.textContent = g.group; wrap.appendChild(h);
+      g.items.forEach((it) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'pick';
+        b.innerHTML = '<span><span class="pick-name"></span><br><span class="pick-meta"></span></span><span class="abv-pill"></span>';
+        b.querySelector('.pick-name').textContent = it.name;
+        b.querySelector('.pick-meta').textContent = it.custom ? 'Wine, spirits, ciders, anything' : 'Usually ' + it.ml + ' ml';
+        b.querySelector('.abv-pill').textContent = it.custom ? 'Set it' : it.abv + '%';
+        b.addEventListener('click', () => choose(it));
+        wrap.appendChild(b);
+      });
+      box.appendChild(wrap);
+    });
+  }
+  function showList() {
+    $('#pickList').hidden = false; $('#pickCfg').hidden = true; $('#sheetBack').hidden = true;
+    $('#sheetTitle').textContent = 'Pick a drink';
+  }
+  function choose(it) {
+    pick = { name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom };
+    $('#pickList').hidden = true; $('#pickCfg').hidden = false; $('#sheetBack').hidden = false;
+    $('#sheetTitle').textContent = it.custom ? 'Your own drink' : it.name;
+    $('#nameField').hidden = !it.custom;
+    $('#cfgName').value = pick.name;
+    $('#cfgNote').hidden = !it.note; $('#cfgNote').textContent = it.note || '';
+    $('#cfgAbv').value = pick.abv; $('#cfgMl').value = pick.ml;
+    renderCfg();
+    sheet.scrollTop = 0;
+  }
+  function renderCfg() {
+    const sc = $('#sizeChips'); sc.innerHTML = '';
+    SIZES.forEach((ml) => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip';
+      c.textContent = ml === 750 ? '750 quart' : ml === 1000 ? '1 litre' : ml + ' ml';
+      c.setAttribute('aria-pressed', String(pick.ml === ml));
+      c.addEventListener('click', () => { pick.ml = ml; $('#cfgMl').value = ml; renderCfg(); });
+      sc.appendChild(c);
+    });
+    const sh = $('#shareChips'); sh.innerHTML = '';
+    SHARES.forEach(([v, label]) => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
+      c.setAttribute('aria-pressed', String(Math.abs(pick.share - v) < 1e-6));
+      c.addEventListener('click', () => { pick.share = v; renderCfg(); });
+      sh.appendChild(c);
+    });
+    $('#qty').textContent = pick.qty;
+    const valid = pick.abv >= 0 && pick.ml > 0;
+    $('#cfgGrams').textContent = valid ? gramsOf(pick).toFixed(1) + ' g' : 'Check the numbers';
+  }
+  $('#cfgAbv').addEventListener('input', (e) => { pick.abv = parseFloat(e.target.value) || 0; renderCfg(); });
+  $('#cfgMl').addEventListener('input', (e) => { pick.ml = parseFloat(e.target.value) || 0; renderCfg(); });
+  $('#cfgName').addEventListener('input', (e) => { pick.name = e.target.value; });
+  $('#qtyMinus').addEventListener('click', () => { pick.qty = Math.max(1, pick.qty - 1); renderCfg(); });
+  $('#qtyPlus').addEventListener('click', () => { pick.qty = Math.min(48, pick.qty + 1); renderCfg(); });
+  $('#cfgAdd').addEventListener('click', () => {
+    if (!(pick.ml > 0) || !(pick.abv >= 0) || pick.abv > 80) { toast('Check the strength and size'); return; }
+    const name = (pick.name || '').trim() || 'Custom drink';
+    state.session.drinks.push({ name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share });
+    save(); sheet.close(); renderAll(); toast(pick.qty + ' × ' + name + ' added');
+  });
+  $('#openPicker').addEventListener('click', () => { showList(); sheet.showModal(); });
+  $('#sheetClose').addEventListener('click', () => sheet.close());
+  $('#sheetBack').addEventListener('click', showList);
+  sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
+
+  // Toast
+  let toastT;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
+
+  // Render loop
+  function renderLive() { lastSim = simulate(); renderHero(lastSim); renderChart(lastSim); }
+  function renderAll() { renderTimes(); renderTab(); renderBody(); renderHistory(); renderLive(); }
+  buildList();
+  renderAll();
+  let ticks = 0;
+  setInterval(() => {
+    ticks++;
+    if (state.session.still) { renderLive(); if (ticks % 30 === 0) renderTimes(); }
+    else { renderHero(lastSim); if (ticks % 30 === 0) renderChart(lastSim); }
+  }, 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
+
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
