@@ -2,13 +2,26 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in V2
+
+* **Driving status.** A pill in the hero shows *Over the legal limit*, *Under the limit, still impaired* or *Clear, by this estimate*, with the time you should drop under the limit. The app never says you're safe to drive.
+* **Driving soon?** Enter when you next need to drive or start a shift. A ticket tells you whether you're likely to be fully clear with an hour to spare, and, if you're still drinking, the latest time to stop at your current pace.
+* **Blackout risk.** A Low, Raised or High rating from your projected peak, how fast your level is rising, how many drinks you've had in the last hour and whether you've eaten. A colour scale shows where you are now and where you'll peak.
+* **Pacing nudges.** When the risk climbs, you get a suggested wait before your next drink, worked out so your peak stays under 0.15% and your pace stays around three drinks an hour or less.
+* **Risk zones on the curve.** The chart is shaded by zone with the legal limit marked.
+* **Food toggle.** *I ate a proper meal* slows absorption and lowers the peak.
+* **Looking out for you.** Very high levels or very fast drinking bring up the signs of alcohol poisoning and tap to call buttons for Botswana's emergency numbers (ambulance 997, Medical Rescue 911, police 999).
+* **Text a friend my status** shares where you're at and when you should be clear.
+
 Everything runs in the browser. Nothing leaves your phone: your tab, settings and past nights are stored in the browser's local storage.
 
 ## Files
 
 | File | What it does |
 | --- | --- |
-| `index.html` | The whole app: layout, styles and logic |
+| `index.html` | Layout, styles and interface logic |
+| `model.js` | The blood alcohol and risk maths, shared by the app and the tests |
+| `tests/model.test.js` | Tests for the maths. Run with `node --test tests/*.test.js` |
 | `manifest.webmanifest` | Lets iPhone and Android install it like an app |
 | `sw.js` | Makes it work offline after the first visit |
 | `icons/` | Home screen icons |
@@ -46,9 +59,9 @@ pages:
 ## How the estimate works
 
 * Grams of alcohol per drink = millilitres x (ABV / 100) x 0.789, multiplied by how many you had and how much of each was yours.
-* Drinks are spread evenly between your start and stop times, then absorbed gradually (half absorbed roughly every 15 minutes).
+* Drinks are spread evenly between your start and stop times, then absorbed gradually: half absorbed roughly every 15 minutes on an empty stomach, or every 35 minutes after a meal (with about 10% less reaching the blood).
 * Blood alcohol uses the Widmark formula: grams / (body water factor x weight in kg x 10), with 0.68 for a male body and 0.55 for a female body.
-* Your body removes a steady amount per hour. 0.015% per hour is the default, and you can adjust it between 0.010% and 0.020% under **Your body**.
+* Your body removes about 0.015% per hour at everyday levels (adjustable from 0.010% to 0.020% under **Your body**). Removal slows near zero, so small drinks still show up and "fully clear" errs on the late side.
 * One standard drink is counted as 10 g of pure alcohol.
 
 ### Built in drinks
@@ -71,6 +84,18 @@ pages:
 
 Strengths change from time to time, so every drink lets you edit the ABV before adding it. To change the defaults, edit the `DRINKS` list near the top of the script in `index.html`.
 
+### Thresholds
+
+| Level | What the app treats it as |
+| --- | --- |
+| Above 0.000% and up to the limit | Impaired |
+| Above the legal limit (Botswana 0.05%, editable) | Over the limit |
+| 0.08% to 0.15% | Very high |
+| 0.15% and above | Blackout risk zone |
+| 0.30% and above | Danger, risk of alcohol poisoning |
+
+Blackout risk is raised by a rise faster than 0.05% per hour, more than 3 standard drinks in the last hour, and an empty stomach. More than 5 standard drinks in an hour, or a level of 0.30%, shows the alcohol poisoning card.
+
 ## Important
 
 This is an estimate for fun and awareness, not a breathalyser. Food, health, medication and individual metabolism all change the real result. Never use it to decide whether you can drive.
@@ -78,4 +103,4 @@ This is an estimate for fun and awareness, not a breathalyser. Food, health, med
 ## Make it yours
 
 * Change the footer line in `index.html` to whatever you like.
-* After changing files, bump `CACHE = 'dry-season-v1'` in `sw.js` to `v2` so installed copies pick up the update.
+* After changing files, bump `CACHE = 'dry-season-v2'` in `sw.js` to `v3` so installed copies pick up the update.

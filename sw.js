@@ -1,8 +1,9 @@
 // Dry Season service worker: works offline after the first visit.
-const CACHE = 'dry-season-v1';
+const CACHE = 'dry-season-v2';
 const ASSETS = [
   './',
   './index.html',
+  './model.js',
   './manifest.webmanifest',
   './icons/icon-180.png',
   './icons/icon-192.png',

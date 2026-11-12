@@ -82,8 +82,8 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .hero-top{position:relative;display:flex;justify-content:space-between;align-items:center;max-width:560px;margin:0 auto}
 .brand{font-family:var(--display);font-size:1.05rem;letter-spacing:.01em;color:var(--text)}
 .ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:7px 14px;font-size:.9rem;font-weight:600}
-.hero-body{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;gap:8px;max-width:560px;margin:22px auto 0;min-height:290px}
-.readout{padding-bottom:84px;min-width:0}
+.hero-body{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;gap:8px;max-width:560px;margin:18px auto 0}
+.readout{padding-bottom:12px;min-width:0}
 .kicker{margin:0;font-weight:600;color:var(--muted);font-size:1rem}
 .clear-time{
   margin:2px 0 6px;font-family:var(--display);font-weight:400;line-height:.88;
@@ -92,11 +92,11 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   text-shadow:0 2px 24px rgba(242,169,59,.25);
 }
 .clear-day{margin:0;font-size:1rem;color:var(--text);white-space:pre-line}
-.stats{display:flex;gap:22px;margin:18px 0 0}
+.stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:560px;margin:14px auto 0;padding:14px 0 96px;border-top:1px solid var(--line)}
 .stats div{min-width:0}
 .stats dt{font-size:.82rem;color:var(--muted)}
 .stats dd{margin:0;font-weight:700;font-size:1.15rem}
-.glass{width:min(31vw,150px);height:auto;margin-bottom:30px;position:relative;z-index:1;overflow:visible;color:var(--foam);filter:drop-shadow(0 10px 18px rgba(0,0,0,.25))}
+.glass{width:min(31vw,150px);height:auto;margin-bottom:6px;position:relative;z-index:1;overflow:visible;color:var(--foam);filter:drop-shadow(0 10px 18px rgba(0,0,0,.25)) drop-shadow(0 0 26px var(--glow));transition:filter .8s}
 .liquid{transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
 .bubble{animation:rise 3.2s linear infinite;opacity:.0}
 .bubble:nth-child(2){animation-delay:.8s;animation-duration:2.6s}
@@ -226,6 +226,84 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .toast.show{transform:translate(-50%,0);opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
+
+/* ---------- V2: status, risk, planner ---------- */
+:root{
+  --over:#E2553F; --impaired:#F2A93B; --ok:#A7B57E;
+  --z1:#F7D57E; --z2:#F2A93B; --z3:#E8803A; --z4:#D9503B; --z5:#8E2430;
+  --glow:rgba(0,0,0,0);
+}
+.hero[data-state="over"]{--glow:rgba(226,85,63,.6)}
+.hero[data-state="impaired"]{--glow:rgba(242,169,59,.45)}
+.hero[data-state="clear"]{--glow:rgba(167,181,126,.5)}
+.status{position:relative;max-width:560px;margin:22px auto 0}
+.pill{display:inline-flex;align-items:center;gap:10px;margin:0;padding:8px 15px 8px 13px;border-radius:999px;font-weight:700;font-size:.95rem;color:var(--ink);background:var(--field);transition:background .5s,color .5s}
+.hero[data-state="over"] .pill{background:var(--over);color:#FFF6EC}
+.hero[data-state="impaired"] .pill{background:var(--impaired)}
+.hero[data-state="clear"] .pill{background:var(--ok)}
+.pill .dot{width:9px;height:9px;border-radius:50%;background:currentColor;position:relative;flex:none}
+.hero[data-state="over"] .pill .dot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid currentColor;animation:ping 1.6s ease-out infinite}
+@keyframes ping{from{transform:scale(.5);opacity:.9}to{transform:scale(1.7);opacity:0}}
+.pill-note{margin:9px 0 0;font-size:.86rem;color:var(--muted);max-width:42ch}
+
+.risk{padding:30px var(--gutter) 6px}
+.risk-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.risk-head h2{margin:0}
+.meter{display:flex;gap:5px}
+.meter i{width:24px;height:8px;border-radius:9px;background:var(--line);transition:background .5s}
+.risk[data-level="low"] .meter i:nth-child(1){background:var(--ok)}
+.risk[data-level="raised"] .meter i:nth-child(-n+2){background:var(--impaired)}
+.risk[data-level="high"] .meter i{background:var(--over)}
+.risk-level{font-family:var(--display);font-size:3.1rem;line-height:1;margin:12px 0 6px;transition:color .5s}
+.risk[data-level="low"] .risk-level{color:var(--ok)}
+.risk[data-level="raised"] .risk-level{color:var(--impaired)}
+.risk[data-level="high"] .risk-level{color:var(--over)}
+.scale{position:relative;padding-top:40px}
+.scale-bar{position:relative;height:16px;border-radius:999px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+.pin-label{position:absolute;top:0;transform:translateX(-50%);background:var(--text);color:var(--ground);font-weight:700;font-size:.82rem;padding:4px 9px;border-radius:8px;white-space:nowrap;transition:left .9s cubic-bezier(.2,.8,.2,1)}
+.pin-stem{position:absolute;top:26px;width:3px;height:32px;border-radius:3px;background:var(--text);transform:translateX(-50%);z-index:2;transition:left .9s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 0 2px var(--ground)}
+.pin-peak{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;border:3px solid var(--text);transform:translate(-50%,-50%);transition:left .9s cubic-bezier(.2,.8,.2,1)}
+.scale-ticks{position:relative;height:24px}
+.scale-ticks span{position:absolute;top:6px;transform:translateX(-50%);font-size:.74rem;color:var(--muted)}
+.scale-peak{display:flex;align-items:center;gap:8px;margin:2px 0 0;font-size:.9rem;color:var(--muted)}
+.ring{width:12px;height:12px;border-radius:50%;border:2.5px solid var(--text);flex:none}
+.scale-legend{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--muted)}
+.scale-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.reasons{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:8px}
+.reasons li{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:7px 13px;font-size:.9rem;font-weight:600}
+.reasons li.strong{border-color:var(--over);color:var(--over)}
+.nudge{margin-top:16px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:16px;border-radius:16px;background:rgba(242,169,59,.12);border:1px solid rgba(242,169,59,.45)}
+.nudge svg{width:26px;height:26px;color:var(--amber)}
+.nudge p{margin:0;font-weight:500}
+.risk .btn{margin-top:16px}
+
+.danger{margin:26px var(--gutter) 0;padding:22px 18px;border-radius:22px;background:#B3362A;color:#FFF5EA;box-shadow:0 20px 40px -20px rgba(179,54,42,.8)}
+.danger h2{color:#FFF5EA;margin-bottom:8px}
+.danger p{margin:0 0 10px}
+.danger ul{margin:0 0 12px;padding-left:20px}
+.danger li{margin:2px 0}
+.call-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.call{display:flex;flex-direction:column;text-decoration:none;color:#2A1A0F;background:#FFF5EA;border-radius:16px;padding:12px 14px;min-height:64px}
+.call span{font-size:.82rem;font-weight:600;opacity:.7}
+.call b{font-family:var(--display);font-weight:400;font-size:1.7rem;line-height:1.1}
+.call.wide{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}
+
+.ticket{margin-top:16px;display:grid;grid-template-columns:108px 1fr;background:var(--receipt);color:var(--ink);border-radius:16px;border:1px solid rgba(42,26,15,.08);position:relative;box-shadow:0 18px 30px -18px rgba(0,0,0,.55)}
+.ticket::before,.ticket::after{content:"";position:absolute;left:108px;width:22px;height:22px;border-radius:50%;background:var(--ground);transform:translateX(-50%)}
+.ticket::before{top:-11px}.ticket::after{bottom:-11px}
+.stub{padding:18px 14px;border-right:2px dashed rgba(42,26,15,.25);display:flex;flex-direction:column;gap:3px}
+.stub-label{font-size:.8rem;color:rgba(42,26,15,.6)}
+.stub b{font-family:var(--display);font-weight:400;font-size:1.8rem;line-height:1}
+.stub-day{font-size:.85rem;font-weight:600}
+.tk-body{padding:18px 16px}
+.tk-verdict{font-weight:700;font-size:1.15rem;margin:0 0 4px;line-height:1.25}
+.ticket[data-ok="yes"] .tk-verdict{color:#4A6A2A}
+.ticket[data-ok="no"] .tk-verdict{color:#B23A26}
+.ticket[data-ok="no"] .stub{background:repeating-linear-gradient(135deg,rgba(178,58,38,.08) 0 8px,transparent 8px 16px);border-radius:16px 0 0 16px}
+.tk-detail{margin:0;font-size:.92rem;color:rgba(42,26,15,.75)}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:12px 0 0;font-size:.9rem}
+.chart .zone-label{font-size:10px;fill:var(--muted);font-weight:600;paint-order:stroke;stroke:var(--ground);stroke-width:3px;stroke-linejoin:round}
+
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
@@ -233,22 +311,23 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 </head>
 <body>
 
-<header class="hero">
+<header class="hero" id="hero" data-state="none">
   <div class="stars" aria-hidden="true"></div>
   <div class="hero-top">
     <span class="brand">Dry Season</span>
     <button class="ghost" id="shareBtn" type="button">Share</button>
   </div>
 
+  <div class="status" id="statusBlock" hidden>
+    <p class="pill"><span class="dot" aria-hidden="true"></span><span id="pillText">Over the legal limit</span></p>
+    <p class="pill-note" id="pillNote">Any alcohol slows your reactions. Get a lift, take a cab, or wait until you're clear.</p>
+  </div>
+
   <div class="hero-body">
-    <div class="readout" aria-live="polite">
+    <div class="readout">
       <p class="kicker" id="kicker">Clear by</p>
       <p class="clear-time" id="clearTime">--:--</p>
       <p class="clear-day" id="clearDay">Add your first drink to start the clock.</p>
-      <dl class="stats">
-        <div><dt>Right now</dt><dd id="nowBac">0.000%</dd></div>
-        <div><dt>Peak</dt><dd id="peakBac">0.000%</dd></div>
-      </dl>
     </div>
 
     <svg class="glass" viewBox="0 0 120 230" aria-hidden="true">
@@ -279,6 +358,12 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     </svg>
   </div>
 
+  <dl class="stats">
+    <div><dt>Right now</dt><dd id="nowBac">0.000%</dd></div>
+    <div><dt>Peak</dt><dd id="peakBac">0.000%</dd></div>
+    <div><dt id="limitLabel">Under 0.05%</dt><dd id="underAt">--</dd></div>
+  </dl>
+
   <svg class="horizon" viewBox="0 0 400 78" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
     <g fill="currentColor">
       <path d="M0 62 Q90 52 200 58 T400 55 V78 H0 Z"/>
@@ -293,6 +378,46 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 </header>
 
 <main class="wrap">
+  <section class="danger" id="danger" hidden aria-labelledby="dangerH">
+    <h2 id="dangerH">Watch for alcohol poisoning</h2>
+    <p>This much alcohol, this fast, can be dangerous. Get help straight away if you or a friend shows any of these:</p>
+    <ul>
+      <li>Confused, or very hard to wake</li>
+      <li>Vomiting while drowsy</li>
+      <li>Slow or irregular breathing</li>
+      <li>Cold, pale or bluish skin</li>
+      <li>A seizure</li>
+    </ul>
+    <p>Never leave someone to sleep it off alone. Lie them on their side so they can't choke.</p>
+    <div class="call-grid">
+      <a class="call" href="tel:997"><span>Ambulance</span><b>997</b></a>
+      <a class="call" href="tel:911"><span>Medical Rescue</span><b>911</b></a>
+      <a class="call wide" href="tel:999"><span>Police</span><b>999</b></a>
+    </div>
+  </section>
+
+  <section class="risk" id="riskSection" data-level="low" hidden aria-labelledby="riskH">
+    <div class="risk-head">
+      <h2 id="riskH">Blackout risk</h2>
+      <span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>
+    </div>
+    <p class="risk-level" id="riskLevel">Low</p>
+    <div class="scale" aria-hidden="true">
+      <span class="pin-label" id="pinLabel">Now 0.000%</span>
+      <span class="pin-stem" id="pinStem"></span>
+      <div class="scale-bar" id="scaleBar"><span class="pin-peak" id="pinPeak"></span></div>
+      <div class="scale-ticks" id="scaleTicks"></div>
+    </div>
+    <p class="scale-peak"><span class="ring" aria-hidden="true"></span><span id="scalePeak"></span></p>
+    <ul class="scale-legend" id="scaleLegend" aria-label="Zones"></ul>
+    <ul class="reasons" id="reasons" aria-label="Why"></ul>
+    <div class="nudge" id="nudge" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3.5 4.3 6 7.6 6 10.6A6 6 0 0 1 6 13.6C6 10.6 8.5 7.3 12 3z"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.3"/></svg>
+      <p id="nudgeText"></p>
+    </div>
+    <button class="btn quiet" id="textFriend" type="button">Text a friend my status</button>
+  </section>
+
   <section class="block" aria-labelledby="nightH">
     <h2 id="nightH">The night</h2>
     <div class="times">
@@ -308,6 +433,12 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
       <span class="track" aria-hidden="true"></span>
       I'm still drinking
     </label>
+    <label class="switch">
+      <input type="checkbox" id="fed">
+      <span class="track" aria-hidden="true"></span>
+      I ate a proper meal
+    </label>
+    <p class="hint">Food slows how fast alcohol reaches your blood, so your peak is lower and arrives later.</p>
     <p class="warn" id="timeWarn" hidden>Your stop time is before your start time. Move one of them.</p>
   </section>
 
@@ -328,6 +459,19 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     <p class="hint">Estimated blood alcohol from your first sip until your body is clear.</p>
   </section>
 
+  <section class="block" aria-labelledby="driveH">
+    <h2 id="driveH">Driving soon?</h2>
+    <p class="hint" style="margin:0 0 14px">Set when you next need to drive or start a shift. You'll see whether you're likely to be fully clear, with an hour to spare.</p>
+    <label class="field">I need to drive at
+      <input type="datetime-local" id="driveAt">
+    </label>
+    <div class="ticket" id="ticket" data-ok="">
+      <div class="stub"><span class="stub-label">Drive at</span><b id="tkTime">--:--</b><span class="stub-day" id="tkDay">Not set</span></div>
+      <div class="tk-body"><p class="tk-verdict" id="tkVerdict">Add a time above</p><p class="tk-detail" id="tkDetail">You'll get a straight answer on whether you're likely to be clear by then.</p></div>
+    </div>
+    <button class="linkbtn" id="driveClear" type="button" hidden>Remove drive time</button>
+  </section>
+
   <details class="block" id="bodyDetails">
     <summary><h2>Your body</h2><span class="chev" aria-hidden="true">&#8964;</span></summary>
     <div class="settings-body">
@@ -345,6 +489,13 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
         <div class="range-row"><span class="label" style="margin:0">How fast your body clears alcohol</span><b id="betaVal"></b></div>
         <input type="range" id="beta" min="0.010" max="0.020" step="0.001">
         <p class="hint">Most people clear between 0.010% and 0.020% per hour. 0.015% is a typical average.</p>
+      </div>
+      <div>
+        <label class="field">Legal driving limit (% blood alcohol)
+          <input type="number" id="limit" inputmode="decimal" min="0" max="0.2" step="0.01">
+        </label>
+        <div class="chips" id="limitChips" style="margin-top:10px"></div>
+        <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
       </div>
     </div>
   </details>
@@ -411,13 +562,16 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 
 <div class="toast" id="toast" role="status"></div>
 
+<script src="model.js"></script>
 <script>
 (() => {
   'use strict';
   const KEY = 'dryseason.v1';
-  const ETHANOL = 0.789;   // g per ml
-  const STD_G = 10;        // grams in one standard drink (WHO)
-  const ABSORB_HALF_MIN = 15;
+  const M = window.DryModel;
+  const { STD_G } = M;
+  const MIN = 60000;
+  const SCALE_MAX = 0.35;
+  const LIMIT_PRESETS = [['Botswana 0.05', 0.05], ['0.08', 0.08], ['0.02', 0.02]];
 
   const DRINKS = [
     { group: 'Brewed in Botswana', items: [
@@ -452,60 +606,38 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 
   function newSession() {
     const now = Date.now();
-    return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, drinks: [] };
+    return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, fed: false, driveAt: null, drinks: [] };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015 }, session: newSession(), history: [] };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05 }, session: newSession(), history: [] };
   }
   function load() {
+    const d = defaults();
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
-      if (s && s.profile && s.session && Array.isArray(s.session.drinks)) return Object.assign(defaults(), s);
+      if (s && s.profile && s.session && Array.isArray(s.session.drinks)) {
+        return {
+          profile: Object.assign(d.profile, s.profile),
+          session: Object.assign({ fed: false, driveAt: null }, s.session),
+          history: Array.isArray(s.history) ? s.history : []
+        };
+      }
     } catch (e) {}
-    return defaults();
+    return d;
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
   let state = load();
 
-  const gramsOf = (d) => d.ml * (d.abv / 100) * ETHANOL * d.qty * d.share;
+  const gramsOf = M.gramsOf;
   const effectiveEnd = () => state.session.still ? Date.now() : state.session.end;
-
-  // Widmark model with first-order absorption and zero-order elimination, stepped per minute.
-  function simulate() {
-    const { kg, sex, beta } = state.profile;
-    const s = state.session;
-    const r = sex === 'f' ? 0.55 : 0.68;
-    const vd = r * kg * 10;                       // grams of alcohol that raise BAC by 1%
-    const G = s.drinks.reduce((a, d) => a + gramsOf(d), 0);
-    const start = s.start;
-    const end = Math.max(effectiveEnd(), start);
-    const out = { G, start, points: [], clear: null, peak: 0, peakAt: start };
-    if (G <= 0 || !isFinite(G)) return out;
-
-    const durMin = Math.max(1, Math.round((end - start) / 60000));
-    const rate = G / durMin;
-    const ka = 1 - Math.exp(-Math.LN2 / ABSORB_HALF_MIN);
-    const elim = beta / 60;
-    let pool = 0, B = 0;
-    for (let m = 0; m < 60 * 96; m++) {
-      if (m < durMin) pool += rate;
-      const abs = pool * ka;
-      pool -= abs;
-      B = Math.max(0, B + abs / vd - elim);
-      const t = start + (m + 1) * 60000;
-      out.points.push(B);
-      if (B > out.peak) { out.peak = B; out.peakAt = t; }
-      if (m >= durMin && pool < 0.01 && B <= 0) { out.clear = t; return out; }
-    }
-    out.clear = start + out.points.length * 60000;
-    return out;
+  function opts(extra) {
+    const p = state.profile, s = state.session;
+    return Object.assign({ drinks: s.drinks, start: s.start, end: effectiveEnd(), kg: p.kg, sex: p.sex, beta: p.beta, fed: !!s.fed }, extra || {});
   }
-  function bacAt(sim, t) {
-    const i = Math.floor((t - sim.start) / 60000) - 1;
-    if (i < 0 || i >= sim.points.length) return 0;
-    return sim.points[i];
-  }
+  const simulate = () => M.simulate(opts());
+  const bacAt = M.bacAt;
+  const fmtLimit = (l) => l.toFixed(2) + '%';
 
   function dayLabel(ms) {
     const d = new Date(ms), n = new Date();
@@ -515,6 +647,10 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     if (diff === 1) return 'Tomorrow';
     if (diff === -1) return 'Yesterday';
     return d.toLocaleDateString(undefined, { weekday: 'long' });
+  }
+  function dayIn(ms) {
+    const l = dayLabel(ms);
+    return ['Today', 'Tomorrow', 'Yesterday'].includes(l) ? l.toLowerCase() : 'on ' + l;
   }
   function dur(ms) {
     const t = Math.max(0, Math.round(ms / 1000));
@@ -543,7 +679,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     } else if (now >= sim.clear) {
       els.kicker.textContent = "You're";
       els.time.textContent = 'Clear';
-      els.day.textContent = 'Clear since ' + fmtTime(sim.clear) + ' ' + dayLabel(sim.clear).toLowerCase() + '. Still worth a glass of water.';
+      els.day.textContent = 'Clear since ' + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Still worth a glass of water.';
     } else {
       const { h, m, s } = dur(sim.clear - now);
       els.kicker.textContent = 'Clear by';
@@ -558,20 +694,49 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     els.liquid.style.transform = 'translateY(' + y.toFixed(1) + 'px)';
   }
 
+  // Zones shared by the chart and the risk scale
+  function zones() {
+    const l = state.profile.limit;
+    return [
+      { to: l, c: 'var(--z1)', name: 'Impaired', op: .10 },
+      { to: Math.max(l, 0.08), c: 'var(--z2)', name: 'Over the limit', op: .16 },
+      { to: 0.15, c: 'var(--z3)', name: 'Very high', op: .20 },
+      { to: 0.30, c: 'var(--z4)', name: 'Blackout risk', op: .26 },
+      { to: Infinity, c: 'var(--z5)', name: 'Danger', op: .36 }
+    ];
+  }
+
   // Chart
   function renderChart(sim) {
     const box = $('#chartBox');
     if (!sim.G) { box.innerHTML = '<div class="chart-empty">Your curve appears once there is something on the tab.</div>'; return; }
-    const W = 340, H = 180, pl = 6, pr = 10, pt = 26, pb = 26;
+    const W = 340, H = 200, pl = 6, pr = 10, pt = 26, pb = 26;
+    const limit = state.profile.limit;
     const t0 = sim.start, t1 = sim.clear, span = Math.max(t1 - t0, 60000);
-    const maxB = Math.max(sim.peak, 0.005) * 1.12;
+    const maxB = Math.max(sim.peak * 1.15, limit * 1.8, 0.02);
     const x = (t) => pl + (t - t0) / span * (W - pl - pr);
-    const y = (b) => pt + (1 - b / maxB) * (H - pt - pb);
+    const y = (b) => pt + (1 - Math.min(b, maxB) / maxB) * (H - pt - pb);
     const n = sim.points.length, step = Math.max(1, Math.floor(n / 180));
     let d = 'M' + x(t0).toFixed(1) + ' ' + y(0).toFixed(1);
     for (let i = 0; i < n; i += step) d += ' L' + x(t0 + (i + 1) * 60000).toFixed(1) + ' ' + y(sim.points[i]).toFixed(1);
     d += ' L' + x(t1).toFixed(1) + ' ' + y(0).toFixed(1);
     const area = d + ' Z';
+
+    let bands = '', from = 0;
+    zones().forEach((z, i) => {
+      const lo = from, hi = Math.min(z.to, maxB);
+      from = z.to;
+      if (hi <= lo) return;
+      const y1 = y(hi), y2 = y(lo);
+      bands += '<rect x="' + pl + '" y="' + y1.toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + (y2 - y1).toFixed(1) + '" style="fill:' + z.c + ';opacity:' + z.op + '"/>';
+      if (i > 0 && y2 - y1 >= 15) bands += '<text x="' + (W - pr - 6) + '" y="' + (y1 + 12).toFixed(1) + '" text-anchor="end" class="zone-label">' + z.name + '</text>';
+    });
+    let limitLine = '';
+    if (limit > 0 && limit < maxB) {
+      const ly = y(limit).toFixed(1);
+      limitLine = '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + ly + '" y2="' + ly + '" style="stroke:var(--text);opacity:.55" stroke-dasharray="5 4"/>'
+                + '<text x="' + (pl + 6) + '" y="' + (ly - 5) + '" class="zone-label">Legal limit ' + fmtLimit(limit) + '</text>';
+    }
 
     const hrs = span / 3600e3;
     const stepH = hrs <= 6 ? 1 : hrs <= 14 ? 2 : hrs <= 30 ? 4 : 8;
@@ -582,24 +747,24 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
       if (hr % stepH !== 0) continue;
       const xx = x(t);
       if (xx < 40 || xx > W - 44) continue;
-      ticks += '<line x1="' + xx + '" x2="' + xx + '" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--line)" stroke-dasharray="2 4"/>'
+      ticks += '<line x1="' + xx + '" x2="' + xx + '" y1="' + pt + '" y2="' + (H - pb) + '" style="stroke:var(--line)" stroke-dasharray="2 4"/>'
              + '<text x="' + xx + '" y="' + (H - 8) + '" text-anchor="middle">' + pad(hr) + ':00</text>';
     }
     const now = Date.now();
     let nowMark = '';
     if (now > t0 && now < t1) {
       const nx = x(now), ny = y(bacAt(sim, now));
-      nowMark = '<line x1="' + nx + '" x2="' + nx + '" y1="' + (pt - 8) + '" y2="' + (H - pb) + '" stroke="var(--text)" stroke-width="1.5"/>'
-              + '<circle cx="' + nx + '" cy="' + ny + '" r="5" fill="var(--text)"/>'
+      nowMark = '<line x1="' + nx + '" x2="' + nx + '" y1="' + (pt - 8) + '" y2="' + (H - pb) + '" style="stroke:var(--text)" stroke-width="1.5"/>'
+              + '<circle cx="' + nx + '" cy="' + ny + '" r="5" style="fill:var(--text)"/>'
               + '<text x="' + nx + '" y="' + (pt - 12) + '" text-anchor="middle" class="peak-label">Now</text>';
     }
     const px = x(sim.peakAt), py = y(sim.peak);
     const anchor = px > W * 0.72 ? 'end' : px < W * 0.2 ? 'start' : 'middle';
     box.innerHTML =
       '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Blood alcohol peaks at ' + fmtBac(sim.peak) + ' around ' + fmtTime(sim.peakAt) + ' and reaches zero at ' + fmtTime(t1) + '">'
-      + '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A93B" stop-opacity=".55"/><stop offset="1" stop-color="#F2A93B" stop-opacity="0"/></linearGradient></defs>'
-      + ticks
-      + '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="var(--line)"/>'
+      + '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A93B" stop-opacity=".5"/><stop offset="1" stop-color="#F2A93B" stop-opacity="0"/></linearGradient></defs>'
+      + bands + ticks + limitLine
+      + '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" style="stroke:var(--line)"/>'
       + '<path d="' + area + '" fill="url(#ag)"/>'
       + '<path d="' + d + '" fill="none" stroke="#F2A93B" stroke-width="2.5" stroke-linejoin="round"/>'
       + '<circle cx="' + px + '" cy="' + py + '" r="4" fill="#F2A93B"/>'
@@ -646,6 +811,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     $('#endAt').value = toLocalInput(effectiveEnd());
     $('#endAt').disabled = s.still;
     $('#stillGoing').checked = s.still;
+    $('#fed').checked = !!s.fed;
     $('#timeWarn').hidden = s.still || s.end >= s.start;
   }
   $('#startAt').addEventListener('change', (e) => { const v = fromLocalInput(e.target.value); if (v) { state.session.start = v; save(); renderAll(); } });
@@ -662,10 +828,23 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     document.querySelectorAll('[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.profile.sex)));
     $('#beta').value = state.profile.beta;
     $('#betaVal').textContent = state.profile.beta.toFixed(3) + '% per hour';
+    if (document.activeElement !== $('#limit')) $('#limit').value = state.profile.limit;
+    const lc = $('#limitChips'); lc.innerHTML = '';
+    LIMIT_PRESETS.forEach(([label, v]) => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
+      c.setAttribute('aria-pressed', String(Math.abs(state.profile.limit - v) < 1e-9));
+      c.addEventListener('click', () => { state.profile.limit = v; save(); renderBody(); buildScale(); renderLive(); });
+      lc.appendChild(c);
+    });
   }
   $('#kg').addEventListener('input', (e) => { const v = parseFloat(e.target.value); if (v >= 35 && v <= 250) { state.profile.kg = v; save(); renderLive(); } });
   document.querySelectorAll('[data-sex]').forEach((b) => b.addEventListener('click', () => { state.profile.sex = b.dataset.sex; save(); renderBody(); renderLive(); }));
   $('#beta').addEventListener('input', (e) => { state.profile.beta = parseFloat(e.target.value); save(); renderBody(); renderLive(); });
+  $('#limit').addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value);
+    if (v >= 0 && v <= 0.2) { state.profile.limit = v; save(); renderBody(); buildScale(); renderLive(); }
+  });
+  $('#fed').addEventListener('change', (e) => { state.session.fed = e.target.checked; save(); renderLive(); });
 
   // History
   function renderHistory() {
@@ -701,7 +880,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
   $('#shareBtn').addEventListener('click', async () => {
     const sim = simulate();
     let text = 'Tracking my night with Dry Season.';
-    if (sim.G && Date.now() < sim.clear) text = "I'll be clear of alcohol by " + fmtTime(sim.clear) + ' ' + dayLabel(sim.clear).toLowerCase() + '. Tracked with Dry Season.';
+    if (sim.G && Date.now() < sim.clear) text = "I'll be clear of alcohol by " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Tracked with Dry Season.';
     else if (sim.G) text = 'Officially clear. Tracked with Dry Season.';
     try {
       if (navigator.share) { await navigator.share({ title: 'Dry Season', text, url: location.href }); return; }
@@ -784,16 +963,178 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
   let toastT;
   function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
 
+  // Status pill and hero stats
+  const hero = $('#hero');
+  function renderStatus(sim) {
+    const now = Date.now(), limit = state.profile.limit;
+    $('#limitLabel').textContent = 'Under ' + fmtLimit(limit);
+    if (!sim.G) {
+      hero.dataset.state = 'none'; $('#statusBlock').hidden = true; $('#underAt').textContent = '--';
+      return;
+    }
+    const b = bacAt(sim, now);
+    const st = M.status(b, limit);
+    hero.dataset.state = st;
+    $('#statusBlock').hidden = false;
+    $('#pillNote').hidden = st === 'clear';
+    $('#pillText').textContent = st === 'over' ? 'Over the legal limit' : st === 'impaired' ? 'Under the limit, still impaired' : 'Clear, by this estimate';
+    const u = M.underLimitAt(sim, limit);
+    $('#underAt').textContent = u === null ? 'Never over' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u));
+  }
+
+  // Risk scale
+  const pct = (v) => Math.max(0, Math.min(100, v / SCALE_MAX * 100));
+  function buildScale() {
+    const z = zones();
+    let from = 0;
+    const parts = [], legend = [];
+    z.forEach((zz) => {
+      const to = Math.min(zz.to, SCALE_MAX);
+      if (to > from) { parts.push(zz.c + ' ' + pct(from).toFixed(2) + '% ' + pct(to).toFixed(2) + '%'); legend.push(zz); }
+      from = Math.max(from, to);
+    });
+    $('#scaleBar').style.background = 'linear-gradient(90deg,' + parts.join(',') + ')';
+    const ticks = [state.profile.limit, 0.08, 0.15, 0.30].filter((v, i, a) => v > 0 && v < SCALE_MAX && a.indexOf(v) === i);
+    $('#scaleTicks').innerHTML = ticks.map((v) => '<span style="left:' + pct(v) + '%">' + v.toFixed(2) + '</span>').join('');
+    $('#scaleLegend').innerHTML = legend.map((zz) => '<li><i style="background:' + zz.c + '"></i>' + zz.name + '</li>').join('');
+  }
+  function renderScale(bNow, sim) {
+    const p = pct(bNow);
+    $('#pinStem').style.left = p + '%';
+    $('#pinLabel').style.left = Math.min(86, Math.max(14, p)) + '%';
+    $('#pinLabel').textContent = 'Now ' + fmtBac(bNow);
+    $('#pinPeak').style.left = pct(sim.peak) + '%';
+    $('#scalePeak').textContent = 'Peak ' + fmtBac(sim.peak) + ' around ' + fmtTime(sim.peakAt);
+  }
+
+  // Blackout risk and pacing
+  let gapMemo = { key: '', at: 0, val: null };
+  function cachedGap(o, now, grams) {
+    const key = JSON.stringify([state.session.drinks.length, o.start, o.fed, o.kg, o.sex, o.beta, grams.toFixed(2)]);
+    if (gapMemo.key === key && now - gapMemo.at < 30000) return gapMemo.val;
+    gapMemo = { key, at: now, val: M.pacingGap(o, now, grams, M.THRESHOLDS.blackout) };
+    return gapMemo.val;
+  }
+  function fmtGap(min) {
+    if (min < 60) return min + ' minutes';
+    const h = Math.floor(min / 60), m = min % 60;
+    return h + (h === 1 ? ' hour' : ' hours') + (m ? ' ' + m + ' minutes' : '');
+  }
+  function renderRisk(sim) {
+    const sec = $('#riskSection');
+    const has = sim.G > 0;
+    const now = Date.now(), o = opts();
+    const bNow = has ? bacAt(sim, now) : 0;
+    const perHour = has ? M.stdLastHour(o, now) : 0;
+    const T = M.THRESHOLDS;
+    $('#danger').hidden = !(has && (bNow >= T.danger || sim.peak >= T.danger || perHour > T.bingeStdPerHour));
+    sec.hidden = !has;
+    if (!has) return;
+    const rise = M.riseRate(sim, now);
+    const risk = M.blackoutRisk({ peak: sim.peak, rise, perHour, fed: !!state.session.fed });
+    sec.dataset.level = risk.level;
+    $('#riskLevel').textContent = { low: 'Low', raised: 'Raised', high: 'High' }[risk.level];
+    renderScale(bNow, sim);
+
+    const ul = $('#reasons'); ul.innerHTML = '';
+    const add = (txt, strong) => { const li = document.createElement('li'); li.textContent = txt; if (strong) li.className = 'strong'; ul.appendChild(li); };
+    risk.reasons.forEach((r) => {
+      if (r.key === 'peak') add(r.strong ? 'Peak ' + fmtBac(sim.peak) + ', in the blackout zone' : 'Peak around ' + fmtBac(sim.peak), r.strong);
+      if (r.key === 'rise') add('Rising ' + rise.toFixed(3) + '% an hour', r.strong);
+      if (r.key === 'pace') add(perHour.toFixed(1) + ' drinks in the last hour', r.strong);
+      if (r.key === 'food') add('Empty stomach', false);
+    });
+    if (!risk.reasons.length) add(state.session.fed ? 'Steady pace, with food' : 'Steady pace so far', false);
+
+    let msg = '';
+    if (risk.level !== 'low' && bNow > 0) {
+      const drinks = state.session.drinks;
+      const last = drinks[drinks.length - 1];
+      const name = last ? last.name : 'drink';
+      if (!state.session.still) {
+        msg = risk.level === 'high'
+          ? 'Tonight peaked in the blackout zone. Stay with people you trust, drink water, and call it a night.'
+          : 'Water and something to eat will help. Stay with people you trust.';
+      } else if (sim.peak >= T.blackout) {
+        msg = 'Switch to water for now. Another ' + name + ' would take you deeper into the blackout zone.';
+      } else {
+        const unitG = M.gramsOf(Object.assign({}, last, { qty: 1 }));
+        const peakGap = cachedGap(o, now, unitG);
+        // Wait long enough that the last hour, including the next drink, holds at most 3 standard drinks.
+        const perMinG = sim.G / Math.max(1, (now - o.start) / MIN);
+        const paceGap = Math.min(60, Math.max(0, Math.ceil((60 - (T.fastStdPerHour * STD_G - unitG) / perMinG) / 5) * 5));
+        const gap = peakGap === null ? null : Math.max(peakGap, paceGap);
+        if (gap === null) msg = 'Switch to water for now. Another ' + name + ' would push you into the blackout zone.';
+        else if (gap === 0) msg = "You're drinking fast. If you have another " + name + ', sip it slowly with water alongside.';
+        else msg = "You're drinking fast. Wait about " + fmtGap(gap) + ' before your next ' + name + ', and have some water in between.';
+      }
+    }
+    $('#nudge').hidden = !msg;
+    $('#nudgeText').textContent = msg;
+  }
+
+  $('#textFriend').addEventListener('click', async () => {
+    const sim = lastSim || simulate(), now = Date.now();
+    const b = bacAt(sim, now), st = M.status(b, state.profile.limit);
+    const text = (!sim.G || st === 'clear')
+      ? "Checking in: my Dry Season estimate says I'm clear."
+      : 'Checking in from Dry Season. My estimate is ' + fmtBac(b) + (st === 'over' ? ', over the legal limit' : ', under the limit but still impaired')
+        + ", so I'm not driving. I should be fully clear around " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '.';
+    try {
+      if (navigator.share) { await navigator.share({ text }); return; }
+      location.href = 'sms:?&body=' + encodeURIComponent(text);
+    } catch (e) { /* share dismissed */ }
+  });
+
+  // Drive planner
+  function renderPlanner() {
+    const s = state.session, t = $('#ticket');
+    if (document.activeElement !== $('#driveAt')) $('#driveAt').value = s.driveAt ? toLocalInput(s.driveAt) : '';
+    $('#driveClear').hidden = !s.driveAt;
+    const set = (ok, verdict, detail) => { t.dataset.ok = ok; $('#tkVerdict').textContent = verdict; $('#tkDetail').textContent = detail; };
+    if (!s.driveAt) {
+      $('#tkTime').textContent = '--:--'; $('#tkDay').textContent = 'Not set';
+      set('', 'Add a time above', "You'll get a straight answer on whether you're likely to be clear by then.");
+      return;
+    }
+    $('#tkTime').textContent = fmtTime(s.driveAt);
+    $('#tkDay').textContent = dayLabel(s.driveAt);
+    const now = Date.now();
+    if (s.driveAt <= now) { set('', 'That time has passed', 'Pick a time later than now.'); return; }
+    if (!s.drinks.length) { set('yes', 'Nothing to clear', 'The tab is empty. Make sure you sleep well before a long drive.'); return; }
+    const plan = M.drivePlan(opts(), now, s.driveAt, 60, s.still);
+    const clearTxt = fmtTime(plan.clearAt) + ' ' + dayIn(plan.clearAt);
+    if (plan.ok) {
+      let d = 'Fully clear around ' + clearTxt + ', with at least an hour to spare.';
+      if (s.still && plan.latestStop) d += ' At your current pace, stop drinking by ' + fmtTime(plan.latestStop) + ' to keep it that way.';
+      set('yes', 'Likely clear in time', d);
+    } else {
+      let d = plan.clearAt > s.driveAt
+        ? "You'd still have alcohol in your blood until about " + clearTxt + '. Arrange a lift or move the drive.'
+        : 'Clear around ' + clearTxt + ', less than an hour before you drive. Too close to call, so arrange a lift or give it more time.';
+      if (s.still) d += ' Stopping now gives you the best chance.';
+      set('no', 'Not clear in time', d);
+    }
+  }
+  $('#driveAt').addEventListener('change', (e) => { state.session.driveAt = fromLocalInput(e.target.value); save(); renderPlanner(); });
+  $('#driveClear').addEventListener('click', () => { state.session.driveAt = null; save(); renderPlanner(); });
+
   // Render loop
-  function renderLive() { lastSim = simulate(); renderHero(lastSim); renderChart(lastSim); }
-  function renderAll() { renderTimes(); renderTab(); renderBody(); renderHistory(); renderLive(); }
+  function renderLive() {
+    lastSim = simulate();
+    renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner();
+  }
+  function renderAll() { renderTimes(); renderTab(); renderBody(); renderHistory(); buildScale(); renderLive(); }
   buildList();
   renderAll();
   let ticks = 0;
   setInterval(() => {
     ticks++;
-    if (state.session.still) { renderLive(); if (ticks % 30 === 0) renderTimes(); }
-    else { renderHero(lastSim); if (ticks % 30 === 0) renderChart(lastSim); }
+    if (state.session.still) lastSim = simulate();
+    renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim);
+    if (state.session.still || ticks % 30 === 0) renderChart(lastSim);
+    if (state.session.still && ticks % 30 === 0) renderTimes();
+    if (ticks % 15 === 0) renderPlanner();
   }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
 
