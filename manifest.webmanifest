@@ -1,15 +1,31 @@
 {
+  "id": "./",
   "name": "Dry Season",
   "short_name": "Dry Season",
-  "description": "Log tonight's drinks and see when your body should be clear of alcohol.",
+  "description": "Log tonight's drinks and see when your body should be clear of alcohol. Works offline.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#17212F",
   "theme_color": "#17212F",
+  "categories": ["health", "lifestyle", "utilities"],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add a drink",
+      "short_name": "Add a drink",
+      "description": "Open the drink picker straight away",
+      "url": "./?action=add",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    { "src": "screenshots/night.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Countdown to clear, with your driving status" },
+    { "src": "screenshots/risk.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Blackout risk scale and pacing nudge" },
+    { "src": "screenshots/picker.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Pick a drink, with your favourites up top" }
   ]
 }

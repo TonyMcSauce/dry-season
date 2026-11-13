@@ -2,6 +2,17 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in V3
+
+* **Properly offline.** Every file the app needs, fonts included, is saved on your phone the first time you open it. No signal at the braai? It opens and works exactly the same.
+* **Checks for updates first, never hangs.** Each time you open the app it asks GitHub whether there's a newer version, giving up after a few seconds on a weak signal.
+* **Updates wait for you.** A new version downloads quietly, then a "Fresh batch ready" coaster slides up. Tap **Update now** for a quick foam-pour reload into the new version, or **Later** to keep going. Your tab, settings and saved nights are kept either way.
+* **What's new.** After an update, a short sheet lists what changed.
+* **Connection status.** An *Offline* badge appears next to the name when you have no signal. Under **Your body** you'll find the version, when it last checked, and a **Check for updates** button.
+* **Heineken Silver (4%, 440 ml can) and Corona Extra (4.5%, 355 ml bottle)**, plus a 355 ml size chip.
+* **Favourites.** Star any drink to pin it to the top of the picker. Heineken Silver and Corona start starred.
+* **Home screen shortcut.** On Android, long-press the icon for *Add a drink*. The install sheet also shows screenshots.
+
 ## New in V2
 
 * **Driving status.** A pill in the hero shows *Over the legal limit*, *Under the limit, still impaired* or *Clear, by this estimate*, with the time you should drop under the limit. The app never says you're safe to drive.
@@ -20,10 +31,15 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 | File | What it does |
 | --- | --- |
 | `index.html` | Layout, styles and interface logic |
+| `version.js` | The app version and the What's new list. Bump it to publish an update |
 | `model.js` | The blood alcohol and risk maths, shared by the app and the tests |
-| `tests/model.test.js` | Tests for the maths. Run with `node --test tests/*.test.js` |
+| `drinks.js` | The built-in drinks, sizes and default favourites |
+| `fonts/` | Alfa Slab One and Schibsted Grotesk (SIL Open Font License), so the app needs no outside servers |
+| `screenshots/` | Images shown on the install sheet |
+| `tests/*.test.js` | Tests for the maths and drinks. Run with `node --test tests/*.test.js` |
+| `tests/offline_check.py` | End-to-end check of offline use and the update flow. Run with `python3 tests/offline_check.py` |
 | `manifest.webmanifest` | Lets iPhone and Android install it like an app |
-| `sw.js` | Makes it work offline after the first visit |
+| `sw.js` | The service worker: saves the app for offline use and handles updates |
 | `icons/` | Home screen icons |
 
 ## Put it on GitHub Pages
@@ -78,6 +94,8 @@ pages:
 | Windhoek Lager | 4.0% | 340 ml |
 | Windhoek Draught | 4.0% | 440 ml |
 | Hansa Pilsener | 4.2% | 340 ml |
+| Heineken Silver | 4.0% | 440 ml can (also 330 ml and 500 ml) |
+| Corona Extra | 4.5% | 355 ml bottle |
 | Heineken | 5.0% | 330 ml |
 | Savanna Dry | 6.0% | 330 ml |
 | Brutal Fruit | 4.5% (varies by flavour) | 275 ml |
@@ -96,6 +114,14 @@ Strengths change from time to time, so every drink lets you edit the ABV before 
 
 Blackout risk is raised by a rise faster than 0.05% per hour, more than 3 standard drinks in the last hour, and an empty stomach. More than 5 standard drinks in an hour, or a level of 0.30%, shows the alcohol poisoning card.
 
+## How offline and updates work
+
+1. The first time you open the site, the service worker (`sw.js`) saves every file in `SHELL` into a cache named after the version, for example `dry-season-3.0.0`.
+2. From then on the app always opens from that saved copy, so it starts instantly and works with no signal.
+3. Each time the app opens, comes back to the foreground, or reconnects, it checks `sw.js` and `version.js` on GitHub for changes. On a weak signal it gives up after 3 seconds and carries on.
+4. If `version.js` has changed, the new version downloads in the background into a fresh cache, then waits. The coaster asks before switching, so nothing changes in the middle of your night.
+5. Tapping **Update now** activates the new version, removes the old cache and reloads.
+
 ## Important
 
 This is an estimate for fun and awareness, not a breathalyser. Food, health, medication and individual metabolism all change the real result. Never use it to decide whether you can drive.
@@ -103,4 +129,5 @@ This is an estimate for fun and awareness, not a breathalyser. Food, health, med
 ## Make it yours
 
 * Change the footer line in `index.html` to whatever you like.
-* After changing files, bump `CACHE = 'dry-season-v2'` in `sw.js` to `v3` so installed copies pick up the update.
+* **Publishing an update:** change the files, then bump `DRY_VERSION` in `version.js` (for example `3.0.0` to `3.0.1`) and add a line to `DRY_CHANGES`. Installed copies only offer an update when that version changes.
+* If you add a new file the app needs, add it to `SHELL` in `sw.js` too. The tests will flag it if you forget.

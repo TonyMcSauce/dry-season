@@ -13,10 +13,15 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/schibsted-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/schibsted-grotesk-700.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face{font-family:'Alfa Slab One';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/alfa-slab-one-400.woff2) format('woff2')}
+@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/schibsted-grotesk-400.woff2) format('woff2')}
+@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/schibsted-grotesk-500.woff2) format('woff2')}
+@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/schibsted-grotesk-600.woff2) format('woff2')}
+@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/schibsted-grotesk-700.woff2) format('woff2')}
 :root{
   --sky-top:#17212F; --sky-mid:#2D2926; --sky-low:#7A3F1F; --horizon:#C8742E;
   --ground:#16120E; --sheet:#211B16;
@@ -205,7 +210,8 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;display:grid;place-items:center;font-size:1.2rem}
 .pick-group{padding:14px var(--gutter) 4px}
 .pick-group h4{margin:0 0 6px;font-size:.88rem;color:var(--muted);font-weight:600}
-.pick{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 2px;min-height:56px}
+.pick-row{display:grid;grid-template-columns:1fr auto;align-items:center;border-bottom:1px solid var(--line)}
+.pick{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:14px 2px;min-height:56px}
 .pick-name{font-weight:600}
 .pick-meta{color:var(--muted);font-size:.86rem}
 .abv-pill{font-weight:700;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.9rem}
@@ -304,17 +310,91 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:12px 0 0;font-size:.9rem}
 .chart .zone-label{font-size:10px;fill:var(--muted);font-weight:600;paint-order:stroke;stroke:var(--ground);stroke-width:3px;stroke-linejoin:round}
 
+
+/* ---------- V3: offline, updates, favourites ---------- */
+.brand-wrap{display:flex;align-items:center;gap:10px;min-width:0}
+.net{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;animation:netIn .4s ease-out}
+.net i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor}
+@keyframes netIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+.star{width:48px;height:48px;border:0;background:transparent;display:grid;place-items:center;color:var(--muted);border-radius:50%}
+.star svg{width:22px;height:22px;transition:transform .2s}
+.star path{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;transition:fill .2s}
+.star[aria-pressed="true"]{color:var(--amber)}
+.star[aria-pressed="true"] path{fill:currentColor}
+.star.pop svg{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(.6) rotate(-20deg)}60%{transform:scale(1.3) rotate(8deg)}100%{transform:none}}
+.pick-group.favs h4{color:var(--amber)}
+.chip[data-fits="1"]:not([aria-pressed="true"]){border-color:rgba(242,169,59,.65)}
+
+.appinfo{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:14px}
+.appinfo-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.appinfo-ver{margin:0;font-weight:700}
+.upd-state{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;font-weight:600;white-space:nowrap;padding-top:2px;color:var(--muted)}
+.upd-state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.upd-state[data-state="current"]{color:var(--ok)}
+.upd-state[data-state="found"]{color:var(--amber)}
+.upd-state[data-state="error"]{color:var(--over)}
+.upd-state[data-state="checking"]::before{animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+
+.coaster{
+  position:fixed;left:var(--gutter);right:var(--gutter);bottom:calc(16px + env(safe-area-inset-bottom));z-index:70;
+  max-width:528px;margin:0 auto;padding:20px 18px 18px;border-radius:30px;
+  background:
+    radial-gradient(circle at 18% 22%,rgba(42,26,15,.05) 0 1px,transparent 1.5px) 0 0/9px 9px,
+    radial-gradient(circle at 70% 60%,rgba(42,26,15,.04) 0 1px,transparent 1.5px) 0 0/13px 13px,
+    #F6EDDA;
+  color:var(--ink);
+  box-shadow:0 26px 50px -18px rgba(0,0,0,.65),inset 0 0 0 7px #F6EDDA,inset 0 0 0 8.5px rgba(184,101,26,.55);
+  display:grid;grid-template-columns:1fr auto;gap:4px 14px;
+  transform:translateY(140%) rotate(-7deg);transition:transform .7s cubic-bezier(.2,1.25,.4,1);
+}
+.coaster.show{transform:translateY(0) rotate(-1.4deg)}
+.coaster h3{margin:4px 0 4px;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1}
+.coaster p{margin:0;font-size:.95rem;color:rgba(42,26,15,.75)}
+.stamp{width:74px;height:74px;border-radius:50%;background:var(--amber);color:var(--ink);display:grid;place-items:center;align-self:start;
+  font-family:var(--display);font-size:1.25rem;transform:rotate(9deg);box-shadow:inset 0 0 0 4px var(--amber),inset 0 0 0 5.5px rgba(42,26,15,.45)}
+.stamp.long{font-size:1rem}
+.coaster-actions{grid-column:1/-1;display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:14px}
+.coaster .btn{min-height:48px;padding:12px}
+.coaster .btn.quiet{background:transparent;color:var(--ink);border:1.5px solid rgba(42,26,15,.25)}
+
+.pour{position:fixed;inset:0;z-index:100;pointer-events:none;transform:translateY(110%);
+  background:
+    radial-gradient(circle,rgba(255,236,190,.7) 0 2px,transparent 3px) 12% 70%/90px 140px,
+    radial-gradient(circle,rgba(255,236,190,.55) 0 1.5px,transparent 2.5px) 60% 40%/70px 110px,
+    linear-gradient(180deg,#F7B94A 0%,#E8962C 55%,#B8651A 100%)}
+.pour::before{content:"";position:absolute;left:0;right:0;top:-30px;height:46px;
+  background:radial-gradient(circle at 24px 30px,#F6EDDA 23px,transparent 24px) 0 0/48px 46px repeat-x,
+             linear-gradient(#F6EDDA,#F6EDDA) 0 28px/100% 18px no-repeat}
+.pour.full{transform:translateY(0)}
+.pour.fill{transform:translateY(0);transition:transform .8s cubic-bezier(.55,0,.3,1)}
+.pour.drain{transform:translateY(110%);transition:transform .9s cubic-bezier(.6,0,.35,1) .1s}
+
+.news .news-head:focus{outline:none}
+.news .news-head{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:18px var(--gutter) 8px}
+.news-ver{font-family:var(--display);font-size:3.4rem;line-height:.9;color:var(--amber)}
+.news h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.5rem;line-height:1.1}
+.news-head p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.news-list{list-style:none;margin:0;padding:8px var(--gutter) 4px;display:grid;gap:14px}
+.news-list li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;line-height:1.45}
+.news-list li::before{content:"";width:14px;height:14px;margin-top:4px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px rgba(242,169,59,.22)}
+.news-foot{padding:18px var(--gutter) 22px}
+
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 </style>
 </head>
 <body>
+<div class="pour" id="pour" aria-hidden="true"></div>
+<script>try{if(sessionStorage.getItem('dry-poured'))document.getElementById('pour').classList.add('full')}catch(e){}</script>
 
 <header class="hero" id="hero" data-state="none">
   <div class="stars" aria-hidden="true"></div>
   <div class="hero-top">
-    <span class="brand">Dry Season</span>
+    <div class="brand-wrap"><span class="brand">Dry Season</span><span class="net" id="net" hidden title="No connection. Everything still works."><i aria-hidden="true"></i>Offline</span></div>
     <button class="ghost" id="shareBtn" type="button">Share</button>
   </div>
 
@@ -497,6 +577,13 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
         <div class="chips" id="limitChips" style="margin-top:10px"></div>
         <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
       </div>
+      <div class="appinfo">
+        <div class="appinfo-row">
+          <div><p class="appinfo-ver" id="appVersion">Version</p><p class="hint" id="lastChecked" style="margin:2px 0 0"></p></div>
+          <span class="upd-state" id="updState" data-state="current" aria-live="polite"></span>
+        </div>
+        <button class="btn quiet" id="checkNow" type="button">Check for updates</button>
+      </div>
     </div>
   </details>
 
@@ -562,40 +649,47 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 
 <div class="toast" id="toast" role="status"></div>
 
+<aside class="coaster" id="coaster" hidden aria-labelledby="coasterH">
+  <div>
+    <h3 id="coasterH">Fresh batch ready</h3>
+    <p>A new version of Dry Season is ready. Your tab, settings and saved nights stay exactly as they are.</p>
+  </div>
+  <span class="stamp" id="stamp" aria-hidden="true">New</span>
+  <div class="coaster-actions">
+    <button class="btn" id="updNow" type="button">Update now</button>
+    <button class="btn quiet" id="updLater" type="button">Later</button>
+  </div>
+</aside>
+
+<dialog class="sheet news" id="news" aria-labelledby="newsH">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="news-head" tabindex="-1" autofocus>
+    <span class="news-ver" id="newsVer" aria-hidden="true">3.0</span>
+    <div><h3 id="newsH">What's new</h3><p id="newsSub">Version 3.0.0</p></div>
+  </div>
+  <ul class="news-list" id="newsList"></ul>
+  <div class="news-foot"><button class="btn" id="newsOk" type="button">Back to my night</button></div>
+</dialog>
+
+<script src="version.js"></script>
+<script src="drinks.js"></script>
 <script src="model.js"></script>
 <script>
 (() => {
   'use strict';
   const KEY = 'dryseason.v1';
+  const APP_KEY = 'dryseason.app';
+  const VERSION = self.DRY_VERSION || '0';
+  const hadData = (() => { try { return !!localStorage.getItem(KEY); } catch (e) { return false; } })();
   const M = window.DryModel;
   const { STD_G } = M;
   const MIN = 60000;
   const SCALE_MAX = 0.35;
   const LIMIT_PRESETS = [['Botswana 0.05', 0.05], ['0.08', 0.08], ['0.02', 0.02]];
 
-  const DRINKS = [
-    { group: 'Brewed in Botswana', items: [
-      { id: 'stl',   name: 'St Louis Lager',      abv: 3.5, ml: 340 },
-      { id: 'stlx',  name: 'St Louis Export',     abv: 4.7, ml: 340 },
-      { id: 'bl',    name: 'Carling Black Label', abv: 5.5, ml: 750 },
-      { id: 'cl',    name: 'Castle Lager',        abv: 5.0, ml: 340 },
-      { id: 'clt',   name: 'Castle Lite',         abv: 4.0, ml: 340 },
-      { id: 'lion',  name: 'Lion Lager',          abv: 5.0, ml: 340 },
-      { id: 'chib',  name: 'Chibuku',             abv: 3.5, ml: 1000, note: 'Chibuku keeps fermenting in the carton, so it gets stronger the longer it sits. Adjust the strength if yours is old.' }
-    ]},
-    { group: 'From across the border', items: [
-      { id: 'wl',    name: 'Windhoek Lager',      abv: 4.0, ml: 340 },
-      { id: 'wd',    name: 'Windhoek Draught',    abv: 4.0, ml: 440 },
-      { id: 'hansa', name: 'Hansa Pilsener',      abv: 4.2, ml: 340 },
-      { id: 'hein',  name: 'Heineken',            abv: 5.0, ml: 330 },
-      { id: 'sav',   name: 'Savanna Dry',         abv: 6.0, ml: 330 },
-      { id: 'bf',    name: 'Brutal Fruit',        abv: 4.5, ml: 275, note: 'Strength varies by flavour. Check the label.' }
-    ]},
-    { group: 'Anything else', items: [
-      { id: 'custom', name: 'Something else', abv: 5.0, ml: 330, custom: true }
-    ]}
-  ];
-  const SIZES = [275, 330, 340, 440, 500, 750, 1000];
+  const D = window.DryDrinks;
+  const DRINKS = D.GROUPS;
+  const SIZES = D.SIZES;
   const SHARES = [[1, 'All mine'], [0.5, 'Half'], [1/3, 'A third'], [0.25, 'A quarter']];
 
   const $ = (s) => document.querySelector(s);
@@ -609,7 +703,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, fed: false, driveAt: null, drinks: [] };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05 }, session: newSession(), history: [] };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05 }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.slice() };
   }
   function load() {
     const d = defaults();
@@ -619,7 +713,8 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
         return {
           profile: Object.assign(d.profile, s.profile),
           session: Object.assign({ fed: false, driveAt: null }, s.session),
-          history: Array.isArray(s.history) ? s.history : []
+          history: Array.isArray(s.history) ? s.history : [],
+          favs: Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS.slice()
         };
       }
     } catch (e) {}
@@ -884,36 +979,68 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     else if (sim.G) text = 'Officially clear. Tracked with Dry Season.';
     try {
       if (navigator.share) { await navigator.share({ title: 'Dry Season', text, url: location.href }); return; }
-      await navigator.clipboard.writeText(text + ' ' + location.href); toast('Copied to clipboard');
-    } catch (e) { /* share dismissed */ }
+      await copyText(text + ' ' + location.href);
+    } catch (e) { if (e && e.name !== 'AbortError') copyText(text + ' ' + location.href); }
   });
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); toast('Copied, ready to paste'); }
+    catch (e) { toast("Couldn't copy. Try the share button again."); }
+  }
 
   // Drink picker
   const sheet = $('#sheet');
   let pick = null;
-  function buildList() {
-    const box = $('#pickList'); box.innerHTML = '';
-    DRINKS.forEach((g) => {
-      const wrap = document.createElement('div'); wrap.className = 'pick-group';
+  const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z"/></svg>';
+  const isFav = (id) => (state.favs || []).includes(id);
+  function buildList(popId, popGroup) {
+    const box = $('#pickList'), y = sheet.scrollTop; box.innerHTML = '';
+    const favItems = (state.favs || []).map(D.byId).filter((it) => it && !it.custom);
+    const groups = (favItems.length ? [{ group: 'Favourites', items: favItems, favs: true }] : []).concat(DRINKS);
+    groups.forEach((g) => {
+      const wrap = document.createElement('div'); wrap.className = 'pick-group' + (g.favs ? ' favs' : '');
       const h = document.createElement('h4'); h.textContent = g.group; wrap.appendChild(h);
       g.items.forEach((it) => {
+        const row = document.createElement('div'); row.className = 'pick-row';
         const b = document.createElement('button'); b.type = 'button'; b.className = 'pick';
         b.innerHTML = '<span><span class="pick-name"></span><br><span class="pick-meta"></span></span><span class="abv-pill"></span>';
         b.querySelector('.pick-name').textContent = it.name;
-        b.querySelector('.pick-meta').textContent = it.custom ? 'Wine, spirits, ciders, anything' : 'Usually ' + it.ml + ' ml';
+        b.querySelector('.pick-meta').textContent = it.custom ? 'Wine, spirits, ciders, anything' : 'Usually ' + it.ml + ' ml' + (it.serve ? ' ' + it.serve : '');
         b.querySelector('.abv-pill').textContent = it.custom ? 'Set it' : it.abv + '%';
         b.addEventListener('click', () => choose(it));
-        wrap.appendChild(b);
+        row.appendChild(b);
+        if (!it.custom) {
+          const st = document.createElement('button'); st.type = 'button'; st.className = 'star';
+          st.innerHTML = STAR;
+          st.dataset.id = it.id; st.dataset.group = g.group;
+          st.setAttribute('aria-pressed', String(isFav(it.id)));
+          st.setAttribute('aria-label', (isFav(it.id) ? 'Remove ' : 'Add ') + it.name + (isFav(it.id) ? ' from favourites' : ' to favourites'));
+          st.addEventListener('click', () => toggleFav(it, g.group));
+          row.appendChild(st);
+        }
+        wrap.appendChild(row);
       });
       box.appendChild(wrap);
     });
+    sheet.scrollTop = y;
+    if (popId) {
+      const el = box.querySelector('.star[data-id="' + popId + '"][data-group="' + popGroup + '"]');
+      if (el) { el.classList.add('pop'); el.focus({ preventScroll: true }); }
+    }
+  }
+  function toggleFav(it, group) {
+    const favs = state.favs || [];
+    const on = !favs.includes(it.id);
+    state.favs = on ? favs.concat([it.id]) : favs.filter((x) => x !== it.id);
+    save();
+    buildList(it.id, group === 'Favourites' && !on ? null : group);
+    toast(on ? it.name + ' pinned to Favourites' : it.name + ' unpinned');
   }
   function showList() {
     $('#pickList').hidden = false; $('#pickCfg').hidden = true; $('#sheetBack').hidden = true;
     $('#sheetTitle').textContent = 'Pick a drink';
   }
   function choose(it) {
-    pick = { name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom };
+    pick = { name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
     $('#pickList').hidden = true; $('#pickCfg').hidden = false; $('#sheetBack').hidden = false;
     $('#sheetTitle').textContent = it.custom ? 'Your own drink' : it.name;
     $('#nameField').hidden = !it.custom;
@@ -928,6 +1055,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     SIZES.forEach((ml) => {
       const c = document.createElement('button'); c.type = 'button'; c.className = 'chip';
       c.textContent = ml === 750 ? '750 quart' : ml === 1000 ? '1 litre' : ml + ' ml';
+      if (pick.sizes && pick.sizes.includes(ml)) c.dataset.fits = '1';
       c.setAttribute('aria-pressed', String(pick.ml === ml));
       c.addEventListener('click', () => { pick.ml = ml; $('#cfgMl').value = ml; renderCfg(); });
       sc.appendChild(c);
@@ -954,7 +1082,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     state.session.drinks.push({ name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share });
     save(); sheet.close(); renderAll(); toast(pick.qty + ' × ' + name + ' added');
   });
-  $('#openPicker').addEventListener('click', () => { showList(); sheet.showModal(); });
+  $('#openPicker').addEventListener('click', () => { buildList(); showList(); sheet.showModal(); });
   $('#sheetClose').addEventListener('click', () => sheet.close());
   $('#sheetBack').addEventListener('click', showList);
   sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
@@ -1138,8 +1266,156 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
   }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
 
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+
+  // ---------- Offline and updates ----------
+  const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function appMeta() { try { return JSON.parse(localStorage.getItem(APP_KEY)) || {}; } catch (e) { return {}; } }
+  function setMeta(p) { try { localStorage.setItem(APP_KEY, JSON.stringify(Object.assign(appMeta(), p))); } catch (e) {} }
+  const raceTimeout = (p, ms) => new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('timeout')), ms); p.then((v) => { clearTimeout(t); res(v); }, (e) => { clearTimeout(t); rej(e); }); });
+
+  let reg = null, checkState = 'idle', pouring = false, waitingVersion = null;
+
+  function renderNet() { $('#net').hidden = navigator.onLine; renderAppInfo(); }
+  window.addEventListener('online', () => { renderNet(); checkForUpdate(false); });
+  window.addEventListener('offline', renderNet);
+
+  function renderAppInfo() {
+    $('#appVersion').textContent = 'Version ' + VERSION;
+    const m = appMeta();
+    $('#lastChecked').textContent = m.checkedAt ? 'Last checked ' + fmtTime(m.checkedAt) + ' ' + dayIn(m.checkedAt) : 'Not checked yet';
+    const waiting = reg && reg.waiting;
+    let st = 'current', txt = 'Up to date';
+    if (checkState === 'checking') { st = 'checking'; txt = 'Checking'; }
+    else if (waiting) { st = 'found'; txt = 'Update ready'; }
+    else if (checkState === 'error') { st = 'error'; txt = "Couldn't reach it"; }
+    else if (!navigator.onLine) { st = 'offline'; txt = 'Offline'; }
+    else if (!reg) { st = 'offline'; txt = 'Saved copy off'; }
+    const el = $('#updState'); el.dataset.state = st; el.textContent = txt;
+    $('#checkNow').textContent = waiting ? 'Update now' : 'Check for updates';
+  }
+
+  async function checkForUpdate(manual) {
+    if (!reg) { if (manual) toast('Updates work once the app is on the web'); return; }
+    if (!navigator.onLine) { if (manual) toast("You're offline. The saved copy works fine."); renderAppInfo(); return; }
+    checkState = 'checking'; renderAppInfo();
+    try {
+      await raceTimeout(reg.update(), manual ? 8000 : 3000);
+      setMeta({ checkedAt: Date.now() });
+      checkState = 'idle';
+      if (reg.waiting) showCoaster();
+      else if (manual && !reg.installing) toast("You're on the latest version");
+      else if (manual) toast('Found an update, getting it ready');
+    } catch (e) {
+      checkState = manual ? 'error' : 'idle';
+      if (manual) toast("Couldn't check. Try again with better signal.");
+    }
+    renderAppInfo();
+  }
+
+  function askVersion(worker) {
+    return new Promise((res) => {
+      try {
+        const ch = new MessageChannel();
+        const t = setTimeout(() => res(null), 1500);
+        ch.port1.onmessage = (e) => { clearTimeout(t); res(e.data && e.data.version); };
+        worker.postMessage({ type: 'GET_VERSION' }, [ch.port2]);
+      } catch (e) { res(null); }
+    });
+  }
+  let coasterDismissed = false;
+  async function showCoaster() {
+    if (!reg || !reg.waiting || coasterDismissed || pouring) return;
+    const c = $('#coaster');
+    waitingVersion = await askVersion(reg.waiting);
+    const v = waitingVersion ? (waitingVersion.endsWith('.0') ? waitingVersion.slice(0, -2) : waitingVersion) : 'New';
+    $('#stamp').textContent = v;
+    $('#stamp').classList.toggle('long', v.length > 3);
+    if (!c.hidden) return;
+    c.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('show')));
+    renderAppInfo();
+  }
+  function hideCoaster() {
+    const c = $('#coaster');
+    c.classList.remove('show');
+    setTimeout(() => { if (!c.classList.contains('show')) c.hidden = true; }, reduceMotion() ? 0 : 450);
+  }
+  function pourIn() {
+    return new Promise((res) => {
+      const p = $('#pour');
+      if (reduceMotion()) { p.classList.add('full'); return res(); }
+      p.classList.add('fill');
+      setTimeout(res, 850);
+    });
+  }
+  async function applyUpdate() {
+    const w = reg && reg.waiting;
+    if (!w) { hideCoaster(); return checkForUpdate(true); }
+    pouring = true;
+    hideCoaster();
+    try { sessionStorage.setItem('dry-poured', '1'); } catch (e) {}
+    await pourIn();
+    w.postMessage({ type: 'SKIP_WAITING' });
+    setTimeout(() => location.reload(), 4000);
+  }
+  $('#updNow').addEventListener('click', applyUpdate);
+  $('#updLater').addEventListener('click', () => { coasterDismissed = true; hideCoaster(); toast("No rush. It'll be waiting in Your body."); });
+  $('#checkNow').addEventListener('click', () => (reg && reg.waiting) ? applyUpdate() : checkForUpdate(true));
+
+  // Drain the pour after an update, then show what's new
+  function drainPour() {
+    const p = $('#pour');
+    let poured = false;
+    try { poured = !!sessionStorage.getItem('dry-poured'); sessionStorage.removeItem('dry-poured'); } catch (e) {}
+    if (!poured && !p.classList.contains('full')) return 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => { p.classList.remove('full', 'fill'); p.classList.add('drain'); }));
+    return reduceMotion() ? 0 : 900;
+  }
+  function showWhatsNew() {
+    const parts = VERSION.split('.');
+    $('#newsVer').textContent = parts.slice(0, 2).join('.');
+    $('#newsSub').textContent = 'Version ' + VERSION;
+    const ul = $('#newsList'); ul.innerHTML = '';
+    (self.DRY_CHANGES || []).forEach((t) => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+    $('#news').showModal();
+  }
+  $('#newsOk').addEventListener('click', () => $('#news').close());
+  $('#news').addEventListener('click', (e) => { if (e.target === $('#news')) $('#news').close(); });
+
+  const wait = drainPour();
+  const seen = appMeta().seenVersion;
+  if (seen !== VERSION) {
+    if (seen || hadData) setTimeout(showWhatsNew, wait + 150);
+    setMeta({ seenVersion: VERSION });
+  }
+
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => {
+      reg = r;
+      r.addEventListener('updatefound', () => {
+        const w = r.installing;
+        if (!w) return;
+        w.addEventListener('statechange', () => {
+          if (w.state === 'installed' && navigator.serviceWorker.controller) { checkState = 'idle'; renderAppInfo(); showCoaster(); }
+        });
+      });
+      if (r.waiting && navigator.serviceWorker.controller) showCoaster();
+      renderAppInfo();
+      checkForUpdate(false);
+    }).catch(() => renderAppInfo());
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (pouring) location.reload(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      const m = appMeta();
+      if (!m.checkedAt || Date.now() - m.checkedAt > 60000) checkForUpdate(false);
+    });
+  }
+  renderNet();
+
+  // Home screen shortcut: Add a drink
+  if (new URLSearchParams(location.search).get('action') === 'add') {
+    history.replaceState(null, '', location.pathname);
+    setTimeout(() => { buildList(); showList(); sheet.showModal(); }, wait);
   }
 })();
 </script>
