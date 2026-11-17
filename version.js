@@ -3,12 +3,10 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '4.2.0';
+self.DRY_VERSION = '4.3.0';
 self.DRY_CHANGES = [
-  'The island mug is now a little 3D mug with a handle that swivels round when you open it.',
-  'Its fill shows the alcohol left to clear, and it drains in real time.',
-  'The beer sloshes when the island moves, and wobbles when you press it.',
-  'Add a drink and watch it pour in, fizz and foam up. When you are over the limit it pours calmly, no celebration.',
-  'Water break: a droplet splashes in, the beer turns to water and ice cubes plop in. Ending it melts the ice.',
-  'Text a friend from the island and the mug raises a cheers.'
+  "Fixed: on recent iPhones the island was hiding blurred behind the real Dynamic Island. iOS frosts the strip under the status bar for home screen apps, so the island now hangs just below it, always sharp.",
+  'A drop falls from your real Dynamic Island and springs into the pill when it appears.',
+  'The middle of the pill now shows your clear time, with the mug on the left and time to go on the right.',
+  'The header makes room for the island so nothing overlaps.'
 ];

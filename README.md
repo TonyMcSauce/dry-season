@@ -2,6 +2,12 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 4.3: always sharp, on every iPhone
+
+* **Fixed:** on iOS 26.1 and later, including iOS 27, the island was drawn inside the frosted status bar strip and came out blurred behind the real Dynamic Island. It now hangs just below the strip, so it's sharp on every iPhone and iOS version.
+* **The drip:** when the island appears, a drop falls from your real Dynamic Island and stretches into the pill.
+* **Compact layout:** mug on the left, *Clear by* time in the middle, time to go on the right.
+
 ## New in 4.2: the mug comes alive
 
 * **A little 3D mug.** Shaded glass with an oval rim, highlights and a handle that swivels round the body when the island opens. Its fill shows the alcohol left to clear (full at 10 hours or more) and drains in real time.
@@ -17,7 +23,7 @@ A small, good looking web app that estimates when your body will be clear of alc
 
 A Live Activity style pill that lives inside Dry Season, built to Apple's Human Interface Guidelines for the Dynamic Island.
 
-* **Fuses with your real island.** On an iPhone with a Dynamic Island, opened from the home screen, it sits flush against the hardware: a pint glass draining on the left of the camera and time to clear on the right, coloured by your driving status. In Safari, on notch iPhones, Android and desktop it floats at the top once the big countdown scrolls away.
+* **Where it lives.** In the installed app it hangs just below the status bar, centred under the real Dynamic Island, and the header makes room for it. iOS frosts the status bar strip for home screen web apps ([WebKit bug 301994](https://bugs.webkit.org/show_bug.cgi?id=301994)), so nothing is drawn inside it. On iPhones with a Dynamic Island a small drop falls from the real island and springs into the pill. In a browser tab it floats at the top once the big countdown scrolls away.
 * **Apple's sizes.** Compact: 52.33 pt either side of the camera (62.33 pt on 430 pt wide phones) and 36.67 pt tall, content snug against the camera. Expanded: the screen width minus 22 pt (371 or 408 pt), 84 to 160 pt tall and only as tall as its content. Black and opaque, with a thin outline tinted to the content in dark mode.
 * **Expands predictably.** Tap or touch and hold. The glass and the time to go glide to their places in the expanded view, which shows your *Clear by* time, current level and how long you're over the limit.
 * **One main action that fits the moment:** **+1** your last drink, **Water break** when your blackout risk is raised, or **End break** while one runs. **More** (three dots) opens Quick actions: favourites, water break, text a friend and all drinks.

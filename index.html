@@ -68,7 +68,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 
 /* Hero */
 .hero{
-  position:relative; overflow:hidden;
+  position:relative; overflow:hidden; transition:padding-top .5s cubic-bezier(.22,1,.36,1);
   background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 42%,var(--sky-low) 80%,var(--horizon) 100%);
   padding:calc(env(safe-area-inset-top) + 14px) var(--gutter) 0;
 }
@@ -381,6 +381,9 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .news-list li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;line-height:1.45}
 .news-list li::before{content:"";width:14px;height:14px;margin-top:4px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px rgba(242,169,59,.22)}
 .news-foot{padding:18px var(--gutter) 22px}
+
+/* Room for the Live Island hanging below the status bar */
+html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}

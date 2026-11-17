@@ -25,7 +25,7 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch()
             for vw, vh, ear, exp_w in ((393, 852, 52.33, 371), (430, 932, 62.33, 408)):
-                for mode in ('fused:59', ''):
+                for mode in ('hang:59', ''):
                     ctx = b.new_context(viewport={'width': vw, 'height': vh}, service_workers='block')
                     pg = ctx.new_page(); pg.on('pageerror', lambda e: errors.append(str(e)))
                     url = f'http://localhost:{port}/' + ('?island=' + mode if mode else '')
@@ -42,6 +42,8 @@ def main():
                     want = round(126 + 2 * ear, 1)
                     assert set(widths) == {want}, f'{vw} {mode or "floating"}: compact width drifted {widths}, want {want}'
                     assert abs(box()['height'] - 36.67) < 0.5
+                    if mode:
+                        assert box()['y'] >= 59 + 4, f'island top {box()["y"]} sits inside the status bar'
                     for view in ('expanded', 'quick'):
                         pg.evaluate(f"DryIsland.current.expand('{view}')"); pg.wait_for_timeout(1300)
                         bb = box()

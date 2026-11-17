@@ -25,11 +25,17 @@ test('compact width never depends on content, so it cannot creep wider', () => {
   assert.equal(widths.size, 1);
 });
 
-test('fuses with the hardware island only on island iPhones opened from the home screen', () => {
-  assert.equal(I.geometry({ sat: 59, vw: 393, standalone: true }).mode, 'fused');
-  assert.equal(I.geometry({ sat: 59, vw: 393, standalone: true }).top, 11);
-  assert.equal(I.geometry({ sat: 62, vw: 402, standalone: true }).top, 14);
-  assert.equal(I.geometry({ sat: 47, vw: 390, standalone: true }).mode, 'floating');
+test('installed app: hangs just below the status bar, never inside the frosted strip', () => {
+  const g = I.geometry({ sat: 59, vw: 430, standalone: true });  // iPhone 14 Pro Max
+  assert.equal(g.mode, 'hang');
+  assert.ok(g.top >= 59 + 4, `top ${g.top} is inside the status bar`);
+  assert.equal(g.drip, true, 'island iPhones get the drop from the real island');
+  assert.equal(I.geometry({ sat: 47, vw: 390, standalone: true }).drip, false, 'notch iPhones hang without the drip');
+  assert.ok(I.geometry({ sat: 47, vw: 390, standalone: true }).top >= 51);
+  assert.equal(I.geometry({ sat: 0, vw: 412, standalone: true }).top, 8, 'Android or iOS reporting no safe area');
+});
+
+test('in a browser tab it floats at the top once the countdown scrolls away', () => {
   assert.equal(I.geometry({ sat: 59, vw: 393, standalone: false }).mode, 'floating');
   assert.equal(I.geometry({ sat: 0, vw: 1280 }).top, 11);
 });

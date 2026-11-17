@@ -31,10 +31,13 @@
     const vw = +o.vw || 390;
     const ear = vw >= 420 ? 62.33 : 52.33;
     const expW = Math.min(vw - 22, 408);
-    if (o.standalone && sat >= 54 && vw >= 360) {
-      return { mode: 'fused', top: Math.max(9, Math.round(sat - 48)), camW: CAM_W, camH: CAM_H, ear, expW, vw };
+    // Installed app: hang just below the status bar. iOS frosts that strip in home screen
+    // web apps (WebKit bug 301994), so nothing is drawn inside it. On island iPhones the
+    // pill drips down from the real island when it first appears.
+    if (o.standalone) {
+      return { mode: 'hang', top: Math.round(sat) + (sat >= 20 ? 6 : 8), drip: sat >= 54 && vw >= 360, camW: CAM_W, camH: CAM_H, ear, expW, vw, sat };
     }
-    return { mode: 'floating', top: Math.round(sat) + 11, camW: CAM_W, camH: CAM_H, ear, expW, vw };
+    return { mode: 'floating', top: Math.round(sat) + 11, drip: false, camW: CAM_W, camH: CAM_H, ear, expW, vw, sat };
   }
   const compactWidth = (g) => g.camW + g.ear * 2;
 
@@ -212,7 +215,8 @@
     island.appendChild(trail);
 
     // ---- Compact: only a hit target, the shared elements carry the content
-    const vC = el('div', 'iv iv-compact', '<button class="ic-hit" type="button" aria-label="Open live status" aria-expanded="false"></button>');
+    const vC = el('div', 'iv iv-compact', '<span class="ic-mid" aria-hidden="true"></span><button class="ic-hit" type="button" aria-label="Open live status" aria-expanded="false"></button>');
+    const midEl = vC.querySelector('.ic-mid');
     island.appendChild(vC);
 
     // ---- Expanded
@@ -286,7 +290,7 @@
       probe.remove();
       const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
       const force = new URLSearchParams(location.search).get('island');
-      if (force) { const [m, s] = force.split(':'); return geometry({ sat: s != null ? +s : sat, vw: innerWidth, standalone: m === 'fused' }); }
+      if (force) { const [m, s] = force.split(':'); return geometry({ sat: s != null ? +s : sat, vw: innerWidth, standalone: m === 'hang' || m === 'fused' }); }
       return geometry({ sat, vw: innerWidth, standalone });
     }
     function layoutGeo() {
@@ -313,14 +317,14 @@
       const h = Math.ceil(vEl.scrollHeight);
       return Math.max(84, Math.min(160, h));
     }
-    function target(v, instant) {
+    function target(v, instant, force) {
+      // While the drop is falling, nothing else may grow the pill early.
+      if (v !== 'gone' && !force && performance.now() < dripUntil) return;
       const o = instant ? { instant: true } : null;
       const cw = compactWidth(geo);
-      const fused = geo.mode === 'fused';
-      const tw = trail.offsetWidth || 40, th = trail.offsetHeight || 29;
+      const th = trail.offsetHeight || 29;
       if (v === 'gone') {
-        if (fused) { anim.set('w', geo.camW, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o); anim.set('s', 1, M, o); }
-        else { anim.set('w', geo.camH, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o); anim.set('s', 0.6, M, o); }
+        anim.set('w', geo.camH, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o); anim.set('s', 0.6, M, o);
         anim.set('y', 0, M, o); anim.set('o', 0, C, Object.assign({ eps: 0.005 }, o));
         anim.set('go', 0, C, Object.assign({ eps: 0.005 }, o)); anim.set('to', 0, C, Object.assign({ eps: 0.005 }, o));
         return;
@@ -329,7 +333,7 @@
       anim.set('y', 0, M, o); anim.set('s', 1, M, o);
       if (v === 'compact') {
         anim.set('w', cw, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o);
-        // Snug against the camera: leading content ends 6 px before it, trailing starts 6 px after.
+        // Apple's compact proportions: the mug in the leading region, time to go in the trailing one.
         anim.set('gx', geo.ear - 3 - MW * GS_COMPACT, M, o);
         anim.set('gy', (geo.camH - 48 * GS_COMPACT) / 2 + 0.5, M, o);
         anim.set('gs', GS_COMPACT, M, o); anim.set('go', 1, C, Object.assign({ eps: 0.005 }, o));
@@ -362,10 +366,20 @@
       if (v !== 'gone') rootEl.hidden = false;
       if (snap) { renderShared(); if (v === 'expanded') renderExpanded(); }
       if (mug && v === 'expanded' && (from === 'compact' || from === 'alert' || from === 'gone')) mug.swivel();
+      document.documentElement.classList.toggle('island-hang', geo.mode === 'hang' && v !== 'gone');
       if (from === 'gone' && v !== 'gone') {
-        // Grow out of the camera (or a small circle when floating), never from a thin line.
+        // Grow out of a small circle, never from a thin line. On island iPhones a drop
+        // falls from the real island first and becomes the pill.
         target('gone', true);
-        anim.set('o', 1, C, { from: geo.mode === 'fused' ? 1 : 0, eps: 0.005 });
+        if (geo.drip && !reduce()) {
+          playDrip();
+          anim.set('o', 0, C, { instant: true });
+          clearTimeout(dripTimer);
+          dripUntil = performance.now() + 340;
+          dripTimer = setTimeout(() => { dripUntil = 0; if (view !== 'gone') { island.classList.add('arriving'); setTimeout(() => island.classList.remove('arriving'), 200); anim.set('o', 1, C, { from: 0.9, eps: 0.005 }); target(view, false, true); } }, 330);
+          return;
+        }
+        anim.set('o', 1, C, { from: 0, eps: 0.005 });
       }
       target(v);
       if (v === 'gone') hideTimer = setTimeout(() => { if (view === 'gone' && anim.settled()) rootEl.hidden = true; else if (view === 'gone') hideTimer = setTimeout(() => { if (view === 'gone') rootEl.hidden = true; }, 600); }, reduce() ? 0 : 650);
@@ -374,6 +388,23 @@
       } else if (v === 'compact' && hadFocus) {
         vC.querySelector('.ic-hit').focus({ preventScroll: true });
       }
+    }
+
+    let dripTimer = null, dripUntil = 0;
+    const dripEl = el('span', 'idrip');
+    dripEl.setAttribute('aria-hidden', 'true');
+    rootEl.insertBefore(dripEl, island);   // the pill covers the drop as it lands
+    function playDrip() {
+      // From the bottom edge of the hardware island down to the top of our pill.
+      const from = (geo.sat - 11.3) - geo.top;
+      if (!dripEl.animate) return;
+      dripEl.animate([
+        { transform: 'translate(-50%,' + (from - 2) + 'px) scale(.9,.25)', opacity: 1, offset: 0 },
+        { transform: 'translate(-50%,' + (from + 1) + 'px) scale(.75,1.35)', opacity: 1, offset: 0.38 },
+        { transform: 'translate(-50%,' + (from * 0.35) + 'px) scale(.8,1.25)', opacity: 1, offset: 0.7 },
+        { transform: 'translate(-50%,2px) scale(1.15,.8)', opacity: 1, offset: 0.92 },
+        { transform: 'translate(-50%,4px) scale(1.4,.7)', opacity: 0, offset: 1 }
+      ], { duration: 380, easing: 'cubic-bezier(.5,0,.75,.4)' });
     }
 
     function restingView() {
@@ -399,7 +430,8 @@
         mug.setWater(!!water);
         mug.setLevel(root.DryMug.mugLevel(snap, now));
       }
-      const txt = water ? splitLeft(snap.water.until - now, true) : (snap.status === 'clear' ? 'Clear' : splitLeft(snap.clearAt - now));
+      const txt = water ? splitLeft(snap.water.until - now, true) : (snap.status === 'clear' ? '0:00' : splitLeft(snap.clearAt - now));
+      midEl.textContent = water ? 'Water break' : snap.status === 'clear' ? 'All clear' : 'Clear by ' + snap.fmt.clear;
       const rebuilt = rollTrail.set(txt, reduce());
       vE.style.setProperty('--tw', (trail.offsetWidth || 40) + 'px');
       if (rebuilt && (view === 'compact' || view === 'expanded')) target(view);
@@ -662,6 +694,7 @@
       },
       setEnabled(v) {
         enabled = v;
+        if (!v) document.documentElement.classList.remove('island-hang');
         if (!v) { clearTimeout(alertTimer); alertQ = []; show('gone'); } else if (snap) show(restingView());
       },
       get view() { return view; },

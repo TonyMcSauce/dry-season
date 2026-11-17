@@ -78,14 +78,21 @@
   transition:opacity .26s .08s ease-out,filter .3s .06s var(--glide),transform .42s .03s var(--glide)}
 
 .iv-compact{height:var(--camh)}
+/* Middle of the compact pill: there's no camera to work around, so it carries the clear time */
+.ic-mid{position:absolute;top:0;left:var(--ear);width:var(--camw);height:var(--camh);display:flex;align-items:center;justify-content:center;
+  font-size:13.5px;font-weight:600;color:var(--ink-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Content waits until the landed drop has stretched into a pill */
+.island.arriving .iv,.island.arriving .ish{opacity:0!important}
+
+/* The drop that falls from the real island when the pill first appears */
+.idrip{position:absolute;top:0;left:50%;width:14px;height:14px;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;background:#000;
+  opacity:0;pointer-events:none;transform:translate(-50%,0);z-index:0}
 .ic-hit{position:absolute;inset:0;z-index:4;background:transparent;border:0;border-radius:999px;cursor:pointer}
 .ic-hit:focus-visible{outline:2px solid var(--tone);outline-offset:-3px}
 
 /* ---------- Expanded: 84 to 160 pt, concentric margins ---------- */
 .iv-expanded{padding:14px 18px 14px}
-.island-root[data-mode="fused"] .iv-expanded,
-.island-root[data-mode="fused"] .iv-quick,
-.island-root[data-mode="fused"] .iv-alert{padding-top:calc(var(--camh) + 2px)}
 .ix-row1{display:grid;grid-template-columns:45px 1fr auto;gap:12px;align-items:center}
 .ix-slot-glass{display:block;width:45px;height:54px}
 .ix-k{margin:0;font-size:13px;font-weight:600;color:var(--ink-lo);line-height:1.25}
