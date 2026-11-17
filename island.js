@@ -97,6 +97,7 @@
     more: '<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>',
     list: '<svg viewBox="0 0 24 24"><path d="M8 7h11M8 12h11M8 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01"/></svg>'
   };
+  const TONE_HEX = { over: '#FF6B53', impaired: '#F7B24A', clear: '#BACB8D', water: '#8ED0E6', danger: '#FF5A47' };
   const TONE = { over: 'over', under: 'impaired', clear: 'clear', risk: 'over', danger: 'danger', 'water-done': 'water' };
 
   // Numeric content transition: changed digits roll, nothing else moves.
@@ -201,13 +202,10 @@
     // Shared elements travel between compact and expanded instead of fading.
     const glass = el('div', 'ish ish-glass');
     glass.setAttribute('aria-hidden', 'true');
-    glass.innerHTML =
-      '<svg class="sg" viewBox="0 0 30 42"><defs><clipPath id="sgc"><path d="M3 3h24l-2.6 34.4a2.4 2.4 0 0 1-2.4 2.2H8a2.4 2.4 0 0 1-2.4-2.2z"/></clipPath>' +
-      '<linearGradient id="sgl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7B94A"/><stop offset=".6" stop-color="#E8962C"/><stop offset="1" stop-color="#B8651A"/></linearGradient></defs>' +
-      '<g clip-path="url(#sgc)"><g class="sg-level"><rect x="0" y="4" width="30" height="40" fill="url(#sgl)"/>' +
-      '<path class="sg-foam" d="M0 4.6q2.5-2.6 5 0t5 0 5 0 5 0 5 0 5 0V8H0z"/></g></g>' +
-      '<path class="sg-outline" d="M3 3h24l-2.6 34.4a2.4 2.4 0 0 1-2.4 2.2H8a2.4 2.4 0 0 1-2.4-2.2z"/></svg>' +
-      '<span class="sg-drop">' + ICON.water + '</span>';
+    const mugCanvas = document.createElement('canvas');
+    glass.appendChild(mugCanvas);
+    const mug = root.DryMug ? root.DryMug.Mug(mugCanvas) : null;
+    const MW = root.DryMug ? root.DryMug.W : 40, MHEAD = root.DryMug ? root.DryMug.HEAD : 12;
     const trail = el('div', 'ish ish-trail');
     trail.innerHTML = '<span class="roll"></span>';
     island.appendChild(glass);
@@ -264,13 +262,20 @@
       island.style.borderRadius = Math.max(0, Math.min(v.r ? v.r.x : 0, h / 2, w / 2)).toFixed(2) + 'px';
       island.style.transform = 'translate3d(0,' + (v.y ? v.y.x : 0).toFixed(2) + 'px,0) scale(' + (v.s ? v.s.x : 1).toFixed(4) + ')';
       island.style.opacity = Math.max(0, Math.min(1, v.o ? v.o.x : 1)).toFixed(3);
-      glass.style.transform = 'translate3d(' + (v.gx ? v.gx.x : 0).toFixed(2) + 'px,' + (v.gy ? v.gy.x : 0).toFixed(2) + 'px,0) scale(' + (v.gs ? v.gs.x : 1).toFixed(4) + ')';
+      const gs = v.gs ? v.gs.x : 1, gx = v.gx ? v.gx.x : 0, gy = v.gy ? v.gy.x : 0;
+      glass.style.transform = 'translate3d(' + gx.toFixed(2) + 'px,' + (gy - MHEAD * gs).toFixed(2) + 'px,0)';
+      if (mug) {
+        mug.setScale(gs);
+        // The liquid feels the island move: its on-screen position drives the slosh.
+        const sc = v.s ? v.s.x : 1;
+        mug.feed((gx - w / 2) * sc, gy * sc + (v.y ? v.y.x : 0), performance.now());
+      }
       glass.style.opacity = Math.max(0, Math.min(1, v.go ? v.go.x : 0)).toFixed(3);
       trail.style.transform = 'translate3d(' + (v.tx ? v.tx.x : 0).toFixed(2) + 'px,' + (v.ty ? v.ty.x : 0).toFixed(2) + 'px,0) scale(' + (v.ts ? v.ts.x : 1).toFixed(4) + ')';
       trail.style.opacity = Math.max(0, Math.min(1, v.to ? v.to.x : 0)).toFixed(3);
     });
     const M = SPRING.morph, C = SPRING.content;
-    const syncReduce = () => anim.setInstant(reduce());
+    const syncReduce = () => { anim.setInstant(reduce()); if (mug) mug.setReduce(reduce()); };
     syncReduce();
     if (mqReduce.addEventListener) mqReduce.addEventListener('change', syncReduce);
 
@@ -300,7 +305,8 @@
     }
 
     // Target sizes and shared element positions for each view.
-    const GS_COMPACT = 0.43;     // shared glass: 30x42 drawn, 13x18 in compact
+    const GS_COMPACT = 0.58;     // shared mug: 40x48 body drawn, 23x28 in compact
+    const GS_EXPANDED = 1.12;    // and 45x54 in expanded
     const TS_COMPACT = 0.62;     // shared time: 24 px type, 15 px in compact
     function contentHeight(v) {
       const vEl = views[v];
@@ -324,8 +330,8 @@
       if (v === 'compact') {
         anim.set('w', cw, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o);
         // Snug against the camera: leading content ends 6 px before it, trailing starts 6 px after.
-        anim.set('gx', geo.ear - 7 - 30 * GS_COMPACT, M, o);
-        anim.set('gy', (geo.camH - 42 * GS_COMPACT) / 2, M, o);
+        anim.set('gx', geo.ear - 3 - MW * GS_COMPACT, M, o);
+        anim.set('gy', (geo.camH - 48 * GS_COMPACT) / 2 + 0.5, M, o);
         anim.set('gs', GS_COMPACT, M, o); anim.set('go', 1, C, Object.assign({ eps: 0.005 }, o));
         anim.set('tx', geo.ear + geo.camW + 7, M, o);
         anim.set('ty', (geo.camH - th * TS_COMPACT) / 2, M, o);
@@ -336,7 +342,7 @@
       anim.set('w', geo.expW, M, o); anim.set('h', h, M, o); anim.set('r', 44, M, o);
       if (v === 'expanded') {
         const sg = vE.querySelector('.ix-slot-glass'), st = vE.querySelector('.ix-slot-trail');
-        anim.set('gx', sg.offsetLeft, M, o); anim.set('gy', sg.offsetTop, M, o); anim.set('gs', 1, M, o); anim.set('go', 1, C, Object.assign({ eps: 0.005 }, o));
+        anim.set('gx', sg.offsetLeft, M, o); anim.set('gy', sg.offsetTop, M, o); anim.set('gs', GS_EXPANDED, M, o); anim.set('go', 1, C, Object.assign({ eps: 0.005 }, o));
         anim.set('tx', st.offsetLeft, M, o); anim.set('ty', st.offsetTop, M, o); anim.set('ts', 1, M, o); anim.set('to', 1, C, Object.assign({ eps: 0.005 }, o));
       } else {
         anim.set('go', 0, C, Object.assign({ eps: 0.005 }, o)); anim.set('to', 0, C, Object.assign({ eps: 0.005 }, o));
@@ -355,6 +361,7 @@
       clearTimeout(hideTimer);
       if (v !== 'gone') rootEl.hidden = false;
       if (snap) { renderShared(); if (v === 'expanded') renderExpanded(); }
+      if (mug && v === 'expanded' && (from === 'compact' || from === 'alert' || from === 'gone')) mug.swivel();
       if (from === 'gone' && v !== 'gone') {
         // Grow out of the camera (or a small circle when floating), never from a thin line.
         target('gone', true);
@@ -387,9 +394,11 @@
       const now = Date.now();
       const water = snap.water && snap.water.until && snap.water.until > now;
       if (view !== 'alert') island.dataset.tone = toneFor();
-      glass.classList.toggle('is-water', !!water);
-      const lvl = snap.peak > 0 ? Math.max(0, Math.min(1, snap.bac / snap.peak)) : 0;
-      glass.querySelector('.sg-level').style.transform = 'translateY(' + ((1 - lvl) * 33).toFixed(2) + 'px)';
+      if (mug) {
+        mug.setTone(TONE_HEX[toneFor()] || TONE_HEX.impaired);
+        mug.setWater(!!water);
+        mug.setLevel(root.DryMug.mugLevel(snap, now));
+      }
       const txt = water ? splitLeft(snap.water.until - now, true) : (snap.status === 'clear' ? 'Clear' : splitLeft(snap.clearAt - now));
       const rebuilt = rollTrail.set(txt, reduce());
       vE.style.setProperty('--tw', (trail.offsetWidth || 40) + 'px');
@@ -437,7 +446,7 @@
           e.stopPropagation();
           if (t.kind === 'drink') { show('expanded'); opts.onAdd(t.d); }
           if (t.kind === 'water') { show('expanded'); opts.onWater(); }
-          if (t.kind === 'text') { collapse(); opts.onText(); }
+          if (t.kind === 'text') { show('expanded'); opts.onText(); }
           if (t.kind === 'picker') { collapse(); opts.onPicker(); }
         });
         row.appendChild(b);
@@ -514,7 +523,7 @@
       const onButton = !!e.target.closest('button:not(.ic-hit)');
       const inRow = !!e.target.closest('.iq-row');
       press = { y: e.clientY, x: e.clientX, t: performance.now(), held: false, dy: 0, btn: onButton, row: inRow, hist: [[performance.now(), e.clientY]], h0: anim.get('h') };
-      if (!onButton && !inRow) anim.set('s', 0.965, SPRING.press);
+      if (!onButton && !inRow) { anim.set('s', 0.965, SPRING.press); if (mug) mug.wobble(); }
       if (view === 'compact' || view === 'alert') {
         press.timer = setTimeout(() => { if (!press) return; press.held = true; anim.set('s', 1, M); expand(); }, 380);
       }
@@ -582,13 +591,52 @@
     layoutGeo();
     target('gone', true);
 
+    // ---- Moments: little animations when something happens
+    const chip = el('span', 'ichip');
+    chip.setAttribute('aria-hidden', 'true');
+    rootEl.appendChild(chip);
+    function popChip(text, kind) {
+      // Only in compact, where space is scarce; expanded already rolls the new numbers in.
+      if (view !== 'compact') return;
+      const r = island.getBoundingClientRect();
+      const gx = anim.get('gx'), gs = anim.get('gs');
+      chip.textContent = text;
+      chip.dataset.kind = kind;
+      const cx = r.left + gx + MW * gs * 0.42;
+      const top = view === 'compact' ? r.bottom + 6 : r.top + anim.get('gy') - 4;
+      chip.style.left = cx + 'px';
+      chip.style.top = (top - geo.top) + 'px';
+      chip.classList.remove('pop'); void chip.offsetWidth; chip.classList.add('pop');
+    }
+    function celebrate(kind, data) {
+      data = data || {};
+      if (!mug || !enabled || view === 'gone' || view === 'alert') return;
+      const calm = root.DryMug.isCalm(snap);
+      if (snap) mug.setLevel(root.DryMug.mugLevel(snap, Date.now()));
+      mug.moment(kind, calm);
+      if (reduce()) { if (data.label) popChip(data.label, kind); return; }
+      if (kind === 'pour' && !calm) {
+        setTimeout(() => { anim.set('s', 1, M, { velocity: 1.1 }); }, 520);
+        if (data.label) setTimeout(() => popChip(data.label, kind), 380);
+      }
+      if (kind === 'waterOn') {
+        setTimeout(() => { anim.set('s', 1, M, { velocity: 0.9 }); }, 900);
+        if (data.label) setTimeout(() => popChip(data.label, kind), 700);
+      }
+      if (kind === 'waterOff' && data.label) setTimeout(() => popChip(data.label, kind), 400);
+      if (kind === 'cheers') setTimeout(() => { anim.set('s', 1, M, { velocity: 0.7 }); popChip('Cheers', kind); }, 260);
+    }
+
     const ctrl = {
       update(s) {
+        const first = !snap;
         prevSnap = snap; snap = s;
         const now = Date.now();
+        if (first && mug) mug.restoreWater(!!(s.water && s.water.until && s.water.until > now));
         if (s.water && s.water.until && now >= s.water.until && waterFiredFor !== s.water.until) {
           waterFiredFor = s.water.until;
           opts.onWaterDone();
+          if (mug) mug.moment('waterOff', true);
           alert('water-done');
         }
         const kind = alertFor(prevSnap, snap);
@@ -602,6 +650,7 @@
         }
       },
       alert,
+      celebrate,
       expand, collapse,
       setHeroVisible(v) {
         // A short buffer so scrolling past the countdown never makes it flicker.

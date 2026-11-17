@@ -2,6 +2,17 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 4.2: the mug comes alive
+
+* **A little 3D mug.** Shaded glass with an oval rim, highlights and a handle that swivels round the body when the island opens. Its fill shows the alcohol left to clear (full at 10 hours or more) and drains in real time.
+* **Real slosh.** The liquid is a damped pendulum fed by how the mug actually moves, so it rocks when the island expands, collapses, hops or gets dragged, and wobbles when you press it.
+* **Moments,** each under 2 seconds:
+  * *Add a drink:* beer pours in from the top of the island, the foam swells, bubbles fizz, the mug squashes and the island hops. In compact a "+1 Corona" chip pops out underneath.
+  * *Water break:* a droplet splashes in, the beer turns to water and two ice cubes plop in with ripples and sparkles. Ending it melts the ice.
+  * *Text a friend:* the mug raises a cheers and sprays a little foam.
+* **Responsible by design:** when you're over the limit or your blackout risk is raised, the pour plays calmly with no hop or chip.
+* **Craft:** drawn live on canvas at real pixel size, it only animates while something is happening and then stops completely. With Reduce Motion on, levels and colours simply change.
+
 ## New in V4: the Live Island
 
 A Live Activity style pill that lives inside Dry Season, built to Apple's Human Interface Guidelines for the Dynamic Island.
@@ -48,6 +59,7 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 | `model.js` | The blood alcohol and risk maths, shared by the app and the tests |
 | `drinks.js` | The built-in drinks, sizes and default favourites |
 | `island.js`, `island.css` | The Live Island |
+| `mug.js` | The animated 3D mug inside the island |
 | `fonts/` | Alfa Slab One and Schibsted Grotesk (SIL Open Font License), so the app needs no outside servers |
 | `screenshots/` | Images shown on the install sheet |
 | `tests/*.test.js` | Tests for the maths and drinks. Run with `node --test tests/*.test.js` |

@@ -680,6 +680,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 <script src="version.js"></script>
 <script src="drinks.js"></script>
 <script src="model.js"></script>
+<script src="mug.js"></script>
 <script src="island.js"></script>
 <script>
 (() => {
@@ -1089,6 +1090,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     const name = (pick.name || '').trim() || 'Custom drink';
     state.session.drinks.push({ name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share });
     save(); sheet.close(); renderAll(); toast(pick.qty + ' × ' + name + ' added');
+    if (island) island.celebrate('pour', { label: '+' + pick.qty + ' ' + shortName(name) });
   });
   $('#openPicker').addEventListener('click', () => { buildList(); showList(); sheet.showModal(); });
   $('#sheetClose').addEventListener('click', () => sheet.close());
@@ -1294,7 +1296,8 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     if (!state.session.still) { state.session.still = true; state.session.end = Date.now(); }
     save(); renderAll();
     const g = M.gramsOf({ abv: d.abv, ml: d.ml, qty: 1, share });
-    if (!island || island.view !== 'expanded') toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
+    if (!island || island.view === 'gone') toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
+    if (island) island.celebrate('pour', { label: '+1 ' + shortName(d.name) });
   }
   function toggleWater() {
     const now = Date.now();
@@ -1302,6 +1305,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     if (w.until && w.until > now) {
       state.session.water = { until: null, count: w.count };
       save(); renderLive();
+      island.celebrate('waterOff', { label: 'Break over' });
       return;
     }
     let min = 20;
@@ -1310,8 +1314,9 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
       const gap = M.pacingGap(opts(), now, M.gramsOf(Object.assign({}, L, { qty: 1 })), M.THRESHOLDS.blackout);
       if (gap) min = Math.max(10, Math.min(45, gap));
     }
-    state.session.water = { until: now + min * 60000, count: (w.count || 0) + 1 };
+    state.session.water = { until: now + min * 60000, dur: min * 60000, count: (w.count || 0) + 1 };
     save(); renderLive();
+    island.celebrate('waterOn', { label: 'Water, ' + min + ' min' });
   }
 
   // Render loop
@@ -1343,7 +1348,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
       onAdd: addFromIsland,
       onWater: toggleWater,
       onWaterDone: () => { const w = state.session.water; state.session.water = { until: null, count: w ? w.count : 0 }; save(); },
-      onText: () => $('#textFriend').click(),
+      onText: () => { island.celebrate('cheers'); setTimeout(() => $('#textFriend').click(), 500); },
       onPicker: () => { buildList(); showList(); sheet.showModal(); },
       onDanger: () => $('#danger').scrollIntoView({ behavior: reduceMotionPref() ? 'auto' : 'smooth', block: 'start' })
     });

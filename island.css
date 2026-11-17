@@ -39,15 +39,22 @@
 
 /* ---------- Shared elements: they travel, they don't fade ---------- */
 .ish{position:absolute;top:0;left:0;transform-origin:0 0;pointer-events:none;z-index:3;will-change:transform,opacity}
-.ish-glass{width:30px;height:42px}
-.sg{display:block;width:30px;height:42px;overflow:visible}
-.sg-outline{fill:none;stroke:var(--tone);stroke-width:1.7px;vector-effect:non-scaling-stroke;stroke-linejoin:round;transition:stroke .45s ease-out}
-.sg-foam{fill:var(--ink-hi)}
-.sg-level{transition:transform .9s var(--glide)}
-.sg-drop{position:absolute;inset:0;display:none;place-items:center}
-.sg-drop svg{width:30px;height:30px;fill:none;stroke:var(--t-water);stroke-width:1.9px;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
-.ish-glass.is-water .sg{display:none}
-.ish-glass.is-water .sg-drop{display:grid}
+.ish-glass canvas{display:block}
+
+/* Moment chip: pops out beside the mug, then fades */
+.ichip{position:absolute;top:0;left:0;z-index:6;pointer-events:none;opacity:0;
+  padding:4px 10px 5px;border-radius:999px;background:#F2A93B;color:#2A1A0F;
+  font:700 12.5px/1.2 var(--body);white-space:nowrap;transform:translate(-50%,0) scale(.6);
+  box-shadow:0 0 0 2px #000}
+.ichip[data-kind="waterOn"],.ichip[data-kind="waterOff"]{background:#8ED0E6;color:#0E2730}
+.ichip.pop{animation:chip 1.45s var(--glide) forwards}
+@keyframes chip{
+  0%{opacity:0;transform:translate(-50%,-6px) scale(.5)}
+  16%{opacity:1;transform:translate(-50%,0) scale(1.08)}
+  28%{transform:translate(-50%,0) scale(1)}
+  74%{opacity:1;transform:translate(-50%,0) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-7px) scale(.96)}
+}
 .ish-trail{font-size:24px;font-weight:700;color:var(--tone);white-space:nowrap;transition:color .45s ease-out}
 
 /* Numeric transitions */
@@ -79,8 +86,8 @@
 .island-root[data-mode="fused"] .iv-expanded,
 .island-root[data-mode="fused"] .iv-quick,
 .island-root[data-mode="fused"] .iv-alert{padding-top:calc(var(--camh) + 2px)}
-.ix-row1{display:grid;grid-template-columns:30px 1fr auto;gap:14px;align-items:center}
-.ix-slot-glass{display:block;width:30px;height:42px}
+.ix-row1{display:grid;grid-template-columns:45px 1fr auto;gap:12px;align-items:center}
+.ix-slot-glass{display:block;width:45px;height:54px}
 .ix-k{margin:0;font-size:13px;font-weight:600;color:var(--ink-lo);line-height:1.25}
 .ix-time{margin:1px 0 0;font-family:var(--display);font-weight:400;font-size:30px;line-height:1;color:var(--ink-hi)}
 .ix-time .r-slot{width:.64em}
@@ -138,7 +145,9 @@
 /* Apple: with Reduce Motion, replace movement with cross-fades */
 @media (prefers-reduced-motion: reduce){
   .iv{transform:translateX(-50%)!important;filter:none!important;transition:opacity .2s ease-out!important}
-  .r-slot>span,.sg-level,.ish-trail,.sg-outline{transition:none!important}
+  .r-slot>span,.ish-trail{transition:none!important}
+  .ichip.pop{animation:chipfade 1.45s ease-out forwards}
+  @keyframes chipfade{0%,100%{opacity:0;transform:translate(-50%,0)}15%,75%{opacity:1;transform:translate(-50%,0)}}
   .island *,.island::after{animation:none!important}
   .ia-ring circle{stroke-dashoffset:0}
 }

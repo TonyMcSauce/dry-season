@@ -23,6 +23,7 @@ const SHELL = [
   './version.js',
   './model.js',
   './drinks.js',
+  './mug.js',
   './island.js',
   './island.css',
   './manifest.webmanifest',
