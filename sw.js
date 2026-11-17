@@ -23,6 +23,8 @@ const SHELL = [
   './version.js',
   './model.js',
   './drinks.js',
+  './island.js',
+  './island.css',
   './manifest.webmanifest',
   './fonts/alfa-slab-one-400.woff2',
   './fonts/schibsted-grotesk-400.woff2',

@@ -386,6 +386,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 </style>
+<link rel="stylesheet" href="island.css">
 </head>
 <body>
 <div class="pour" id="pour" aria-hidden="true"></div>
@@ -577,6 +578,11 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
         <div class="chips" id="limitChips" style="margin-top:10px"></div>
         <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
       </div>
+      <label class="switch" style="margin-top:0">
+        <input type="checkbox" id="islandOn">
+        <span class="track" aria-hidden="true"></span>
+        Live island at the top of the screen
+      </label>
       <div class="appinfo">
         <div class="appinfo-row">
           <div><p class="appinfo-ver" id="appVersion">Version</p><p class="hint" id="lastChecked" style="margin:2px 0 0"></p></div>
@@ -674,6 +680,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 <script src="version.js"></script>
 <script src="drinks.js"></script>
 <script src="model.js"></script>
+<script src="island.js"></script>
 <script>
 (() => {
   'use strict';
@@ -700,10 +707,10 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 
   function newSession() {
     const now = Date.now();
-    return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, fed: false, driveAt: null, drinks: [] };
+    return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, fed: false, driveAt: null, water: null, drinks: [] };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05 }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.slice() };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.slice() };
   }
   function load() {
     const d = defaults();
@@ -712,7 +719,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
       if (s && s.profile && s.session && Array.isArray(s.session.drinks)) {
         return {
           profile: Object.assign(d.profile, s.profile),
-          session: Object.assign({ fed: false, driveAt: null }, s.session),
+          session: Object.assign({ fed: false, driveAt: null, water: null }, s.session),
           history: Array.isArray(s.history) ? s.history : [],
           favs: Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS.slice()
         };
@@ -923,6 +930,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     document.querySelectorAll('[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.profile.sex)));
     $('#beta').value = state.profile.beta;
     $('#betaVal').textContent = state.profile.beta.toFixed(3) + '% per hour';
+    $('#islandOn').checked = state.profile.island !== false;
     if (document.activeElement !== $('#limit')) $('#limit').value = state.profile.limit;
     const lc = $('#limitChips'); lc.innerHTML = '';
     LIMIT_PRESETS.forEach(([label, v]) => {
@@ -1156,11 +1164,13 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     const perHour = has ? M.stdLastHour(o, now) : 0;
     const T = M.THRESHOLDS;
     $('#danger').hidden = !(has && (bNow >= T.danger || sim.peak >= T.danger || perHour > T.bingeStdPerHour));
+    dangerNow = !$('#danger').hidden;
     sec.hidden = !has;
-    if (!has) return;
+    if (!has) { riskNow = 'low'; return; }
     const rise = M.riseRate(sim, now);
     const risk = M.blackoutRisk({ peak: sim.peak, rise, perHour, fed: !!state.session.fed });
     sec.dataset.level = risk.level;
+    riskNow = risk.level;
     $('#riskLevel').textContent = { low: 'Low', raised: 'Raised', high: 'High' }[risk.level];
     renderScale(bNow, sim);
 
@@ -1247,10 +1257,70 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
   $('#driveAt').addEventListener('change', (e) => { state.session.driveAt = fromLocalInput(e.target.value); save(); renderPlanner(); });
   $('#driveClear').addEventListener('click', () => { state.session.driveAt = null; save(); renderPlanner(); });
 
+  // ---------- Live Island ----------
+  let island = null, riskNow = 'low', dangerNow = false;
+  const keyOf = (d) => d.name + '|' + d.ml + '|' + d.abv;
+  function shortName(name) {
+    const p = D.byName(name);
+    if (p && p.short) return p.short;
+    return name.length > 12 ? name.slice(0, 11).trim() + '\u2026' : name;
+  }
+  function islandSnap(sim) {
+    const now = Date.now(), limit = state.profile.limit, has = sim.G > 0;
+    const b = has ? bacAt(sim, now) : 0;
+    const st = has ? M.status(b, limit) : 'clear';
+    const u = has ? M.underLimitAt(sim, limit) : null;
+    const drinks = state.session.drinks, L = drinks[drinks.length - 1];
+    const clearAt = sim.clear || now;
+    const { h, m } = dur(clearAt - now);
+    return {
+      has, status: st, bac: b, peak: sim.peak, start: sim.start, clearAt, underAt: u,
+      risk: riskNow, danger: dangerNow,
+      last: L ? { key: keyOf(L), name: L.name, short: shortName(L.name), ml: L.ml, abv: L.abv, share: L.share } : null,
+      favs: (state.favs || []).map(D.byId).filter((x) => x && !x.custom).map((x) => ({ key: keyOf(x), name: x.name, short: x.short || x.name, ml: x.ml, abv: x.abv, share: 1 })),
+      water: state.session.water,
+      fmt: {
+        bac: fmtBac(b), clear: fmtTime(clearAt), clearedAt: fmtTime(clearAt), clearDay: dayLabel(clearAt),
+        left: h ? h + ' h ' + pad(m) + ' m' : m + ' min', start: fmtTime(sim.start),
+        underAt: u ? fmtTime(u) : '--', limit: fmtLimit(limit)
+      }
+    };
+  }
+  function addFromIsland(d) {
+    const drinks = state.session.drinks, L = drinks[drinks.length - 1];
+    const share = d.share || 1;
+    if (L && keyOf(L) === keyOf(d) && L.share === share) L.qty += 1;
+    else drinks.push({ name: d.name, abv: d.abv, ml: d.ml, qty: 1, share });
+    if (!state.session.still) { state.session.still = true; state.session.end = Date.now(); }
+    save(); renderAll();
+    const g = M.gramsOf({ abv: d.abv, ml: d.ml, qty: 1, share });
+    if (island) island.alert('added', '+1 ' + d.name, g.toFixed(1) + ' g of alcohol. Clear by ' + fmtTime(lastSim.clear) + ' now.');
+  }
+  function toggleWater() {
+    const now = Date.now();
+    const w = state.session.water || { until: null, count: 0 };
+    if (w.until && w.until > now) {
+      state.session.water = { until: null, count: w.count };
+      save(); renderLive();
+      island.alert('water-end', 'Water break ended', w.count + (w.count === 1 ? ' glass' : ' glasses') + ' of water tonight.');
+      return;
+    }
+    let min = 20;
+    const L = state.session.drinks[state.session.drinks.length - 1];
+    if (L && riskNow !== 'low') {
+      const gap = M.pacingGap(opts(), now, M.gramsOf(Object.assign({}, L, { qty: 1 })), M.THRESHOLDS.blackout);
+      if (gap) min = Math.max(10, Math.min(45, gap));
+    }
+    state.session.water = { until: now + min * 60000, count: (w.count || 0) + 1 };
+    save(); renderLive();
+    island.alert('water-start', 'Water break, ' + min + ' min', 'Have a glass. The island counts it down.');
+  }
+
   // Render loop
   function renderLive() {
     lastSim = simulate();
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner();
+    if (island) island.update(islandSnap(lastSim));
   }
   function renderAll() { renderTimes(); renderTab(); renderBody(); renderHistory(); buildScale(); renderLive(); }
   buildList();
@@ -1263,7 +1333,30 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     if (state.session.still || ticks % 30 === 0) renderChart(lastSim);
     if (state.session.still && ticks % 30 === 0) renderTimes();
     if (ticks % 15 === 0) renderPlanner();
+    if (island) island.update(islandSnap(lastSim));
   }, 1000);
+
+  if (window.DryIsland) {
+    island = DryIsland.create({
+      onAddLast: () => {
+        const L = state.session.drinks[state.session.drinks.length - 1];
+        if (L) addFromIsland(L); else { buildList(); showList(); sheet.showModal(); }
+      },
+      onAdd: addFromIsland,
+      onWater: toggleWater,
+      onWaterDone: () => { const w = state.session.water; state.session.water = { until: null, count: w ? w.count : 0 }; save(); },
+      onText: () => $('#textFriend').click(),
+      onPicker: () => { buildList(); showList(); sheet.showModal(); },
+      onDanger: () => $('#danger').scrollIntoView({ behavior: reduceMotionPref() ? 'auto' : 'smooth', block: 'start' })
+    });
+    island.setEnabled(state.profile.island !== false);
+    island.update(islandSnap(lastSim));
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((es) => es.forEach((e) => island.setHeroVisible(e.isIntersecting)), { threshold: 0.15 }).observe($('.readout'));
+    }
+  }
+  function reduceMotionPref() { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  $('#islandOn').addEventListener('change', (e) => { state.profile.island = e.target.checked; save(); if (island) island.setEnabled(e.target.checked); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
 
 

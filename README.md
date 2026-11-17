@@ -2,6 +2,19 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in V4: the Live Island
+
+A Dynamic Island style status pill that lives inside Dry Season.
+
+* **Fuses with your real island.** On an iPhone with a Dynamic Island, opened from the home screen, it sits flush against the hardware: a mini pint glass draining on the left of the camera, time to clear on the right in rolling digits, coloured by your driving status. In Safari, on notch iPhones, Android and desktop it floats at the top once the big countdown scrolls away.
+* **Tap to open** your night at a glance: status, current level, *Clear by* time, a timeline from first sip to clear with the moment you drop under the legal limit, and three actions: **+1** your last drink, **Water break** and **Text a friend**.
+* **Long-press for Quick add:** one tap puts your last drink or a favourite on the tab.
+* **Alerts:** it pops open by itself when you go over the legal limit, drop back under, reach high blackout risk, hit danger levels or become clear. It collapses after a few seconds; tap to open it fully.
+* **Water break:** a timer (your pacing gap, or 20 minutes) runs right in the island and tells you when it's done.
+* **Motion:** spring morphs with a little overshoot, content that cross-fades through a soft blur, rolling digits, a liquid wave in the glass and a ring that draws itself around alert icons. With Reduce Motion on, every state still shows, without the movement.
+* **Controls:** tap outside, swipe up or press Escape to close. Switch it off under **Your body**.
+* **Limits:** it only exists while Dry Season is open on screen. A real Lock Screen or system-wide Live Activity needs a native iPhone app.
+
 ## New in V3
 
 * **Properly offline.** Every file the app needs, fonts included, is saved on your phone the first time you open it. No signal at the braai? It opens and works exactly the same.
@@ -34,6 +47,7 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 | `version.js` | The app version and the What's new list. Bump it to publish an update |
 | `model.js` | The blood alcohol and risk maths, shared by the app and the tests |
 | `drinks.js` | The built-in drinks, sizes and default favourites |
+| `island.js`, `island.css` | The Live Island |
 | `fonts/` | Alfa Slab One and Schibsted Grotesk (SIL Open Font License), so the app needs no outside servers |
 | `screenshots/` | Images shown on the install sheet |
 | `tests/*.test.js` | Tests for the maths and drinks. Run with `node --test tests/*.test.js` |
