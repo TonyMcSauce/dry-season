@@ -1294,7 +1294,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     if (!state.session.still) { state.session.still = true; state.session.end = Date.now(); }
     save(); renderAll();
     const g = M.gramsOf({ abv: d.abv, ml: d.ml, qty: 1, share });
-    if (island) island.alert('added', '+1 ' + d.name, g.toFixed(1) + ' g of alcohol. Clear by ' + fmtTime(lastSim.clear) + ' now.');
+    if (!island || island.view !== 'expanded') toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
   }
   function toggleWater() {
     const now = Date.now();
@@ -1302,7 +1302,6 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     if (w.until && w.until > now) {
       state.session.water = { until: null, count: w.count };
       save(); renderLive();
-      island.alert('water-end', 'Water break ended', w.count + (w.count === 1 ? ' glass' : ' glasses') + ' of water tonight.');
       return;
     }
     let min = 20;
@@ -1313,7 +1312,6 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     }
     state.session.water = { until: now + min * 60000, count: (w.count || 0) + 1 };
     save(); renderLive();
-    island.alert('water-start', 'Water break, ' + min + ' min', 'Have a glass. The island counts it down.');
   }
 
   // Render loop
@@ -1352,7 +1350,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
     island.setEnabled(state.profile.island !== false);
     island.update(islandSnap(lastSim));
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver((es) => es.forEach((e) => island.setHeroVisible(e.isIntersecting)), { threshold: 0.15 }).observe($('.readout'));
+      new IntersectionObserver((es) => es.forEach((e) => island.setHeroVisible(e.intersectionRatio > 0.25)), { threshold: [0, 0.25, 0.5, 1] }).observe($('.readout'));
     }
   }
   function reduceMotionPref() { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; }

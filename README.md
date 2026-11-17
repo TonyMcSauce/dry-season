@@ -4,15 +4,15 @@ A small, good looking web app that estimates when your body will be clear of alc
 
 ## New in V4: the Live Island
 
-A Dynamic Island style status pill that lives inside Dry Season.
+A Live Activity style pill that lives inside Dry Season, built to Apple's Human Interface Guidelines for the Dynamic Island.
 
-* **Fuses with your real island.** On an iPhone with a Dynamic Island, opened from the home screen, it sits flush against the hardware: a mini pint glass draining on the left of the camera, time to clear on the right in rolling digits, coloured by your driving status. In Safari, on notch iPhones, Android and desktop it floats at the top once the big countdown scrolls away.
-* **Tap to open** your night at a glance: status, current level, *Clear by* time, a timeline from first sip to clear with the moment you drop under the legal limit, and three actions: **+1** your last drink, **Water break** and **Text a friend**.
-* **Long-press for Quick add:** one tap puts your last drink or a favourite on the tab.
-* **Alerts:** it pops open by itself when you go over the legal limit, drop back under, reach high blackout risk, hit danger levels or become clear. It collapses after a few seconds; tap to open it fully.
-* **Water break:** a timer (your pacing gap, or 20 minutes) runs right in the island and tells you when it's done.
-* **Motion:** spring morphs with a little overshoot, content that cross-fades through a soft blur, rolling digits, a liquid wave in the glass and a ring that draws itself around alert icons. With Reduce Motion on, every state still shows, without the movement.
-* **Controls:** tap outside, swipe up or press Escape to close. Switch it off under **Your body**.
+* **Fuses with your real island.** On an iPhone with a Dynamic Island, opened from the home screen, it sits flush against the hardware: a pint glass draining on the left of the camera and time to clear on the right, coloured by your driving status. In Safari, on notch iPhones, Android and desktop it floats at the top once the big countdown scrolls away.
+* **Apple's sizes.** Compact: 52.33 pt either side of the camera (62.33 pt on 430 pt wide phones) and 36.67 pt tall, content snug against the camera. Expanded: the screen width minus 22 pt (371 or 408 pt), 84 to 160 pt tall and only as tall as its content. Black and opaque, with a thin outline tinted to the content in dark mode.
+* **Expands predictably.** Tap or touch and hold. The glass and the time to go glide to their places in the expanded view, which shows your *Clear by* time, current level and how long you're over the limit.
+* **One main action that fits the moment:** **+1** your last drink, **Water break** when your blackout risk is raised, or **End break** while one runs. **More** (three dots) opens Quick actions: favourites, water break, text a friend and all drinks.
+* **Motion.** Real spring physics using Apple's response and bounce model. Springs can be interrupted and redirected mid-move without jumping, follow your finger when you swipe, and hand your speed back when you let go. Every animation finishes in under 2 seconds and nothing loops. With Reduce Motion on, movement becomes a simple cross-fade.
+* **Alerts only for essential moments:** over the legal limit, back under, high blackout risk, danger levels, clear, and a finished water break. Tap an alert to open it; it collapses after a few seconds.
+* **Controls:** swipe up, tap outside or press Escape to close. Switch it off under **Your body**.
 * **Limits:** it only exists while Dry Season is open on screen. A real Lock Screen or system-wide Live Activity needs a native iPhone app.
 
 ## New in V3
@@ -52,6 +52,7 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 | `screenshots/` | Images shown on the install sheet |
 | `tests/*.test.js` | Tests for the maths and drinks. Run with `node --test tests/*.test.js` |
 | `tests/offline_check.py` | End-to-end check of offline use and the update flow. Run with `python3 tests/offline_check.py` |
+| `tests/island_check.py` | Checks the island against Apple's sizes and that it never stretches. Run with `python3 tests/island_check.py` |
 | `manifest.webmanifest` | Lets iPhone and Android install it like an app |
 | `sw.js` | The service worker: saves the app for offline use and handles updates |
 | `icons/` | Home screen icons |

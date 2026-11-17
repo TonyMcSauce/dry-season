@@ -1,29 +1,44 @@
 /* Dry Season Live Island.
- * A Dynamic Island style status pill that lives inside the app.
- * - On an iPhone with a Dynamic Island, opened from the home screen, it sits flush
- *   against the real island so the hardware appears to grow.
- * - Everywhere else it floats at the top once the big countdown scrolls away.
- * Pure helpers (geometry, alertFor, splitLeft) are exported for the node tests.
+ * A Live Activity style pill that lives inside the app, built to Apple's
+ * Human Interface Guidelines for the Dynamic Island:
+ * - Compact: content either side of the camera, 52.33 pt each side (62.33 on
+ *   430 pt wide phones), 36.67 pt tall, snug against the camera.
+ * - Expanded: screen width minus 22 pt, 84 to 160 pt tall, sized to its content.
+ * - Motion: spring physics in Apple's response and bounce model, interruptible,
+ *   velocity preserving, no looping decoration, every animation under 2 s.
+ * On an iPhone with a Dynamic Island, opened from the home screen, it sits flush
+ * against the real island. Everywhere else it floats at the top once the big
+ * countdown scrolls away.
+ * Pure helpers (geometry, alertFor, splitLeft, primaryAction, springStep) are
+ * exported for the node tests.
  */
 (function (root) {
   'use strict';
 
-  const CAM_W = 126;          // the hardware island, in CSS px
-  const CAM_H = 37;
-  const SIDE = 46;            // compact content either side of the camera
+  const CAM_W = 126;           // hardware island width, CSS px
+  const CAM_H = 36.67;         // Apple: compact and minimal height
   const ALERT_MS = 4200;
+  const SPRING = {             // Apple's model: response (s) and bounce (0 to 1)
+    morph: { response: 0.5, bounce: 0.2 },
+    content: { response: 0.34, bounce: 0 },
+    press: { response: 0.24, bounce: 0 },
+    follow: { response: 0.12, bounce: 0 }
+  };
 
-  /** Where and how to draw. sat = safe-area-inset-top in px. */
+  /** Where and how big. sat = safe-area-inset-top in px. */
   function geometry(o) {
     const sat = Math.max(0, +o.sat || 0);
     const vw = +o.vw || 390;
+    const ear = vw >= 420 ? 62.33 : 52.33;
+    const expW = Math.min(vw - 22, 408);
     if (o.standalone && sat >= 54 && vw >= 360) {
-      return { mode: 'fused', top: Math.max(9, Math.round(sat - 48)), camW: CAM_W, camH: CAM_H, vw };
+      return { mode: 'fused', top: Math.max(9, Math.round(sat - 48)), camW: CAM_W, camH: CAM_H, ear, expW, vw };
     }
-    return { mode: 'floating', top: Math.round(sat) + 8, camW: CAM_W, camH: 36, vw };
+    return { mode: 'floating', top: Math.round(sat) + 11, camW: CAM_W, camH: CAM_H, ear, expW, vw };
   }
+  const compactWidth = (g) => g.camW + g.ear * 2;
 
-  /** Which alert, if any, a change in state deserves. */
+  /** Essential moments only, per Apple: alert for what needs attention. */
   function alertFor(prev, next) {
     if (!prev || !next || !prev.has || !next.has) return null;
     if (!prev.danger && next.danger) return 'danger';
@@ -36,7 +51,15 @@
     return null;
   }
 
-  /** Time left as h:mm (or m:ss under a minute's worth of hours for timers). */
+  /** One main action that fits the moment. */
+  function primaryAction(s, now) {
+    const water = s.water && s.water.until && s.water.until > now;
+    if (water) return { act: 'water', label: 'End break', icon: 'water' };
+    if (!s.has || !s.last) return { act: 'picker', label: 'Add a drink', icon: 'plus' };
+    if ((s.risk === 'raised' || s.risk === 'high') && s.status !== 'clear') return { act: 'water', label: 'Water break', icon: 'water' };
+    return { act: 'add', label: '+1 ' + s.last.short, icon: 'glass' };
+  }
+
   function splitLeft(ms, withSeconds) {
     const t = Math.max(0, Math.round(ms / 1000));
     const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
@@ -45,39 +68,47 @@
     return h + ':' + p(m);
   }
 
-  // ---------------------------------------------------------------------------
-  // Browser only below
+  /** One step of a damped spring. Apple: stiffness (2π/response)², damping 4π(1 − bounce)/response. */
+  function springStep(sp, p, dt) {
+    const k = Math.pow(2 * Math.PI / p.response, 2);
+    const c = 4 * Math.PI * (1 - p.bounce) / p.response;
+    const a = -k * (sp.x - sp.t) - c * sp.v;
+    sp.v += a * dt;
+    sp.x += sp.v * dt;
+  }
+
   if (typeof document === 'undefined') {
-    const api = { geometry, alertFor, splitLeft, CAM_W, CAM_H, SIDE };
+    const api = { geometry, compactWidth, alertFor, primaryAction, splitLeft, springStep, SPRING, CAM_W, CAM_H };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     return;
   }
 
-  const SVG = {
+  // ---------------------------------------------------------------------------
+  const ICON = {
     over: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="2.3"/><path d="M4.2 10.6c2.6-.7 5.2-1 7.8-1s5.2.3 7.8 1M12 14.3v5.6"/><path d="M4.5 19.5 19.5 4.5"/></svg>',
     under: '<svg viewBox="0 0 24 24"><path d="M12 4.5v13.5M6.5 12.8 12 18.3l5.5-5.5"/></svg>',
     clear: '<svg viewBox="0 0 24 24"><path d="m5.5 12.6 4.2 4.1 8.8-9.4"/></svg>',
     risk: '<svg viewBox="0 0 24 24"><path d="M12 4.2 20.6 19H3.4z"/><path d="M12 10v4.2M12 16.8v.1"/></svg>',
     danger: '<svg viewBox="0 0 24 24"><path d="M12 3.5 21 19.5H3z"/><path d="M12 9.5v5M12 17.2v.1"/></svg>',
     water: '<svg viewBox="0 0 24 24"><path d="M12 3.8c3.6 4.4 5.9 7.6 5.9 10.6a5.9 5.9 0 0 1-11.8 0c0-3 2.3-6.2 5.9-10.6z"/><path d="M9.4 15a2.7 2.7 0 0 0 2.6 2.4"/></svg>',
-    added: '<svg viewBox="0 0 24 24"><path d="M6.5 4.5h11l-1.3 15h-8.4z"/><path d="M12 9.2v6M9 12.2h6"/></svg>',
-    text: '<svg viewBox="0 0 24 24"><path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6.2l-4.3 3.4v-3.4h-.5a2 2 0 0 1-2-2z"/></svg>',
+    glass: '<svg viewBox="0 0 24 24"><path d="M6.5 4.5h11l-1.3 15h-8.4z"/><path d="M12 9.2v6M9 12.2h6"/></svg>',
     plus: '<svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg>',
-    more: '<svg viewBox="0 0 24 24"><circle cx="6.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="17.5" cy="12" r="1.2"/></svg>'
+    text: '<svg viewBox="0 0 24 24"><path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6.2l-4.3 3.4v-3.4h-.5a2 2 0 0 1-2-2z"/></svg>',
+    more: '<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>',
+    list: '<svg viewBox="0 0 24 24"><path d="M8 7h11M8 12h11M8 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01"/></svg>'
   };
+  const TONE = { over: 'over', under: 'impaired', clear: 'clear', risk: 'over', danger: 'danger', 'water-done': 'water' };
 
-  const TONE = { over: 'over', under: 'impaired', clear: 'clear', risk: 'over', danger: 'danger', added: 'amber', 'water-start': 'water', 'water-done': 'water', 'water-end': 'water' };
-
-  // Rolling digits: each character slides up and away while the new one slides in.
+  // Numeric content transition: changed digits roll, nothing else moves.
   function Roller(el) {
     let current = '';
-    this.set = (str) => {
+    const shape = (x) => x.replace(/[0-9]/g, '9');
+    this.set = (str, reduce) => {
       str = String(str);
-      if (str === current) return;
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const shape = (x) => x.replace(/[0-9]/g, '9');
-      if (!current || shape(str) !== shape(current) || reduce) {
-        el.innerHTML = '';
+      if (str === current) return false;
+      const rebuild = !current || shape(str) !== shape(current) || reduce;
+      if (rebuild) {
+        el.textContent = '';
         for (const ch of str) el.appendChild(slot(ch));
       } else {
         [...str].forEach((ch, i) => {
@@ -89,21 +120,61 @@
           fresh.className = 'r-in';
           s.appendChild(fresh);
           requestAnimationFrame(() => requestAnimationFrame(() => { fresh.className = ''; if (old) old.className = 'r-out'; }));
-          setTimeout(() => { if (old && old.parentNode) old.remove(); }, 600);
+          setTimeout(() => { if (old && old.parentNode) old.remove(); }, 650);
         });
       }
       current = str;
       el.setAttribute('aria-label', str);
+      return rebuild;
     };
     function slot(ch) {
       const s = document.createElement('span');
       s.className = /[0-9]/.test(ch) ? 'r-slot' : 'r-ch';
+      s.setAttribute('aria-hidden', 'true');
       const i = document.createElement('span');
       i.textContent = ch;
       s.appendChild(i);
-      s.setAttribute('aria-hidden', 'true');
       return s;
     }
+  }
+
+  // A tiny spring animator: named values with position, velocity and target.
+  function Animator(apply) {
+    const vals = {};
+    let raf = 0, last = 0, instant = false;
+    function tick(t) {
+      const dt = Math.min(0.05, last ? (t - last) / 1000 : 1 / 60);
+      last = t;
+      let busy = false;
+      const steps = Math.max(1, Math.round(dt / (1 / 240)));
+      for (const key in vals) {
+        const sp = vals[key];
+        if (sp.done) continue;
+        for (let i = 0; i < steps; i++) springStep(sp, sp.p, dt / steps);
+        if (Math.abs(sp.x - sp.t) < sp.eps && Math.abs(sp.v) < sp.eps * 8) { sp.x = sp.t; sp.v = 0; sp.done = true; }
+        else busy = true;
+      }
+      apply(vals);
+      if (busy) raf = requestAnimationFrame(tick); else { raf = 0; last = 0; }
+    }
+    return {
+      set(key, target, p, opts) {
+        opts = opts || {};
+        let sp = vals[key];
+        if (!sp) sp = vals[key] = { x: opts.from != null ? opts.from : target, v: 0, t: target, p, eps: opts.eps || 0.05, done: true };
+        if (opts.from != null) sp.x = opts.from;
+        if (opts.velocity != null) sp.v = opts.velocity;
+        sp.t = target; sp.p = p || sp.p;
+        if (instant || opts.instant) { sp.x = target; sp.v = 0; sp.done = true; apply(vals); return; }
+        sp.done = false;
+        if (!raf) raf = requestAnimationFrame(tick);
+      },
+      get(key) { return vals[key] ? vals[key].x : 0; },
+      vel(key) { return vals[key] ? vals[key].v : 0; },
+      settled() { for (const k in vals) if (!vals[k].done) return false; return true; },
+      setInstant(v) { instant = v; },
+      flush() { apply(vals); }
+    };
   }
 
   function el(tag, cls, html) {
@@ -114,7 +185,9 @@
   }
 
   function create(opts) {
-    const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mqReduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const reduce = () => mqReduce.matches;
+
     const rootEl = el('div', 'island-root');
     rootEl.id = 'islandRoot';
     rootEl.hidden = true;
@@ -125,21 +198,45 @@
     live.setAttribute('aria-live', 'polite');
     rootEl.appendChild(live);
 
-    // ---- Compact
-    const vC = el('div', 'iv iv-compact');
-    vC.innerHTML =
-      '<button class="ic-hit" type="button" aria-label="Open live status" aria-expanded="false"></button>' +
-      '<span class="ic-lead" aria-hidden="true">' +
-        '<svg class="mini-glass" viewBox="0 0 16 22"><defs><clipPath id="mgc"><path d="M2 2h12l-1.5 17.2a1.6 1.6 0 0 1-1.6 1.4H5.1a1.6 1.6 0 0 1-1.6-1.4z"/></clipPath></defs>' +
-        '<g clip-path="url(#mgc)"><rect class="mg-liquid" x="0" y="0" width="16" height="22"/><rect class="mg-foam" x="0" y="0" width="16" height="3.2"/></g>' +
-        '<path class="mg-outline" d="M2 2h12l-1.5 17.2a1.6 1.6 0 0 1-1.6 1.4H5.1a1.6 1.6 0 0 1-1.6-1.4z"/></svg>' +
-        '<span class="ic-drop">' + SVG.water + '</span>' +
-      '</span>' +
-      '<span class="ic-mid"></span>' +
-      '<span class="ic-trail"><span class="roll" data-roll="trail"></span></span>';
+    // Shared elements travel between compact and expanded instead of fading.
+    const glass = el('div', 'ish ish-glass');
+    glass.setAttribute('aria-hidden', 'true');
+    glass.innerHTML =
+      '<svg class="sg" viewBox="0 0 30 42"><defs><clipPath id="sgc"><path d="M3 3h24l-2.6 34.4a2.4 2.4 0 0 1-2.4 2.2H8a2.4 2.4 0 0 1-2.4-2.2z"/></clipPath>' +
+      '<linearGradient id="sgl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7B94A"/><stop offset=".6" stop-color="#E8962C"/><stop offset="1" stop-color="#B8651A"/></linearGradient></defs>' +
+      '<g clip-path="url(#sgc)"><g class="sg-level"><rect x="0" y="4" width="30" height="40" fill="url(#sgl)"/>' +
+      '<path class="sg-foam" d="M0 4.6q2.5-2.6 5 0t5 0 5 0 5 0 5 0 5 0V8H0z"/></g></g>' +
+      '<path class="sg-outline" d="M3 3h24l-2.6 34.4a2.4 2.4 0 0 1-2.4 2.2H8a2.4 2.4 0 0 1-2.4-2.2z"/></svg>' +
+      '<span class="sg-drop">' + ICON.water + '</span>';
+    const trail = el('div', 'ish ish-trail');
+    trail.innerHTML = '<span class="roll"></span>';
+    island.appendChild(glass);
+    island.appendChild(trail);
+
+    // ---- Compact: only a hit target, the shared elements carry the content
+    const vC = el('div', 'iv iv-compact', '<button class="ic-hit" type="button" aria-label="Open live status" aria-expanded="false"></button>');
     island.appendChild(vC);
 
-    // ---- Alert
+    // ---- Expanded
+    const vE = el('div', 'iv iv-expanded');
+    vE.innerHTML =
+      '<div class="ix-row1">' +
+        '<span class="ix-slot-glass"></span>' +
+        '<div class="ix-clear"><p class="ix-k ix-k-clear">Clear by</p><p class="ix-time"><span class="roll" data-roll="clear"></span></p></div>' +
+        '<div class="ix-left"><span class="ix-slot-trail"></span><p class="ix-k ix-k-left">to go</p></div>' +
+      '</div>' +
+      '<div class="ix-row2">' +
+        '<p class="ix-status"><i class="ix-dot" aria-hidden="true"></i><span class="ix-status-t"></span></p>' +
+        '<button class="ix-act" type="button"><span class="ix-ic" aria-hidden="true"></span><span class="ix-al"></span></button>' +
+        '<button class="ix-more" type="button" aria-label="More actions">' + ICON.more + '</button>' +
+      '</div>';
+    island.appendChild(vE);
+
+    // ---- Quick actions
+    const vQ = el('div', 'iv iv-quick', '<div class="iq-row" role="group" aria-label="Quick actions"></div>');
+    island.appendChild(vQ);
+
+    // ---- Alert (an expanded presentation with a message)
     const vA = el('div', 'iv iv-alert');
     vA.innerHTML =
       '<span class="ia-icon"><svg class="ia-ring" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20"/></svg><span class="ia-glyph" aria-hidden="true"></span></span>' +
@@ -147,56 +244,40 @@
       '<span class="ia-timer" aria-hidden="true"></span>';
     island.appendChild(vA);
 
-    // ---- Expanded
-    const vE = el('div', 'iv iv-expanded');
-    vE.innerHTML =
-      '<div class="ix-top">' +
-        '<button class="ix-status" type="button" aria-label="Close live status"><i class="ix-dot"></i><span class="ix-status-t"></span></button>' +
-        '<span class="ix-bac"><span class="roll" data-roll="bac"></span></span>' +
-      '</div>' +
-      '<div class="ix-main">' +
-        '<svg class="ix-glass" viewBox="0 0 48 66" aria-hidden="true"><defs><clipPath id="xgc"><path d="M5 4h38l-4.2 55.4a3.4 3.4 0 0 1-3.4 3.1H12.6a3.4 3.4 0 0 1-3.4-3.1z"/></clipPath>' +
-          '<linearGradient id="xgl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7B94A"/><stop offset=".6" stop-color="#E8962C"/><stop offset="1" stop-color="#B8651A"/></linearGradient></defs>' +
-          '<g clip-path="url(#xgc)"><g class="xg-level"><path class="xg-wave" fill="url(#xgl)" d="M-48 6 Q-36 1 -24 6 T0 6 T24 6 T48 6 T72 6 T96 6 V80 H-48Z"/>' +
-          '<path class="xg-foam" d="M-48 6 Q-36 1 -24 6 T0 6 T24 6 T48 6 T72 6 T96 6 V10 Q84 13 72 10 T48 10 T24 10 T0 10 T-24 10 T-48 10Z"/></g>' +
-          '<circle class="xg-b" cx="18" cy="56" r="1.3"/><circle class="xg-b" cx="30" cy="58" r="1"/><circle class="xg-b" cx="24" cy="60" r="1.5"/></g>' +
-          '<path class="xg-outline" d="M5 4h38l-4.2 55.4a3.4 3.4 0 0 1-3.4 3.1H12.6a3.4 3.4 0 0 1-3.4-3.1z"/></svg>' +
-        '<div class="ix-read"><p class="ix-k">Clear by</p><p class="ix-time"><span class="roll" data-roll="clear"></span></p><p class="ix-sub"></p></div>' +
-      '</div>' +
-      '<div class="ix-line" aria-hidden="true">' +
-        '<div class="ix-track"><div class="ix-past"></div><i class="ix-tick"></i><i class="ix-now"></i></div>' +
-        '<div class="ix-labels"><span class="ix-l0"></span><span class="ix-lmid"></span><span class="ix-l1"></span></div>' +
-      '</div>' +
-      '<p class="ix-water" hidden></p>' +
-      '<div class="ix-actions">' +
-        '<button type="button" data-act="add"><span class="ix-ic">' + SVG.plus + '</span><span class="ix-al"></span></button>' +
-        '<button type="button" data-act="water"><span class="ix-ic">' + SVG.water + '</span><span class="ix-al">Water break</span></button>' +
-        '<button type="button" data-act="text"><span class="ix-ic">' + SVG.text + '</span><span class="ix-al">Text a friend</span></button>' +
-      '</div>';
-    island.appendChild(vE);
-
-    // ---- Quick add
-    const vQ = el('div', 'iv iv-quick');
-    vQ.innerHTML =
-      '<div class="iq-head"><p class="iq-title">Quick add</p><button class="iq-close" type="button" aria-label="Close quick add">' + SVG.plus + '</button></div>' +
-      '<div class="iq-tiles"></div>';
-    island.appendChild(vQ);
-
     document.body.appendChild(rootEl);
 
-    const rollers = {};
-    island.querySelectorAll('[data-roll]').forEach((r) => { rollers[r.dataset.roll] = new Roller(r); });
-    const views = { compact: vC, alert: vA, expanded: vE, quick: vQ };
+    const views = { compact: vC, expanded: vE, quick: vQ, alert: vA };
+    const rollTrail = new Roller(trail.querySelector('.roll'));
+    const rollClear = new Roller(vE.querySelector('[data-roll="clear"]'));
 
     // ---- State
     let geo = null, view = 'gone', snap = null, prevSnap = null, enabled = true;
-    let heroVisible = true, alertQ = [], alertTimer = null, alertKind = null, alertStart = 0, alertPaused = 0;
-    let waterFiredFor = null;
+    let heroVisible = true, heroTimer = null;
+    let alertQ = [], alertTimer = null, alertKind = null, alertStart = 0;
+    let waterFiredFor = null, kbd = false, hideTimer = null;
+
+    // ---- Spring-driven layout
+    const anim = Animator((v) => {
+      const w = v.w ? v.w.x : 0, h = v.h ? v.h.x : 0;
+      island.style.width = w.toFixed(2) + 'px';
+      island.style.height = Math.max(0, h).toFixed(2) + 'px';
+      island.style.borderRadius = Math.max(0, Math.min(v.r ? v.r.x : 0, h / 2, w / 2)).toFixed(2) + 'px';
+      island.style.transform = 'translate3d(0,' + (v.y ? v.y.x : 0).toFixed(2) + 'px,0) scale(' + (v.s ? v.s.x : 1).toFixed(4) + ')';
+      island.style.opacity = Math.max(0, Math.min(1, v.o ? v.o.x : 1)).toFixed(3);
+      glass.style.transform = 'translate3d(' + (v.gx ? v.gx.x : 0).toFixed(2) + 'px,' + (v.gy ? v.gy.x : 0).toFixed(2) + 'px,0) scale(' + (v.gs ? v.gs.x : 1).toFixed(4) + ')';
+      glass.style.opacity = Math.max(0, Math.min(1, v.go ? v.go.x : 0)).toFixed(3);
+      trail.style.transform = 'translate3d(' + (v.tx ? v.tx.x : 0).toFixed(2) + 'px,' + (v.ty ? v.ty.x : 0).toFixed(2) + 'px,0) scale(' + (v.ts ? v.ts.x : 1).toFixed(4) + ')';
+      trail.style.opacity = Math.max(0, Math.min(1, v.to ? v.to.x : 0)).toFixed(3);
+    });
+    const M = SPRING.morph, C = SPRING.content;
+    const syncReduce = () => anim.setInstant(reduce());
+    syncReduce();
+    if (mqReduce.addEventListener) mqReduce.addEventListener('change', syncReduce);
 
     function measureGeo() {
       const probe = el('div', 'island-probe');
       document.body.appendChild(probe);
-      let sat = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+      const sat = parseFloat(getComputedStyle(probe).paddingTop) || 0;
       probe.remove();
       const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
       const force = new URLSearchParams(location.search).get('island');
@@ -204,67 +285,83 @@
       return geometry({ sat, vw: innerWidth, standalone });
     }
     function layoutGeo() {
-      geo = measureGeo();
+      const g = measureGeo();
+      const changed = !geo || g.mode !== geo.mode || g.vw !== geo.vw || g.top !== geo.top;
+      geo = g;
       rootEl.dataset.mode = geo.mode;
       rootEl.style.setProperty('--itop', geo.top + 'px');
       rootEl.style.setProperty('--camw', geo.camW + 'px');
       rootEl.style.setProperty('--camh', geo.camH + 'px');
-      const wide = Math.min(geo.vw - 16, 404);
-      rootEl.style.setProperty('--wide', wide + 'px');
-      rootEl.style.setProperty('--alertw', Math.min(geo.vw - 16, 384) + 'px');
-      if (view !== 'gone') size(view, true);
+      rootEl.style.setProperty('--ear', geo.ear + 'px');
+      rootEl.style.setProperty('--expw', geo.expW + 'px');
+      vE.style.width = vQ.style.width = vA.style.width = geo.expW + 'px';
+      vC.style.width = compactWidth(geo) + 'px';
+      if (changed && view !== 'gone') target(view, true);
     }
 
-    function compactWidth() {
-      if (geo.mode === 'fused') return geo.camW + SIDE * 2;
-      const mid = vC.querySelector('.ic-mid');
-      return Math.ceil(30 + 14 + mid.scrollWidth + 14 + vC.querySelector('.ic-trail').scrollWidth + 16);
+    // Target sizes and shared element positions for each view.
+    const GS_COMPACT = 0.43;     // shared glass: 30x42 drawn, 13x18 in compact
+    const TS_COMPACT = 0.62;     // shared time: 24 px type, 15 px in compact
+    function contentHeight(v) {
+      const vEl = views[v];
+      const h = Math.ceil(vEl.scrollHeight);
+      return Math.max(84, Math.min(160, h));
     }
-    function size(v, instant) {
-      let w, h, r;
-      const wide = parseFloat(rootEl.style.getPropertyValue('--wide'));
+    function target(v, instant) {
+      const o = instant ? { instant: true } : null;
+      const cw = compactWidth(geo);
+      const fused = geo.mode === 'fused';
+      const tw = trail.offsetWidth || 40, th = trail.offsetHeight || 29;
       if (v === 'gone') {
-        if (geo.mode === 'fused') { w = geo.camW; h = geo.camH; r = geo.camH / 2; }
-        else { w = 40; h = 12; r = 6; }
-      } else if (v === 'compact') {
-        w = compactWidth(); h = geo.camH; r = geo.camH / 2;
-        vC.style.width = w + 'px';
-      } else {
-        const vEl = views[v];
-        w = v === 'alert' ? parseFloat(rootEl.style.getPropertyValue('--alertw')) : wide;
-        vEl.style.width = w + 'px';
-        h = Math.ceil(vEl.scrollHeight);
-        r = v === 'alert' ? Math.min(34, h / 2) : 40;
+        if (fused) { anim.set('w', geo.camW, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o); anim.set('s', 1, M, o); }
+        else { anim.set('w', geo.camH, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o); anim.set('s', 0.6, M, o); }
+        anim.set('y', 0, M, o); anim.set('o', 0, C, Object.assign({ eps: 0.005 }, o));
+        anim.set('go', 0, C, Object.assign({ eps: 0.005 }, o)); anim.set('to', 0, C, Object.assign({ eps: 0.005 }, o));
+        return;
       }
-      if (instant) island.classList.add('no-anim');
-      island.style.width = w + 'px';
-      island.style.height = h + 'px';
-      island.style.borderRadius = r + 'px';
-      if (instant) { void island.offsetWidth; island.classList.remove('no-anim'); }
+      anim.set('o', 1, C, Object.assign({ eps: 0.005 }, o));
+      anim.set('y', 0, M, o); anim.set('s', 1, M, o);
+      if (v === 'compact') {
+        anim.set('w', cw, M, o); anim.set('h', geo.camH, M, o); anim.set('r', geo.camH / 2, M, o);
+        // Snug against the camera: leading content ends 6 px before it, trailing starts 6 px after.
+        anim.set('gx', geo.ear - 7 - 30 * GS_COMPACT, M, o);
+        anim.set('gy', (geo.camH - 42 * GS_COMPACT) / 2, M, o);
+        anim.set('gs', GS_COMPACT, M, o); anim.set('go', 1, C, Object.assign({ eps: 0.005 }, o));
+        anim.set('tx', geo.ear + geo.camW + 7, M, o);
+        anim.set('ty', (geo.camH - th * TS_COMPACT) / 2, M, o);
+        anim.set('ts', TS_COMPACT, M, o); anim.set('to', 1, C, Object.assign({ eps: 0.005 }, o));
+        return;
+      }
+      const h = contentHeight(v);
+      anim.set('w', geo.expW, M, o); anim.set('h', h, M, o); anim.set('r', 44, M, o);
+      if (v === 'expanded') {
+        const sg = vE.querySelector('.ix-slot-glass'), st = vE.querySelector('.ix-slot-trail');
+        anim.set('gx', sg.offsetLeft, M, o); anim.set('gy', sg.offsetTop, M, o); anim.set('gs', 1, M, o); anim.set('go', 1, C, Object.assign({ eps: 0.005 }, o));
+        anim.set('tx', st.offsetLeft, M, o); anim.set('ty', st.offsetTop, M, o); anim.set('ts', 1, M, o); anim.set('to', 1, C, Object.assign({ eps: 0.005 }, o));
+      } else {
+        anim.set('go', 0, C, Object.assign({ eps: 0.005 }, o)); anim.set('to', 0, C, Object.assign({ eps: 0.005 }, o));
+      }
     }
 
     function show(v) {
-      if (v === view) { if (v !== 'gone') size(v); return; }
+      if (v === view) { if (v !== 'gone') target(v); return; }
       const from = view;
       view = v;
       island.dataset.view = v;
       rootEl.dataset.view = v;
       vC.querySelector('.ic-hit').setAttribute('aria-expanded', String(v === 'expanded' || v === 'quick'));
-      if (v !== 'gone') rootEl.hidden = false;
-      if ((v === 'compact' || v === 'gone') && snap) renderCompact();
-      if (from === 'gone' && v !== 'gone') {
-        // Start from the camera (or a dot) so it grows out of the hardware.
-        size('gone', true);
-        island.classList.add('arriving');
-        requestAnimationFrame(() => requestAnimationFrame(() => { island.classList.remove('arriving'); size(v); }));
-      } else {
-        size(v);
-      }
-      if (v === 'gone') {
-        setTimeout(() => { if (view === 'gone') rootEl.hidden = true; }, reduce() ? 0 : 520);
-      }
       const hadFocus = island.contains(document.activeElement);
       Object.keys(views).forEach((k) => { views[k].inert = k !== v; });
+      clearTimeout(hideTimer);
+      if (v !== 'gone') rootEl.hidden = false;
+      if (snap) { renderShared(); if (v === 'expanded') renderExpanded(); }
+      if (from === 'gone' && v !== 'gone') {
+        // Grow out of the camera (or a small circle when floating), never from a thin line.
+        target('gone', true);
+        anim.set('o', 1, C, { from: geo.mode === 'fused' ? 1 : 0, eps: 0.005 });
+      }
+      target(v);
+      if (v === 'gone') hideTimer = setTimeout(() => { if (view === 'gone' && anim.settled()) rootEl.hidden = true; else if (view === 'gone') hideTimer = setTimeout(() => { if (view === 'gone') rootEl.hidden = true; }, 600); }, reduce() ? 0 : 650);
       if ((v === 'expanded' || v === 'quick') && kbd) {
         setTimeout(() => { const b = views[v].querySelector('button'); if (b) b.focus({ preventScroll: true }); }, 60);
       } else if (v === 'compact' && hadFocus) {
@@ -281,84 +378,70 @@
     }
 
     // ---- Rendering
-    function setTone(t, fromCompact) { if (fromCompact && view !== 'compact' && view !== 'gone') return; island.dataset.tone = t; }
-    function renderCompact() {
+    function toneFor() {
+      const now = Date.now();
+      if (snap.water && snap.water.until && snap.water.until > now) return 'water';
+      return snap.status === 'over' ? 'over' : snap.status === 'impaired' ? 'impaired' : 'clear';
+    }
+    function renderShared() {
       const now = Date.now();
       const water = snap.water && snap.water.until && snap.water.until > now;
-      vC.classList.toggle('is-water', !!water);
-      const mid = vC.querySelector('.ic-mid');
-      if (water) {
-        setTone('water', true);
-        rollers.trail.set(splitLeft(snap.water.until - now, true));
-        mid.textContent = geo.mode === 'floating' ? 'Water break' : '';
-        return;
-      }
-      setTone(snap.status === 'over' ? 'over' : snap.status === 'impaired' ? 'impaired' : 'clear', true);
+      if (view !== 'alert') island.dataset.tone = toneFor();
+      glass.classList.toggle('is-water', !!water);
       const lvl = snap.peak > 0 ? Math.max(0, Math.min(1, snap.bac / snap.peak)) : 0;
-      vC.querySelector('.mg-liquid').style.transform = 'translateY(' + (3 + (1 - lvl) * 17).toFixed(2) + 'px)';
-      vC.querySelector('.mg-foam').style.transform = 'translateY(' + (1.4 + (1 - lvl) * 17).toFixed(2) + 'px)';
-      rollers.trail.set(snap.status === 'clear' ? 'Clear' : splitLeft(snap.clearAt - now));
-      mid.textContent = geo.mode === 'floating' ? (snap.status === 'clear' ? 'All clear' : 'Clear by ' + snap.fmt.clear) : '';
+      glass.querySelector('.sg-level').style.transform = 'translateY(' + ((1 - lvl) * 33).toFixed(2) + 'px)';
+      const txt = water ? splitLeft(snap.water.until - now, true) : (snap.status === 'clear' ? 'Clear' : splitLeft(snap.clearAt - now));
+      const rebuilt = rollTrail.set(txt, reduce());
+      vE.style.setProperty('--tw', (trail.offsetWidth || 40) + 'px');
+      if (rebuilt && (view === 'compact' || view === 'expanded')) target(view);
     }
     function renderExpanded() {
       const now = Date.now();
-      const st = snap.status;
-      vE.querySelector('.ix-status-t').textContent = st === 'over' ? 'Over the legal limit' : st === 'impaired' ? 'Under the limit, still impaired' : 'Clear, by this estimate';
-      rollers.bac.set(snap.fmt.bac);
-      rollers.clear.set(st === 'clear' ? snap.fmt.clearedAt : snap.fmt.clear);
-      vE.querySelector('.ix-k').textContent = st === 'clear' ? 'Clear since' : 'Clear by';
-      vE.querySelector('.ix-sub').textContent = st === 'clear' ? 'Have a glass of water anyway.' : snap.fmt.clearDay + ', ' + snap.fmt.left + ' to go';
-      const lvl = snap.peak > 0 ? Math.max(0, Math.min(1, snap.bac / snap.peak)) : 0;
-      vE.querySelector('.xg-level').style.transform = 'translateY(' + (6 + (1 - lvl) * 50).toFixed(1) + 'px)';
-      // Timeline of the night
-      const span = Math.max(1, snap.clearAt - snap.start);
-      const pct = (t) => Math.max(0, Math.min(100, (t - snap.start) / span * 100));
-      const pNow = pct(now);
-      vE.querySelector('.ix-past').style.width = pNow + '%';
-      vE.querySelector('.ix-now').style.left = pNow + '%';
-      const tick = vE.querySelector('.ix-tick');
-      const mid = vE.querySelector('.ix-lmid');
-      if (snap.underAt && snap.underAt > snap.start && snap.underAt < snap.clearAt) {
-        const pu = pct(snap.underAt);
-        tick.hidden = false; tick.style.left = pu + '%';
-        mid.hidden = pu < 22 || pu > 78;
-        mid.style.left = pu + '%';
-        mid.textContent = 'Under ' + snap.fmt.limit + ' ' + snap.fmt.underAt;
-      } else { tick.hidden = true; mid.hidden = true; }
-      vE.querySelector('.ix-l0').textContent = snap.fmt.start;
-      vE.querySelector('.ix-l1').textContent = snap.fmt.clear;
-      // Water row and actions
       const water = snap.water && snap.water.until && snap.water.until > now;
-      const wr = vE.querySelector('.ix-water');
-      wr.hidden = !water;
-      if (water) wr.textContent = 'Water break, ' + splitLeft(snap.water.until - now, true) + ' left';
-      const addL = vE.querySelector('[data-act="add"] .ix-al');
-      addL.textContent = snap.last ? '+1 ' + snap.last.short : 'Add a drink';
-      vE.querySelector('[data-act="water"] .ix-al').textContent = water ? 'End break' : 'Water break';
-      setTone(st === 'over' ? 'over' : st === 'impaired' ? 'impaired' : 'clear');
+      const st = snap.status;
+      vE.querySelector('.ix-k-clear').textContent = st === 'clear' ? 'Clear since' : 'Clear by';
+      rollClear.set(snap.fmt.clear, reduce());
+      vE.querySelector('.ix-k-left').textContent = water ? 'water break' : st === 'clear' ? 'all done' : 'to go';
+      let status;
+      if (water) status = 'Have a glass of water';
+      else if (st === 'over') status = snap.fmt.bac + ', over the limit until ' + snap.fmt.underAt;
+      else if (st === 'impaired') status = snap.fmt.bac + ', under the limit but impaired';
+      else status = 'Clear, by this estimate';
+      vE.querySelector('.ix-status-t').textContent = status;
+      const a = primaryAction(snap, now);
+      const b = vE.querySelector('.ix-act');
+      b.dataset.act = a.act;
+      b.querySelector('.ix-ic').innerHTML = ICON[a.icon];
+      b.querySelector('.ix-al').textContent = a.label;
     }
     function renderQuick() {
-      const box = vQ.querySelector('.iq-tiles');
-      box.innerHTML = '';
-      const seen = new Set();
-      const list = [];
+      const row = vQ.querySelector('.iq-row');
+      row.textContent = '';
+      const seen = new Set(), list = [];
       if (snap.last) { list.push(snap.last); seen.add(snap.last.key); }
       (snap.favs || []).forEach((f) => { if (!seen.has(f.key) && list.length < 3) { list.push(f); seen.add(f.key); } });
-      list.forEach((d, i) => {
-        const b = el('button', 'iq-tile');
+      const now = Date.now();
+      const water = snap.water && snap.water.until && snap.water.until > now;
+      const tiles = list.map((d) => ({ kind: 'drink', d, n: d.short || d.name, m: d.ml + ' ml, ' + d.abv + '%', icon: 'glass' }));
+      tiles.push({ kind: 'water', n: water ? 'End break' : 'Water break', m: water ? splitLeft(snap.water.until - now, true) + ' left' : 'Starts a timer', icon: 'water' });
+      tiles.push({ kind: 'text', n: 'Text a friend', m: 'Share your status', icon: 'text' });
+      tiles.push({ kind: 'picker', n: 'All drinks', m: 'Open the list', icon: 'list' });
+      tiles.forEach((t, i) => {
+        const b = el('button', 'iq-tile iq-' + t.kind);
         b.type = 'button';
         b.style.setProperty('--i', i);
-        b.innerHTML = '<span class="iq-n"></span><span class="iq-m"></span>';
-        b.querySelector('.iq-n').textContent = d.name;
-        b.querySelector('.iq-m').textContent = d.ml + ' ml, ' + d.abv + '%';
-        b.addEventListener('click', (e) => { e.stopPropagation(); collapse(); opts.onAdd(d); });
-        box.appendChild(b);
+        b.innerHTML = '<span class="iq-ic" aria-hidden="true">' + ICON[t.icon] + '</span><span class="iq-n"></span><span class="iq-m"></span>';
+        b.querySelector('.iq-n').textContent = t.n;
+        b.querySelector('.iq-m').textContent = t.m;
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (t.kind === 'drink') { show('expanded'); opts.onAdd(t.d); }
+          if (t.kind === 'water') { show('expanded'); opts.onWater(); }
+          if (t.kind === 'text') { collapse(); opts.onText(); }
+          if (t.kind === 'picker') { collapse(); opts.onPicker(); }
+        });
+        row.appendChild(b);
       });
-      const more = el('button', 'iq-tile iq-more', '<span class="iq-ic">' + SVG.more + '</span><span class="iq-n">More drinks</span>');
-      more.type = 'button';
-      more.style.setProperty('--i', list.length);
-      more.addEventListener('click', (e) => { e.stopPropagation(); collapse(); opts.onPicker(); });
-      box.appendChild(more);
     }
 
     function copyFor(kind, s) {
@@ -374,116 +457,131 @@
       }
     }
 
-    // ---- Alerts
+    // ---- Alerts: essential moments only
     function alert(kind, title, sub) {
-      if (!enabled) return;
+      if (!enabled || !snap) return;
       if (!title) { const c = copyFor(kind, snap); title = c[0]; sub = c[1]; }
+      live.textContent = title + '. ' + (sub || '');
+      if (view === 'expanded' || view === 'quick') return;
       alertQ = alertQ.filter((a) => a.kind !== kind);
       alertQ.push({ kind, title, sub });
       if (alertQ.length > 3) alertQ.shift();
-      if (view === 'expanded' || view === 'quick') { live.textContent = title + '. ' + (sub || ''); alertQ.pop(); return; }
       if (view !== 'alert') nextAlert();
     }
     function nextAlert() {
       const a = alertQ.shift();
       if (!a) { alertKind = null; show(restingView()); return; }
       alertKind = a.kind;
-      setTone(TONE[a.kind] || 'amber');
-      vA.querySelector('.ia-glyph').innerHTML = SVG[a.kind.startsWith('water') ? 'water' : a.kind] || SVG.added;
+      island.dataset.tone = TONE[a.kind] || 'impaired';
+      vA.querySelector('.ia-glyph').innerHTML = ICON[a.kind === 'water-done' ? 'water' : a.kind] || ICON.glass;
       vA.querySelector('.ia-title').textContent = a.title;
       vA.querySelector('.ia-sub').textContent = a.sub || '';
       vA.classList.remove('play'); void vA.offsetWidth; vA.classList.add('play');
-      live.textContent = a.title + '. ' + (a.sub || '');
-      if (view === 'alert') size('alert'); else show('alert');
-      island.classList.remove('breath'); void island.offsetWidth; island.classList.add('breath');
-      alertStart = Date.now(); alertPaused = 0;
+      if (view === 'alert') target('alert'); else show('alert');
+      alertStart = Date.now();
       clearTimeout(alertTimer);
       alertTimer = setTimeout(endAlert, ALERT_MS);
     }
     function endAlert() { clearTimeout(alertTimer); nextAlert(); }
 
-    // ---- Expand and collapse
-    let kbd = false;
     function expand(which) {
       clearTimeout(alertTimer); alertQ = []; alertKind = null;
-      if (which === 'quick') renderQuick(); else renderExpanded();
+      if (which === 'quick') renderQuick();
       show(which || 'expanded');
     }
     function collapse() {
       if (view !== 'expanded' && view !== 'quick' && view !== 'alert') return;
       clearTimeout(alertTimer); alertQ = []; alertKind = null;
-      island.style.transform = '';
-      renderCompact();
       show(restingView());
     }
 
-    // ---- Gestures
+    // ---- Gestures: follow the finger, hand the speed back on release
     let press = null;
+    function track(e) {
+      const t = performance.now();
+      press.hist.push([t, e.clientY]);
+      while (press.hist.length > 2 && t - press.hist[0][0] > 90) press.hist.shift();
+    }
+    function velocityY(p) {
+      const h = p.hist;
+      if (h.length < 2) return 0;
+      const a = h[0], b = h[h.length - 1];
+      return (b[1] - a[1]) / Math.max(1, b[0] - a[0]) * 1000; // px per second
+    }
     island.addEventListener('pointerdown', (e) => {
       if (view === 'gone') return;
       kbd = false;
-      press = { y: e.clientY, x: e.clientX, t: Date.now(), long: false, dy: 0, btn: !!e.target.closest('button:not(.ic-hit)') };
-      island.classList.add('pressed');
+      const onButton = !!e.target.closest('button:not(.ic-hit)');
+      const inRow = !!e.target.closest('.iq-row');
+      press = { y: e.clientY, x: e.clientX, t: performance.now(), held: false, dy: 0, btn: onButton, row: inRow, hist: [[performance.now(), e.clientY]], h0: anim.get('h') };
+      if (!onButton && !inRow) anim.set('s', 0.965, SPRING.press);
       if (view === 'compact' || view === 'alert') {
-        press.timer = setTimeout(() => { press.long = true; island.classList.remove('pressed'); expand('quick'); }, 450);
+        press.timer = setTimeout(() => { if (!press) return; press.held = true; anim.set('s', 1, M); expand(); }, 380);
       }
-      if (view === 'alert') alertPaused = Date.now();
+      if (onButton && e.target.closest('.ix-act')) {
+        press.timer = setTimeout(() => { if (!press) return; press.held = true; expand('quick'); }, 420);
+      }
     });
     island.addEventListener('pointermove', (e) => {
       if (!press) return;
+      track(e);
       const dy = e.clientY - press.y, dx = e.clientX - press.x;
       press.dy = dy;
-      if (Math.abs(dy) > 6 || Math.abs(dx) > 6) clearTimeout(press.timer);
-      if (press.long || press.btn) return;
+      if ((Math.abs(dy) > 7 || Math.abs(dx) > 7) && !press.moved) { press.moved = true; clearTimeout(press.timer); anim.set('s', 1, SPRING.press); }
+      if (press.held || press.btn || press.row) return;
       const open = view === 'expanded' || view === 'quick';
-      if (open && dy < 0) island.style.transform = 'translateY(' + (dy * 0.32).toFixed(1) + 'px) scaleY(' + (1 + dy * 0.0009).toFixed(3) + ')';
-      else if (!open && dy > 0) island.style.transform = 'translateY(' + Math.min(dy * 0.3, 14).toFixed(1) + 'px) scale(' + (1 + Math.min(dy, 50) * 0.0016).toFixed(3) + ')';
+      if (open && dy < 0) {
+        anim.set('y', dy * 0.32, SPRING.follow);
+        anim.set('h', Math.max(geo.camH, press.h0 + dy * 0.22), SPRING.follow);
+      } else if (!open && dy > 0) {
+        const pull = Math.min(dy, 70);
+        anim.set('y', pull * 0.28, SPRING.follow);
+        anim.set('s', 1 + pull * 0.0012, SPRING.follow);
+      }
     });
     function release(e) {
       if (!press) return;
       clearTimeout(press.timer);
-      island.classList.remove('pressed');
-      island.style.transform = '';
       const p = press; press = null;
-      if (alertPaused && view === 'alert') {
-        const left = ALERT_MS - (alertPaused - alertStart);
-        alertStart = Date.now() - (ALERT_MS - left);
-        alertPaused = 0;
-        clearTimeout(alertTimer); alertTimer = setTimeout(endAlert, Math.max(800, left));
-      }
-      if (p.long || p.btn || (e && e.type === 'pointercancel')) return;
+      const vy = velocityY(p);
       const open = view === 'expanded' || view === 'quick';
-      if (open && p.dy < -28) return collapse();
-      if (!open && p.dy > 22) return expand();
-      if (Math.abs(p.dy) < 8) {
+      if (p.held) return;
+      if (e.type === 'pointercancel') { if (view !== 'gone') target(view); return; }
+      if (open && !p.btn && !p.row && (p.dy < -36 || vy < -500)) { collapse(); anim.set('y', 0, M, { velocity: vy * 0.3 }); return; }
+      if (!open && !p.btn && (p.dy > 24 || vy > 500)) { expand(); return; }
+      if (Math.abs(p.dy) < 8 && !p.btn && !p.row) {
         if (view === 'alert' && alertKind === 'danger') { collapse(); opts.onDanger(); return; }
-        if (view === 'compact' || view === 'alert') return expand();
-        if (open && !e.target.closest('button')) return collapse();
+        if (view === 'compact' || view === 'alert') { expand(); return; }
+        if (open && !e.target.closest('button')) { collapse(); return; }
       }
+      if (view !== 'gone') target(view);
     }
     island.addEventListener('pointerup', release);
     island.addEventListener('pointercancel', release);
     vC.querySelector('.ic-hit').addEventListener('click', (e) => { if (e.detail === 0) { kbd = true; expand(); } });
-    vE.querySelector('.ix-status').addEventListener('click', (e) => { if (e.detail === 0) collapse(); });
-    vQ.querySelector('.iq-close').addEventListener('click', (e) => { e.stopPropagation(); collapse(); });
-    vE.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', (e) => {
+    vE.querySelector('.ix-act').addEventListener('click', (e) => {
       e.stopPropagation();
-      const act = b.dataset.act;
-      if (act === 'add') { collapse(); opts.onAddLast(); }
-      if (act === 'water') { collapse(); opts.onWater(); }
-      if (act === 'text') { opts.onText(); }
-    }));
+      const act = e.currentTarget.dataset.act;
+      if (act === 'add') opts.onAddLast();
+      if (act === 'water') opts.onWater();
+      if (act === 'picker') { collapse(); opts.onPicker(); }
+    });
+    vE.querySelector('.ix-more').addEventListener('click', (e) => { e.stopPropagation(); kbd = e.detail === 0; expand('quick'); });
     document.addEventListener('pointerdown', (e) => {
       if ((view === 'expanded' || view === 'quick') && !island.contains(e.target)) collapse();
     }, true);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && view !== 'compact' && view !== 'gone') { kbd = true; collapse(); } });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (view === 'quick') { kbd = true; show('expanded'); }
+      else if (view === 'expanded' || view === 'alert') { kbd = true; collapse(); }
+    });
     addEventListener('resize', layoutGeo);
     addEventListener('orientationchange', () => setTimeout(layoutGeo, 300));
 
     Object.keys(views).forEach((k) => { views[k].inert = true; });
     layoutGeo();
+    target('gone', true);
 
-    // ---- Public
     const ctrl = {
       update(s) {
         prevSnap = snap; snap = s;
@@ -495,30 +593,39 @@
         }
         const kind = alertFor(prevSnap, snap);
         if (kind) alert(kind);
-        if (view === 'compact' || view === 'gone' || view === 'alert') renderCompact();
-        if (view === 'expanded') renderExpanded();
+        renderShared();
+        if (view === 'expanded') { renderExpanded(); target('expanded'); }
+        if (view === 'quick') renderQuickLive();
         if (view === 'compact' || view === 'gone') {
           const want = restingView();
-          if (want !== view) show(want); else if (view === 'compact') size('compact');
+          if (want !== view) show(want);
         }
       },
       alert,
       expand, collapse,
       setHeroVisible(v) {
-        heroVisible = v;
-        if (view === 'compact' || view === 'gone') show(restingView());
+        // A short buffer so scrolling past the countdown never makes it flicker.
+        clearTimeout(heroTimer);
+        heroTimer = setTimeout(() => {
+          heroVisible = v;
+          if (view === 'compact' || view === 'gone') show(restingView());
+        }, v ? 120 : 180);
       },
       setEnabled(v) {
         enabled = v;
-        if (!v) { clearTimeout(alertTimer); alertQ = []; show('gone'); } else if (snap) { renderCompact(); show(restingView()); }
+        if (!v) { clearTimeout(alertTimer); alertQ = []; show('gone'); } else if (snap) show(restingView());
       },
       get view() { return view; },
       get mode() { return geo.mode; },
       relayout: layoutGeo
     };
+    function renderQuickLive() {
+      const w = vQ.querySelector('.iq-water .iq-m');
+      if (w && snap.water && snap.water.until && snap.water.until > Date.now()) w.textContent = splitLeft(snap.water.until - Date.now(), true) + ' left';
+    }
     root.DryIsland.current = ctrl;
     return ctrl;
   }
 
-  root.DryIsland = { geometry, alertFor, splitLeft, create };
+  root.DryIsland = { geometry, compactWidth, alertFor, primaryAction, splitLeft, springStep, SPRING, create };
 })(typeof self !== 'undefined' ? self : this);
