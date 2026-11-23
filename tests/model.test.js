@@ -97,3 +97,41 @@ test('small amounts still register and clear soon after reading zero', () => {
     assert.ok(tailMin <= 2, `tail of ${tailMin} min when fed=${fed}`);
   }
 });
+
+// Rounds: several timed windows on one timeline.
+const local = (h, m = 0, d = 23) => new Date(2026, 10, d, h, m).getTime();
+const hein = (qty) => ({ name: 'Heineken', abv: 5, ml: 330, qty, share: 1 });
+const body = { kg: 75, sex: 'm', beta: 0.015, fed: false };
+
+test('legacy window and a single round give the same curve', () => {
+  const legacy = M.simulate(Object.assign({ drinks: [hein(6)], start: local(14), end: local(18) }, body));
+  const rounds = M.simulate(Object.assign({ rounds: [{ drinks: [hein(6)], start: local(14), end: local(18) }] }, body));
+  assert.deepEqual(rounds, legacy);
+});
+
+test('six Heinekens from 2 PM to 6 PM clear at 01:16', () => {
+  const sim = M.simulate(Object.assign({ rounds: [{ drinks: [hein(6)], start: local(14), end: local(18) }] }, body));
+  assert.equal(sim.peak.toFixed(3), '0.089');
+  assert.ok(Math.abs(sim.clear - local(1, 16, 24)) <= 2 * 60000);
+});
+
+test('a second round after a break carries the leftover alcohol', () => {
+  const o = Object.assign({ rounds: [
+    { drinks: [hein(3)], start: local(21), end: local(23) },
+    { drinks: [hein(6)], start: local(14), end: local(18) }
+  ] }, body);
+  const sim = M.simulate(o);
+  assert.equal(sim.start, local(14));
+  assert.equal(M.bacAt(sim, local(21)).toFixed(3), '0.055');
+  assert.equal(M.bacAt(sim, local(23)).toFixed(3), '0.088');
+  assert.ok(Math.abs(sim.clear - local(6, 24, 24)) <= 2 * 60000);
+});
+
+test('stopAt clamps every round and pace counts only the live round', () => {
+  const o = Object.assign({ rounds: [
+    { drinks: [hein(6)], start: local(14), end: local(18) },
+    { drinks: [hein(2)], start: local(21), end: local(23) }
+  ] }, body);
+  assert.deepEqual(M.roundsOf(M.stopAt(o, local(22))).map((r) => r.end), [local(18), local(22)]);
+  assert.equal(M.stdLastHour(o, local(23)).toFixed(2), (M.gramsOf(hein(2)) / 2 / M.STD_G).toFixed(2));
+});
