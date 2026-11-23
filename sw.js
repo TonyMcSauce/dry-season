@@ -22,6 +22,7 @@ const SHELL = [
   './index.html',
   './version.js',
   './model.js',
+  './night.js',
   './drinks.js',
   './mug.js',
   './island.js',
