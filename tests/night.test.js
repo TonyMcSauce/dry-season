@@ -32,3 +32,46 @@ test('simOpts ends the live round at now', () => {
   const o = N.simOpts(s, { kg: 75, sex: 'm', beta: 0.015 }, local(22));
   assert.equal(o.rounds[0].end, local(22));
 });
+
+// Where a new round goes.
+const P = { kg: 75, sex: 'm', beta: 0.015 };
+const night = (...rounds) => ({ v: 5, fed: false, driveAt: null, water: null,
+  rounds: rounds.map((r, i) => Object.assign({ id: 'r' + i, late: true }, r)) });
+
+test('a round after a break continues while alcohol remains, and reports what was left', () => {
+  const p = N.place(night({ start: local(14), end: local(18), drinks: [hein(6)] }), P,
+    { start: local(21), end: local(23), drinks: [hein(3)] }, local(23));
+  assert.equal(p.action, 'continue');
+  assert.equal(p.carried.toFixed(3), '0.055');
+  assert.equal(p.overlap, null);
+});
+
+test('a late round before tonight still continues when its alcohol reached tonight', () => {
+  const p = N.place(night({ start: local(20), end: null, drinks: [hein(2)] }), P,
+    { start: local(14), end: local(18), drinks: [hein(6)] }, local(22));
+  assert.equal(p.action, 'continue');
+});
+
+test('overlapping drinking times are reported', () => {
+  const p = N.place(night({ start: local(17), end: null, drinks: [hein(3)] }), P,
+    { start: local(14), end: local(18), drinks: [hein(6)] }, local(22));
+  assert.deepEqual(p.overlap, { roundId: 'r0', from: local(17), to: local(18) });
+});
+
+test('once tonight has cleared, a later round starts a fresh night', () => {
+  const p = N.place(night({ start: local(12), end: local(13), drinks: [hein(1)] }), P,
+    { start: local(20), end: local(21), drinks: [hein(2)] }, local(22));
+  assert.equal(p.action, 'fresh');
+});
+
+test('yesterday goes to History, unless it is still in your system', () => {
+  const empty = night();
+  assert.equal(N.place(empty, P, { start: local(20, 0, 22), end: local(23, 0, 22), drinks: [hein(2)] }, local(22)).action, 'history');
+  assert.equal(N.place(empty, P, { start: local(22, 0, 22), end: local(2), drinks: [hein(6)] }, local(3)).action, 'continue');
+});
+
+test('an earlier, separate session today goes to History', () => {
+  const p = N.place(night({ start: local(20), end: local(21), drinks: [hein(2)] }), P,
+    { start: local(11), end: local(12), drinks: [hein(1)] }, local(22));
+  assert.equal(p.action, 'history');
+});
