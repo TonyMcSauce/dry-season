@@ -157,7 +157,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;
 .tab li.round-h + li{border-top:1.5px dashed rgba(42,26,15,.22)}
 .rounds{list-style:none;margin:0 0 4px;padding:0;display:grid;gap:10px}
 .round-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--field);border:1px solid var(--line)}
-.round-card .rc-body{flex:1;min-width:0;display:flex;flex-direction:column}
+.round-card .rc-body{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:0;background:transparent;color:inherit;padding:0;min-height:44px}
 .rc-when{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
 .rc-what{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-meta{font-size:.8rem;color:var(--muted)}
@@ -212,6 +212,15 @@ input[type=range]{width:100%;accent-color:var(--amber);margin:8px 0 0}
 .history li:last-child{border-bottom:1px solid var(--line)}
 .history .h-date{font-weight:700}
 .history .h-meta{color:var(--muted);font-size:.9rem;text-align:right}
+.history li:has(.h-open){padding:0}
+.h-open{display:flex;justify-content:space-between;gap:12px;width:100%;padding:12px 0;border:0;background:transparent;color:inherit;text-align:left;min-height:56px}
+.past-sky{position:relative;height:190px;overflow:hidden;background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--sky-low) 85%,var(--horizon) 100%)}
+.past-sky .horizon{color:var(--sheet)}
+.past-body{padding:0 0 22px}
+.past-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px var(--gutter) 6px}
+.past-stats dt{font-size:.8rem;color:var(--muted)}
+.past-stats dd{margin:0;font-weight:700;font-size:1.1rem}
+.past-body .rounds{padding:0 var(--gutter)}
 .actions{display:grid;gap:10px;padding:22px var(--gutter) 0}
 footer{padding:36px var(--gutter) 40px;color:var(--muted);font-size:.85rem;text-align:center}
 
@@ -780,6 +789,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <button class="link-btn" id="lateAll" type="button">All drinks</button>
     </div>
     <button class="btn" id="lateAdd" type="button">Add round to tonight</button>
+    <button class="btn quiet" id="lateRemove" type="button" hidden>Remove round</button>
   </div>
   <div class="late-overlap" id="lateOverlap" hidden>
     <svg class="ov-art" viewBox="0 0 120 64" aria-hidden="true"><circle cx="44" cy="32" r="26"/><circle cx="76" cy="32" r="26"/><path class="ov-lens" d="M60 10.7a26 26 0 0 1 0 42.6a26 26 0 0 1 0-42.6z"/></svg>
@@ -794,6 +804,34 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <span><strong>Extra drinks</strong><span>Count both rounds</span></span>
     </button>
     <p class="ov-safe"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l5.5 2v4c0 3.4-2.3 6-5.5 7-3.2-1-5.5-3.6-5.5-7v-4z"/></svg>Not sure? Counting both keeps your estimate on the safe side.</p>
+  </div>
+</dialog>
+
+<dialog class="sheet past" id="past" aria-labelledby="pastTitle">
+  <div class="sheet-head">
+    <h3 id="pastTitle">Past night</h3>
+    <button class="icon-btn" id="pastClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="past-body">
+    <div class="past-sky">
+      <svg class="horizon" id="pastHorizon" viewBox="0 0 400 150" aria-hidden="true">
+        <g class="hz-bands"></g>
+        <line class="hz-limit" x1="0" x2="400" y1="78" y2="78"/>
+        <path class="hz-hill" d="M0 142L400 142L400 142L0 142Z"/>
+        <rect class="hz-ground" x="0" y="141.5" width="400" height="9"/>
+        <path class="hz-ghost"/>
+        <path class="hz-ridge" d="M0 142L400 142"/>
+        <g class="hz-labels"></g>
+        <circle class="hz-moon" r="4.5" cx="0" cy="135"/>
+        <circle class="hz-now" r="5.5" cx="0" cy="142"/>
+      </svg>
+    </div>
+    <dl class="past-stats">
+      <div><dt>Peak</dt><dd id="pastPeak"></dd></div>
+      <div><dt>Fully sober</dt><dd id="pastClear"></dd></div>
+      <div><dt>Drinks</dt><dd id="pastCount"></dd></div>
+    </dl>
+    <ul class="rounds" id="pastRounds"></ul>
   </div>
 </dialog>
 
@@ -1091,7 +1129,9 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     ul.innerHTML = '';
     rounds.forEach((r) => {
       const li = document.createElement('li'); li.className = 'round-card'; li.dataset.id = r.id;
-      li.innerHTML = '<span class="rc-body"><span class="rc-when"></span><span class="rc-what"></span><span class="rc-meta"></span></span>';
+      li.innerHTML = '<button type="button" class="rc-open rc-body"><span class="rc-when"></span><span class="rc-what"></span><span class="rc-meta"></span></button>';
+      li.querySelector('.rc-open').setAttribute('aria-label', 'Edit round ' + roundWhen(r) + ', ' + roundWhat(r));
+      li.querySelector('.rc-open').addEventListener('click', () => openLate(r));
       li.querySelector('.rc-when').textContent = roundWhen(r);
       li.querySelector('.rc-what').textContent = roundWhat(r);
       li.querySelector('.rc-meta').textContent = r.end == null ? 'still going' : r.late ? 'logged late' : 'logged as you went';
@@ -1154,13 +1194,42 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       const li = document.createElement('li');
       const { h: hh, m } = dur(n.clear - n.start);
       const date = new Date(n.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-      li.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
-      li.querySelector('.h-date').textContent = date;
-      li.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
-      li.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
+      const wrap = n.rounds && n.rounds.length ? document.createElement('button') : li;
+      wrap.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
+      wrap.querySelector('.h-date').textContent = date;
+      wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
+      wrap.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
+      if (wrap !== li) {
+        wrap.type = 'button'; wrap.className = 'h-open';
+        wrap.addEventListener('click', () => openPast(n));
+        li.appendChild(wrap);
+      }
       ul.appendChild(li);
     });
   }
+  const past = $('#past');
+  function openPast(n) {
+    $('#pastTitle').textContent = new Date(n.start).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' });
+    $('#pastPeak').textContent = fmtBac(n.peak);
+    $('#pastClear').textContent = fmtTime(n.clear);
+    $('#pastCount').textContent = String(n.count);
+    const ul = $('#pastRounds'); ul.innerHTML = '';
+    n.rounds.forEach((r) => {
+      const li = document.createElement('li'); li.className = 'round-card';
+      li.innerHTML = '<span class="rc-body"><span class="rc-when"></span><span class="rc-what"></span></span>';
+      li.querySelector('.rc-when').textContent = fmtTime(r.start) + ' to ' + fmtTime(r.end);
+      li.querySelector('.rc-what').textContent = roundWhat(r);
+      ul.appendChild(li);
+    });
+    past.showModal();
+    // Seen from the moment it cleared, so no "now" marker sits on the hills.
+    const o = N.simOpts({ rounds: n.rounds, fed: false }, state.profile, n.clear);
+    const sim = M.simulate(o);
+    window.DryHorizon.render($('#pastHorizon'), { sim, rounds: o.rounds, now: n.clear, limit: state.profile.limit, prevSim: null });
+    $('#pastHorizon .hz-now').style.display = 'none';
+  }
+  $('#pastClose').addEventListener('click', () => past.close());
+  past.addEventListener('click', (e) => { if (e.target === past) past.close(); });
   $('#saveNight').addEventListener('click', () => {
     const entry = N.summarize(state.session, state.profile, Date.now());
     if (!entry.G) { toast('Add a drink before saving'); return; }
@@ -1350,6 +1419,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   function lateView() {
     const now = Date.now();
     const cand = { start: draft.start, end: draft.end, drinks: draft.drinks };
+    if (editing) {
+      const rounds = state.session.rounds.map((r) => (r.id === editing.id ? cand : r));
+      const sim = M.simulate(N.simOpts({ rounds, fed: state.session.fed }, state.profile, now));
+      return { p: { action: 'continue', carried: 0, overlap: null }, sim, now, soberAt: sim.G > 0 ? sim.clear : draft.end };
+    }
     const p = N.place(state.session, state.profile, cand, now);
     const rounds = p.action === 'continue' ? state.session.rounds.concat([cand]) : [cand];
     const sim = M.simulate(N.simOpts({ rounds, fed: state.session.fed }, state.profile, now));
@@ -1412,26 +1486,39 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#fromVal').textContent = (draft.start < atToday(0) ? dayLabel(draft.start) + ' ' : '') + fmtTime(draft.start);
     $('#untilVal').textContent = draft.end >= now ? 'Now' : (draft.end < atToday(0) ? dayLabel(draft.end) + ' ' : '') + fmtTime(draft.end);
     renderLateDrinks();
-    const others = v.p.action === 'continue' ? state.session.rounds.map((r) => ({ start: r.start, end: N.endOf(r, now) })) : [];
+    const others = v.p.action === 'continue' ? state.session.rounds.filter((r) => !editing || r.id !== editing.id).map((r) => ({ start: r.start, end: N.endOf(r, now) })) : [];
     DryDial.render($('#dial'), { round: { start: draft.start, end: draft.end }, others, soberAt: v.soberAt, now, tone: hist ? 'history' : 'amber' });
     const clear = v.soberAt <= now;
     $('#dlKicker').textContent = hist ? 'That night, sober at' : clear ? 'Sober since' : 'Fully sober at';
     $('#dlTime').textContent = fmtTime(v.soberAt);
     const { h, m } = dur(v.soberAt - now);
     $('#dlTag').textContent = hist ? dayLabel(draft.start) + ' · History' : clear ? 'Already clear' : dayLabel(v.soberAt) + ' · ' + h + ' h ' + pad(m) + ' m';
-    $('#lateAdd').textContent = hist ? 'Save to History'
+    $('#lateAdd').textContent = editing ? 'Save round' : hist ? 'Save to History'
       : v.p.action === 'continue' && state.session.rounds.length ? 'Add round · continues tonight' : 'Add round to tonight';
   }
   function showLateMain() {
     $('#lateMain').hidden = false; $('#lateOverlap').hidden = true; $('#lateBack').hidden = true;
-    $('#lateTitle').textContent = 'Log earlier drinks';
+    $('#lateTitle').textContent = editing ? 'Edit round' : 'Log earlier drinks';
+    $('#lateRemove').hidden = !editing;
   }
-  function openLate() {
-    draft = newDraft();
+  let editing = null;                   // the round being edited, or null when logging a new one
+  function openLate(round) {
+    editing = round && round.id ? round : null;
+    draft = editing
+      ? { start: editing.start, end: editing.end == null ? Date.now() : editing.end, drinks: editing.drinks.map((d) => Object.assign({}, d)) }
+      : newDraft();
     late.classList.remove('leaving');
     showLateMain();
     renderLate();
     late.showModal();
+  }
+  function saveEdit() {
+    const now = Date.now();
+    const live = editing.end == null && draft.end >= now - MIN;
+    nightNote = null;
+    state = N.editRound(state, editing.id, { start: draft.start, end: live ? null : draft.end, drinks: draft.drinks });
+    save();
+    handOff();
   }
   function showOverlap(ov) {
     const r = state.session.rounds.find((x) => x.id === ov.roundId);
@@ -1484,14 +1571,20 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       setTimeout(() => orb.remove(), 1300);
     }, 420);
   }
-  $('#openLate').addEventListener('click', openLate);
+  $('#openLate').addEventListener('click', () => openLate());
   $('#lateClose').addEventListener('click', () => late.close());
   late.addEventListener('click', (e) => { if (e.target === late) late.close(); });
   $('#fromDown').addEventListener('click', () => setDraft({ start: draft.start - 15 * MIN }));
   $('#fromUp').addEventListener('click', () => setDraft({ start: Math.min(draft.start + 15 * MIN, draft.end - 15 * MIN) }));
   $('#untilDown').addEventListener('click', () => setDraft({ end: Math.max(draft.end - 15 * MIN, draft.start + 15 * MIN) }));
   $('#untilUp').addEventListener('click', () => setDraft({ end: draft.end + 15 * MIN }));
-  $('#lateAdd').addEventListener('click', () => commitLate());
+  $('#lateAdd').addEventListener('click', () => (editing ? saveEdit() : commitLate()));
+  $('#lateRemove').addEventListener('click', () => {
+    if (!editing || !confirm('Remove this round?')) return;
+    nightNote = null;
+    state = N.removeRound(state, editing.id);
+    save(); late.close(); renderAll(); toast('Round removed');
+  });
   $('#lateBack').addEventListener('click', showLateMain);
   $('#ovSame').addEventListener('click', () => commitLate('same'));
   $('#ovExtra').addEventListener('click', () => commitLate('extra'));

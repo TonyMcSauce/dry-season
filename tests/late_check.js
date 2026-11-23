@@ -9,6 +9,7 @@ const { spawn } = require('node:child_process');
 const net = require('node:net');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const M = require('../model.js');
 
 const ROOT = path.join(__dirname, '..');
 const local = (h, m = 0, d = 23) => new Date(2026, 10, d, h, m).getTime();
@@ -105,6 +106,38 @@ const checks = [
     await page.getByRole('button', { name: /Extra drinks/ }).click();
     await page.waitForTimeout(1200);
     assert.equal(await page.locator('#rounds li').count(), 3);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['edit a round, remove every round, and open a past night', async (browser, url) => {
+    const past = { start: local(20, 0, 22), end: local(23, 0, 22), drinks: [hein(3)] };
+    const sim = M.simulate(Object.assign({ rounds: [past] }, PROFILE, { fed: false }));
+    const entry = { start: sim.start, clear: sim.clear, G: sim.G, peak: sim.peak, count: 3, rounds: [Object.assign({ id: 'h1', late: true }, past)] };
+    const { page, errors } = await open(browser, url, Object.assign({}, EMPTY, { history: [entry] }));
+    page.on('dialog', (d) => d.accept());
+    await logRound(page, { from: 'Lunch', fromUp: 4, until: '4 h ago', heineken: 6 });
+    await page.click('#lateAdd');
+    await page.waitForTimeout(1200);
+    await page.locator('#rounds li .rc-open').first().click();
+    await page.waitForTimeout(300);
+    assert.equal((await text(page, '#lateTitle')).trim(), 'Edit round');
+    await page.click('#untilDown');
+    await page.getByRole('button', { name: 'Save round' }).click();
+    await page.waitForTimeout(1200);
+    assert.match(await text(page, '#rounds li'), /14:00 to 17:45/);
+    await page.locator('#rounds li .rc-open').first().click();
+    await page.waitForTimeout(300);
+    await page.getByRole('button', { name: 'Remove round' }).click();
+    await page.waitForTimeout(1200);
+    assert.equal(await page.locator('#rounds li').count(), 0);
+    assert.equal((await text(page, '#clearTime')).trim(), '--:--');
+    const ridge = await page.locator('#horizon .hz-ridge').getAttribute('d');
+    assert.ok(ridge.split('L').every((pt) => pt.trim().endsWith(' 142.0')), 'horizon is flat');
+    await page.locator('#historyList li button').first().click();
+    await page.waitForTimeout(400);
+    const hm = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    assert.equal((await text(page, '#pastClear')).trim(), hm(entry.clear));
     assert.deepEqual(errors, []);
     await page.close();
   }]
