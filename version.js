@@ -3,10 +3,8 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '5.1.0';
+self.DRY_VERSION = '5.2.0';
 self.DRY_CHANGES = [
-  'A 3D hero: a cold bottle beaded with condensation stands beside a real glass that bends the sunset behind it.',
-  'Your first drink pours: the cap pops, the bottle tips, and the glass fills with foam and rising bubbles. The glass empties as you sober up.',
-  'Your night is now the landscape behind your drinks, round by round, and the scene tilts with your phone.',
-  'With nothing on the tab, the hero simply reads Clear.'
+  'New Appearance setting under Your body: Automatic follows your phone, or choose Light or Dark for the whole app.',
+  'The 3D night scene at the top now always stays at dusk, in Light mode too.'
 ];

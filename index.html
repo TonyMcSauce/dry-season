@@ -6,6 +6,7 @@
 <title>Dry Season</title>
 <meta name="description" content="Log tonight's drinks and see when your body should be clear of alcohol.">
 <meta name="theme-color" content="#17212F">
+<script>try{var t=((JSON.parse(localStorage.getItem('dryseason.v1'))||{}).profile||{}).theme;if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -47,6 +48,21 @@
   :root:not([data-theme="dark"]) .glass{ color:#2A1A0F; }
 }
 :root[data-theme="dark"]{ color-scheme:dark; }
+:root[data-theme="light"]{
+  --sky-top:#E9D9BB; --sky-mid:#EFD3A2; --sky-low:#E2A563; --horizon:#C9763A;
+  --ground:#F5EEE1; --sheet:#FBF6EC;
+  --text:#2A1A0F; --muted:rgba(42,26,15,.64); --line:rgba(42,26,15,.15);
+  --field:rgba(42,26,15,.05); --receipt:#FFFBF3; --stars:0;
+  color-scheme:light;
+}
+:root[data-theme="light"] .hero{ --text:#2A1A0F; --muted:rgba(42,26,15,.7); }
+:root[data-theme="light"] .glass{ color:#2A1A0F; }
+/* The 3D hero is a dusk scene in every theme: its tokens and text stay dusk. In light it reads as a dusk card. */
+#hero.three{
+  --sky-top:#17212F; --sky-mid:#2D2926; --sky-low:#7A3F1F; --horizon:#C8742E; --ground:#16120E;
+  --text:#F6EDDA; --muted:rgba(246,237,218,.64); --line:rgba(246,237,218,.16); --field:rgba(246,237,218,.07);
+  color-scheme:dark; border-radius:0 0 28px 28px; color:var(--text);
+}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -697,6 +713,15 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         <div class="chips" id="limitChips" style="margin-top:10px"></div>
         <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
       </div>
+      <div>
+        <p class="label">Appearance</p>
+        <div class="seg" id="themeSeg" role="group" aria-label="Appearance">
+          <button type="button" data-theme-choice="auto">Automatic</button>
+          <button type="button" data-theme-choice="light">Light</button>
+          <button type="button" data-theme-choice="dark">Dark</button>
+        </div>
+        <p class="hint">Automatic follows your phone. The night scene at the top always stays at dusk.</p>
+      </div>
       <label class="switch" style="margin-top:0">
         <input type="checkbox" id="islandOn">
         <span class="track" aria-hidden="true"></span>
@@ -914,7 +939,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     return { v: 5, rounds: [], fed: false, driveAt: null, water: null };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true, theme: 'auto' }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
   }
   function load() {
     const d = defaults();
@@ -973,17 +998,15 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   let lastHorizon = null;
   // The 3D hero. Without WebGL (or three.js) this stays null and the flat glass and SVG horizon remain.
   const cssToken = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const sceneTokens = () => ({ skyTop: cssToken('--sky-top'), skyMid: cssToken('--sky-mid'), skyLow: cssToken('--sky-low'), horizon: cssToken('--horizon'),
-    ground: cssToken('--ground'), amber: cssToken('--amber'), ink: cssToken('--ink'), stars: cssToken('--stars') });
+  // The 3D hero is always at dusk, whatever the theme, so it uses the dark palette.
+  const sceneTokens = () => ({ skyTop: '#17212F', skyMid: '#2D2926', skyLow: '#7A3F1F', horizon: '#C8742E',
+    ground: '#16120E', amber: cssToken('--amber'), ink: cssToken('--ink'), stars: '1' });
   let scene = null, sceneStarted = false;
   try {
     scene = window.DryScene ? DryScene.create($('#scene3d'), $('#hero'), { tokens: sceneTokens, reduceMotion: () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches }) : null;
   } catch (e) { scene = null; }
   if (scene) {
     $('#hero').classList.add('three');
-    const retheme = () => scene.setTheme(sceneTokens());
-    if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
-    new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   }
   function layoutScene() {
     const hero = $('#hero'), sp = $('#stageSpace');
@@ -1203,8 +1226,20 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     return false;
   }
 
+  // Appearance: Automatic follows the phone; Light or Dark is fixed for the whole app
+  function applyTheme() {
+    const t = state.profile.theme;
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    else document.documentElement.removeAttribute('data-theme');
+  }
+  document.querySelectorAll('#themeSeg [data-theme-choice]').forEach((b) => b.addEventListener('click', () => {
+    state.profile.theme = b.dataset.themeChoice; save(); applyTheme(); renderBody();
+  }));
+  applyTheme();
+
   // Body settings
   function renderBody() {
+    document.querySelectorAll('#themeSeg [data-theme-choice]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === (state.profile.theme || 'auto'))));
     $('#kg').value = state.profile.kg;
     document.querySelectorAll('[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.profile.sex)));
     $('#beta').value = state.profile.beta;
