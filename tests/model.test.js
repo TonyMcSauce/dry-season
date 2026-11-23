@@ -141,3 +141,14 @@ test('an empty night reads zero at any time', () => {
   assert.equal(sim.G, 0);
   assert.equal(M.bacAt(sim, local(22)), 0);
 });
+
+test('the planner extends the round marked live, even when another ends at the same moment', () => {
+  const late = { drinks: [hein(8)], start: local(18), end: local(22) };
+  const live = { drinks: [hein(1)], start: local(21), end: local(22) };
+  const plan = (flagLate) => M.drivePlan(Object.assign({ rounds: [
+    Object.assign({}, late, { live: flagLate }), Object.assign({}, live, { live: !flagLate })] }, body),
+    local(22), local(16, 0, 24), 60, true);
+  const slow = plan(false), fast = plan(true);
+  assert.ok(slow.ok && fast.ok);
+  assert.ok(slow.latestStop > fast.latestStop, `${slow.latestStop} vs ${fast.latestStop}`);
+});

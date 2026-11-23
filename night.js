@@ -20,7 +20,7 @@
     const drinks = Array.isArray(old.drinks) ? old.drinks : [];
     return {
       v: 5,
-      rounds: drinks.length ? [{ id: newId(), start: old.start, end: old.still ? null : old.end, drinks, late: false }] : [],
+      rounds: drinks.length ? [{ id: newId(), start: old.start, end: old.still ? null : Math.max(old.start, old.end), drinks, late: false }] : [],
       fed: !!old.fed,
       driveAt: old.driveAt || null,
       water: old.water || null
@@ -32,7 +32,7 @@
   /** Options for M.simulate. The live round counts up to now. */
   function simOpts(session, profile, now) {
     return {
-      rounds: session.rounds.map((r) => ({ start: r.start, end: Math.max(r.start, endOf(r, now)), drinks: r.drinks })),
+      rounds: session.rounds.map((r) => ({ start: r.start, end: Math.max(r.start, endOf(r, now)), drinks: r.drinks, live: r.end == null })),
       kg: profile.kg, sex: profile.sex, beta: profile.beta, fed: !!session.fed
     };
   }
@@ -121,11 +121,13 @@
     return {
       start: sim.start, clear: clearOf(sim, rounds, now), G: sim.G, peak: sim.peak,
       count: rounds.reduce((a, r) => a + r.drinks.reduce((b, d) => b + d.qty, 0), 0),
-      rounds
+      rounds, fed: !!session.fed
     };
   }
 
-  const pushHistory = (history, entry) => (history || []).concat([entry]).slice(-HISTORY_MAX);
+  /** Add a night to History. A night already there (same start) is replaced, never listed twice. */
+  const pushHistory = (history, entry) =>
+    (history || []).filter((h) => h.start !== entry.start).concat([entry]).slice(-HISTORY_MAX);
   const emptyNight = (rounds) => ({ v: 5, rounds, fed: false, driveAt: null, water: null });
 
   /**
@@ -206,7 +208,7 @@
   }
 
   const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
-    addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf };
+    addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf, saveToHistory: pushHistory };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;
 })(typeof self !== 'undefined' ? self : this);

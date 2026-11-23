@@ -158,6 +158,38 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['an old History entry opens, and saving to History sends no orb to tonight', async (browser, url) => {
+    const old = { start: local(19, 0, 20), clear: local(2, 30, 21), G: 52, peak: 0.061, count: 4 };
+    const live = { id: 'l', start: local(20), end: null, drinks: [hein(2)], late: false, lastAt: local(21, 50) };
+    const { page, errors } = await open(browser, url, Object.assign({}, EMPTY, { history: [old],
+      session: { v: 5, fed: false, driveAt: null, water: null, rounds: [live] } }));
+    await page.locator('#historyList li button').first().click();
+    await page.waitForTimeout(300);
+    assert.equal((await text(page, '#pastClear')).trim(), '02:30');
+    assert.equal(await page.locator('#pastNote').isVisible(), true);
+    await page.click('#pastClose');
+    await page.getByRole('button', { name: 'Log earlier drinks' }).click();
+    await page.locator('#fromChips .chip', { hasText: 'Last night' }).click();
+    await page.click('#lateAdd');
+    await page.waitForTimeout(700);
+    assert.equal(await page.locator('.orb').count(), 0);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }],
+  ['with Reduce Motion the round still lands, with a cross fade', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await logRound(page, { from: '2 h ago', until: 'Just now', heineken: 2 });
+    await page.click('#lateAdd');
+    await page.waitForTimeout(50);
+    assert.equal(await page.evaluate(() => document.getAnimations().some((a) => a.effect && a.effect.target && a.effect.target.id === 'horizon')), true);
+    await page.waitForTimeout(600);
+    assert.equal(await page.locator('#rounds li').count(), 1);
+    assert.equal(await page.locator('.orb').count(), 0);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {
