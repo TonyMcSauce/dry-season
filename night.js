@@ -93,7 +93,103 @@
     return out('continue');
   }
 
-  const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place };
+  const HISTORY_MAX = 20;
+  const keyOf = (d) => d.name + '|' + d.ml + '|' + d.abv + '|' + d.share;
+  const byStart = (a, b) => a.start - b.start;
+  const copyDrinks = (drinks) => drinks.map((d) => Object.assign({}, d));
+  const withSession = (state, patch) => Object.assign({}, state, { session: Object.assign({}, state.session, patch) });
+
+  /** One round covering both windows. Each drink keeps the larger count; none is dropped. */
+  function mergeRounds(a, b) {
+    const drinks = copyDrinks(a.drinks);
+    for (const d of b.drinks) {
+      const same = drinks.find((x) => keyOf(x) === keyOf(d));
+      if (same) same.qty = Math.max(same.qty, d.qty);
+      else drinks.push(Object.assign({}, d));
+    }
+    return {
+      id: a.id, start: Math.min(a.start, b.start),
+      end: a.end == null || b.end == null ? null : Math.max(a.end, b.end),
+      drinks, late: !!(a.late && b.late)
+    };
+  }
+
+  /** A History entry for these rounds: the old summary plus the rounds themselves. */
+  function summarize(session, profile, now) {
+    const rounds = session.rounds.map((r) => Object.assign({}, r, { end: endOf(r, now), drinks: copyDrinks(r.drinks) }));
+    const sim = simRounds(rounds, session, profile, now);
+    return {
+      start: sim.start, clear: clearOf(sim, rounds, now), G: sim.G, peak: sim.peak,
+      count: rounds.reduce((a, r) => a + r.drinks.reduce((b, d) => b + d.qty, 0), 0),
+      rounds
+    };
+  }
+
+  const pushHistory = (history, entry) => (history || []).concat([entry]).slice(-HISTORY_MAX);
+  const emptyNight = (rounds) => ({ v: 5, rounds, fed: false, driveAt: null, water: null });
+
+  /**
+   * Add a round where it belongs. choice ('same' | 'extra') answers an overlap
+   * with a round already on tonight's tab; without one an overlap throws.
+   */
+  function addRound(state, cand, now, choice) {
+    const p = place(state.session, state.profile, cand, now);
+    const round = { id: newId(), start: cand.start, end: cand.end == null ? null : cand.end,
+      drinks: copyDrinks(cand.drinks), late: cand.late !== false };
+    const outcome = { action: p.action, carried: p.carried, archived: false };
+
+    if (p.action === 'history') {
+      const entry = summarize({ rounds: [round], fed: state.session.fed }, state.profile, now);
+      return { state: Object.assign({}, state, { history: pushHistory(state.history, entry) }), outcome };
+    }
+    if (p.action === 'fresh') {
+      outcome.archived = state.session.rounds.length > 0;
+      const history = outcome.archived ? pushHistory(state.history, summarize(state.session, state.profile, now)) : state.history;
+      return { state: Object.assign({}, state, { session: emptyNight([round]), history }), outcome };
+    }
+    if (p.overlap && !choice) throw new Error('overlap choice needed');
+    let rounds = state.session.rounds;
+    if (p.overlap && choice === 'same') rounds = rounds.map((r) => (r.id === p.overlap.roundId ? mergeRounds(r, round) : r));
+    else rounds = rounds.concat([round]);
+    return { state: withSession(state, { rounds: rounds.slice().sort(byStart) }), outcome };
+  }
+
+  /**
+   * A drink being had now. It joins the live round; with none, a new live round
+   * starts two hours back, never before the last round ended, and is placed.
+   */
+  function addLiveDrink(state, drink, now) {
+    const live = liveRound(state.session);
+    const one = Object.assign({ qty: 1, share: 1 }, drink);
+    if (live) {
+      const drinks = copyDrinks(live.drinks), last = drinks[drinks.length - 1];
+      if (last && keyOf(last) === keyOf(one)) last.qty += one.qty;
+      else drinks.push(one);
+      const rounds = state.session.rounds.map((r) => (r === live ? Object.assign({}, r, { drinks }) : r));
+      return { state: withSession(state, { rounds }), outcome: { action: 'continue', carried: 0, archived: false } };
+    }
+    const lastEnd = state.session.rounds.reduce((a, r) => Math.max(a, endOf(r, now)), 0);
+    const start = Math.max(Math.floor((now - 2 * 3600000) / 300000) * 300000, lastEnd);
+    return addRound(state, { start, end: null, drinks: [one], late: false }, now, 'extra');
+  }
+
+  /** The live round stops now. */
+  function finishLive(state, now) {
+    return withSession(state, { rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
+  }
+
+  /** Change a round's times or drinks in place. */
+  function editRound(state, id, patch) {
+    const rounds = state.session.rounds.map((r) => (r.id === id ? Object.assign({}, r, patch) : r));
+    return withSession(state, { rounds: rounds.sort(byStart) });
+  }
+
+  function removeRound(state, id) {
+    return withSession(state, { rounds: state.session.rounds.filter((r) => r.id !== id) });
+  }
+
+  const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
+    addRound, addLiveDrink, finishLive, editRound, removeRound, keyOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;
 })(typeof self !== 'undefined' ? self : this);

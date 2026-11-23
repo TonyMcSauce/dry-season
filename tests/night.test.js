@@ -75,3 +75,54 @@ test('an earlier, separate session today goes to History', () => {
     { start: local(11), end: local(12), drinks: [hein(1)] }, local(22));
   assert.equal(p.action, 'history');
 });
+
+// Adding, merging and archiving.
+const silver = (qty) => ({ name: 'Heineken Silver', abv: 4, ml: 330, qty, share: 1 });
+const st = (session) => ({ profile: P, session, history: [] });
+
+test('same drinks merge into one round without losing a drink type', () => {
+  const m = N.mergeRounds({ id: 'a', start: local(14), end: local(18), drinks: [hein(6)] },
+                          { id: 'b', start: local(17), end: null, drinks: [hein(3), silver(2)] });
+  assert.equal(m.start, local(14));
+  assert.equal(m.end, null);
+  assert.deepEqual(m.drinks.map((d) => d.name + ' ' + d.qty), ['Heineken 6', 'Heineken Silver 2']);
+});
+
+test('an overlapping round needs a choice, and extra keeps both', () => {
+  const s = st(night({ start: local(17), end: null, drinks: [hein(3)] }));
+  const cand = { start: local(14), end: local(18), drinks: [hein(6)] };
+  assert.throws(() => N.addRound(s, cand, local(22)), /overlap choice needed/);
+  assert.equal(N.addRound(s, cand, local(22), 'extra').state.session.rounds.length, 2);
+  assert.equal(N.addRound(s, cand, local(22), 'same').state.session.rounds.length, 1);
+});
+
+test('a fresh night saves the old one to History', () => {
+  const r = N.addRound(st(night({ start: local(12), end: local(13), drinks: [hein(1)] })),
+    { start: local(20), end: local(21), drinks: [hein(2)] }, local(22));
+  assert.equal(r.outcome.action, 'fresh');
+  assert.equal(r.outcome.archived, true);
+  assert.equal(r.state.history.length, 1);
+  assert.equal(r.state.history[0].rounds.length, 1);
+  assert.equal(r.state.session.rounds[0].start, local(20));
+});
+
+test('the first live drink starts two hours back, but never before the last round ended', () => {
+  const a = N.addLiveDrink(st(night()), hein(1), local(22)).state.session.rounds[0];
+  assert.equal(a.start, local(20));
+  const b = N.addLiveDrink(st(night({ start: local(18), end: local(21), drinks: [hein(4)] })), hein(1), local(22));
+  assert.equal(b.state.session.rounds[1].start, local(21));
+  assert.equal(b.outcome.action, 'continue');
+});
+
+test('a live drink the morning after, once clear, starts a fresh night', () => {
+  const r = N.addLiveDrink(st(night({ start: local(20, 0, 22), end: local(23, 0, 22), drinks: [hein(3)] })), hein(1), local(18));
+  assert.equal(r.outcome.action, 'fresh');
+  assert.equal(r.state.history.length, 1);
+  assert.equal(r.state.session.rounds.length, 1);
+});
+
+test('a second tap on the same drink adds to its count', () => {
+  const once = N.addLiveDrink(st(night()), hein(1), local(22)).state;
+  const twice = N.addLiveDrink(once, hein(1), local(22, 5)).state;
+  assert.equal(twice.session.rounds[0].drinks[0].qty, 2);
+});
