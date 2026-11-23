@@ -135,3 +135,9 @@ test('stopAt clamps every round and pace counts only the live round', () => {
   assert.deepEqual(M.roundsOf(M.stopAt(o, local(22))).map((r) => r.end), [local(18), local(22)]);
   assert.equal(M.stdLastHour(o, local(23)).toFixed(2), (M.gramsOf(hein(2)) / 2 / M.STD_G).toFixed(2));
 });
+
+test('an empty night reads zero at any time', () => {
+  const sim = M.simulate(Object.assign({ rounds: [] }, body));
+  assert.equal(sim.G, 0);
+  assert.equal(M.bacAt(sim, local(22)), 0);
+});

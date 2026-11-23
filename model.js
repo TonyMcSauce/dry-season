@@ -97,7 +97,7 @@
 
   function bacAt(sim, t) {
     const i = Math.floor((t - sim.start) / MIN) - 1;
-    if (i < 0 || i >= sim.points.length || (sim.clear && t >= sim.clear)) return 0;
+    if (!(i >= 0) || i >= sim.points.length || (sim.clear && t >= sim.clear)) return 0;
     return sim.points[i];
   }
 
