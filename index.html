@@ -273,6 +273,29 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .link-btn{margin-top:6px;min-height:44px;border:0;background:transparent;color:var(--text);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0 2px}
 #lateAdd{transition:background .4s,transform .15s}
 .late.history #lateAdd{background:#8FB4DA}
+.late.leaving{transform:translateY(105%);opacity:.6;transition:transform .42s cubic-bezier(.4,0,.2,1),opacity .42s}
+.late-overlap{padding:18px var(--gutter) 24px;display:grid;gap:14px}
+.ov-art{width:120px;height:64px;margin:4px auto 0;display:block}
+.ov-art circle{fill:none;stroke:var(--text);stroke-opacity:.45;stroke-width:2}
+.ov-lens{fill:var(--russet);opacity:.75;animation:lensPulse 1.6s ease-in-out infinite}
+@keyframes lensPulse{0%,100%{opacity:.45}50%{opacity:.9}}
+.ov-title{margin:0;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.15;text-align:center}
+.ov-text{margin:0;color:var(--muted);text-align:center}
+.ov-choice{display:flex;align-items:center;gap:14px;min-height:68px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);text-align:left}
+.ov-choice > span{display:flex;flex-direction:column}
+.ov-choice strong{font-size:1.02rem}
+.ov-choice > span > span{font-size:.86rem;color:var(--muted)}
+.ov-choice svg{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.ov-choice.primary{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.ov-choice.primary > span > span{color:rgba(42,26,15,.75)}
+.ov-safe{margin:0;display:flex;gap:8px;align-items:flex-start;font-size:.88rem;color:var(--muted)}
+.ov-safe svg{width:16px;height:16px;flex:none;margin-top:3px;fill:none;stroke:currentColor;stroke-width:1.4}
+.night-note{display:flex;gap:10px;align-items:flex-start;margin:4px 0 0;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,rgba(242,169,59,.2),rgba(228,111,72,.12));border:1px solid rgba(242,169,59,.45);animation:noteIn .6s cubic-bezier(.22,1,.36,1)}
+.night-note svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--amber)}
+.night-note p{margin:0;font-size:.94rem;line-height:1.4}
+@keyframes noteIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.orb{position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:radial-gradient(circle,#FFE3B0 0%,#F2A93B 45%,rgba(242,169,59,0) 72%);pointer-events:none;z-index:60;transition:left .8s cubic-bezier(.22,1,.36,1),top .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1),opacity .45s}
+@media (prefers-reduced-motion: reduce){.ov-lens,.night-note{animation:none}.late.leaving{transition:none}}
 @media (prefers-reduced-motion: reduce){.dl-arc,.dl-tail,.dl-other,.dl-handle,.dl-moon,.dl-now,.dial-wrap::before{transition:none}}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .sheet-head{position:sticky;top:0;background:var(--sheet);display:flex;align-items:center;justify-content:space-between;padding:12px var(--gutter);border-bottom:1px solid var(--line);z-index:2}
@@ -582,6 +605,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <h2 id="nightH">The night</h2>
     <ul class="rounds" id="rounds"></ul>
     <p class="hint rounds-empty" id="roundsEmpty">Nothing on tonight's tab yet. Had a few already? Log them with the times you drank.</p>
+    <div class="night-note" id="nightNote" role="status" hidden>
+      <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M3 11h10M9 6l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="11" r="2.5" fill="currentColor"/></svg>
+      <p><strong id="nnTitle"></strong> <span id="nnText"></span></p>
+    </div>
     <button class="btn quiet late-open" id="openLate" type="button">Log earlier drinks</button>
     <label class="switch">
       <input type="checkbox" id="fed">
@@ -753,6 +780,20 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <button class="link-btn" id="lateAll" type="button">All drinks</button>
     </div>
     <button class="btn" id="lateAdd" type="button">Add round to tonight</button>
+  </div>
+  <div class="late-overlap" id="lateOverlap" hidden>
+    <svg class="ov-art" viewBox="0 0 120 64" aria-hidden="true"><circle cx="44" cy="32" r="26"/><circle cx="76" cy="32" r="26"/><path class="ov-lens" d="M60 10.7a26 26 0 0 1 0 42.6a26 26 0 0 1 0-42.6z"/></svg>
+    <h4 class="ov-title">Same drinks, or extra ones?</h4>
+    <p class="ov-text" id="ovText"></p>
+    <button class="ov-choice" id="ovSame" type="button">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="10" cy="13" r="7"/><circle cx="16" cy="13" r="7"/></svg>
+      <span><strong>Same drinks</strong><span id="ovSameSub">Merge them into one round</span></span>
+    </button>
+    <button class="ov-choice primary" id="ovExtra" type="button">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M13 5v16M5 13h16"/></svg>
+      <span><strong>Extra drinks</strong><span>Count both rounds</span></span>
+    </button>
+    <p class="ov-safe"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l5.5 2v4c0 3.4-2.3 6-5.5 7-3.2-1-5.5-3.6-5.5-7v-4z"/></svg>Not sure? Counting both keeps your estimate on the safe side.</p>
   </div>
 </dialog>
 
@@ -1024,6 +1065,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         rm.setAttribute('aria-label', 'Remove ' + d.name);
         rm.addEventListener('click', () => {
           const drinks = r.drinks.filter((_, j) => j !== i);
+          nightNote = null;
           state = drinks.length ? N.editRound(state, r.id, { drinks }) : N.removeRound(state, r.id);
           save(); renderAll(); toast('Removed from the tab');
         });
@@ -1055,16 +1097,25 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       li.querySelector('.rc-meta').textContent = r.end == null ? 'still going' : r.late ? 'logged late' : 'logged as you went';
       if (r.end == null) {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-mini'; b.textContent = 'Finished drinking';
-        b.addEventListener('click', () => { state = N.finishLive(state, Date.now()); save(); renderAll(); });
+        b.addEventListener('click', () => { nightNote = null; state = N.finishLive(state, Date.now()); save(); renderAll(); });
         li.appendChild(b);
       }
       ul.appendChild(li);
     });
-    $('#roundsEmpty').hidden = rounds.length > 0;
+    $('#roundsEmpty').hidden = rounds.length > 0 || !!nightNote;
+    renderNote();
     $('#fed').checked = !!state.session.fed;
+  }
+  // The note under the rounds after a late round: what happened and why.
+  let nightNote = null;
+  function renderNote() {
+    const box = $('#nightNote');
+    box.hidden = !nightNote;
+    if (nightNote) { $('#nnTitle').textContent = nightNote[0]; $('#nnText').textContent = nightNote[1]; }
   }
   /** Toast for what happened to the night when a drink or round was added. */
   function announce(outcome) {
+    nightNote = null;
     if (outcome.action === 'fresh' && outcome.archived) { toast('New night started. The last one is saved in History.'); return true; }
     return false;
   }
@@ -1371,22 +1422,67 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#lateAdd').textContent = hist ? 'Save to History'
       : v.p.action === 'continue' && state.session.rounds.length ? 'Add round · continues tonight' : 'Add round to tonight';
   }
+  function showLateMain() {
+    $('#lateMain').hidden = false; $('#lateOverlap').hidden = true; $('#lateBack').hidden = true;
+    $('#lateTitle').textContent = 'Log earlier drinks';
+  }
   function openLate() {
     draft = newDraft();
-    $('#lateTitle').textContent = 'Log earlier drinks';
+    late.classList.remove('leaving');
+    showLateMain();
     renderLate();
     late.showModal();
+  }
+  function showOverlap(ov) {
+    const r = state.session.rounds.find((x) => x.id === ov.roundId);
+    const end = r.end == null ? 'now' : fmtTime(Math.max(r.end, draft.end));
+    $('#ovText').textContent = 'Your new round (' + fmtTime(draft.start) + ' to ' + fmtTime(draft.end) + ') overlaps a round already on tonight\'s tab, from '
+      + fmtTime(ov.from) + ' to ' + fmtTime(ov.to) + '. We don\'t want to count anything twice.';
+    $('#ovSameSub').textContent = 'Merge them into one round, ' + fmtTime(Math.min(r.start, draft.start)) + ' to ' + end;
+    $('#lateMain').hidden = true; $('#lateOverlap').hidden = false; $('#lateBack').hidden = false;
+    $('#lateTitle').textContent = 'Check the times';
+    late.scrollTop = 0;
   }
   /** Add the draft. choice answers an overlap with a round already on the tab. */
   function commitLate(choice) {
     const now = Date.now();
     const cand = { start: draft.start, end: draft.end, drinks: draft.drinks, late: true };
+    const p = N.place(state.session, state.profile, cand, now);
+    if (p.overlap && !choice) { showOverlap(p.overlap); return; }
+    const hadRounds = state.session.rounds.length > 0;
     const r = N.addRound(state, cand, now, choice);
     state = r.state;
     save();
-    late.close();
-    renderAll();
-    if (!announce(r.outcome) && r.outcome.action === 'history') toast('Saved to History');
+    const o = r.outcome;
+    nightNote = o.action === 'history' ? ['Saved to History.', 'That night does not change tonight\'s numbers.']
+      : o.action === 'fresh' && o.archived ? ['A fresh night.', 'Your earlier drinks had cleared, so that night is saved in History.']
+      : o.action === 'continue' && hadRounds && o.carried >= M.CLEAR ? ['This round continues tonight.', 'At ' + fmtTime(cand.start) + ' you still had ' + fmtBac(o.carried) + ' from earlier, so it counts on top.']
+      : null;
+    handOff();
+  }
+  /** The sheet glides away, an orb carries the round to its peak on the horizon, and the hills reshape. */
+  function handOff() {
+    if (reduceMotionPref()) { late.close(); renderAll(); return; }
+    const box = $('#dial').getBoundingClientRect();
+    const from = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    window.scrollTo(0, 0);
+    late.classList.add('leaving');
+    setTimeout(() => {
+      late.close();
+      late.classList.remove('leaving');
+      renderAll();
+      if (!lastHorizon || !state.session.rounds.length) return;
+      const hz = $('#horizon').getBoundingClientRect();
+      const to = { x: hz.left + lastHorizon.peakX, y: hz.top + lastHorizon.peakY * hz.height / 150 };
+      const orb = document.createElement('div'); orb.className = 'orb';
+      orb.style.left = from.x + 'px'; orb.style.top = from.y + 'px'; orb.style.transform = 'scale(.5)';
+      document.body.appendChild(orb);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        orb.style.left = to.x + 'px'; orb.style.top = to.y + 'px'; orb.style.transform = 'scale(1.3)';
+      }));
+      setTimeout(() => { orb.style.opacity = '0'; orb.style.transform = 'scale(3)'; }, 800);
+      setTimeout(() => orb.remove(), 1300);
+    }, 420);
   }
   $('#openLate').addEventListener('click', openLate);
   $('#lateClose').addEventListener('click', () => late.close());
@@ -1396,6 +1492,9 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   $('#untilDown').addEventListener('click', () => setDraft({ end: Math.max(draft.end - 15 * MIN, draft.start + 15 * MIN) }));
   $('#untilUp').addEventListener('click', () => setDraft({ end: draft.end + 15 * MIN }));
   $('#lateAdd').addEventListener('click', () => commitLate());
+  $('#lateBack').addEventListener('click', showLateMain);
+  $('#ovSame').addEventListener('click', () => commitLate('same'));
+  $('#ovExtra').addEventListener('click', () => commitLate('extra'));
   $('#lateAll').addEventListener('click', () => { pickFor = 'late'; buildList(); showList(); sheet.showModal(); });
 
   // Toast

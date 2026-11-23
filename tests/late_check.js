@@ -47,6 +47,7 @@ async function logRound(page, o) {
   await page.waitForTimeout(300);
   await page.locator('#fromChips .chip', { hasText: o.from }).click();
   for (let i = 0; i < (o.fromUp || 0); i++) await page.click('#fromUp');
+  for (let i = 0; i < (o.fromDown || 0); i++) await page.click('#fromDown');
   await page.locator('#untilChips .chip', { hasText: o.until }).click();
   const have = Number((await text(page, '#lateFavs .fav-card:first-child .fc-count')).trim());
   for (let i = have; i < o.heineken; i++) await page.getByRole('button', { name: 'Add one Heineken 330 ml' }).click();
@@ -82,6 +83,28 @@ const checks = [
     await page.getByRole('button', { name: 'Log earlier drinks' }).click();
     await page.locator('#fromChips .chip', { hasText: 'Last night' }).click();
     assert.equal((await text(page, '#lateAdd')).trim(), 'Save to History');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['a second round continues the night, and overlapping times ask first', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await logRound(page, { from: 'Lunch', fromUp: 4, until: '4 h ago', heineken: 6 });
+    await page.click('#lateAdd');
+    await page.waitForTimeout(1200);
+    await logRound(page, { from: '2 h ago', until: 'Just now', heineken: 3 });
+    assert.equal((await text(page, '#lateAdd')).trim(), 'Add round · continues tonight');
+    await page.click('#lateAdd');
+    await page.waitForTimeout(1200);
+    assert.match(await text(page, '#nightNote'), /At 20:00 you still had 0\.070%/);
+    assert.equal((await text(page, '#clearTime')).trim(), '06:22');
+    await logRound(page, { from: '4 h ago', fromDown: 4, until: '4 h ago', heineken: 2 });
+    await page.click('#lateAdd');
+    await page.waitForTimeout(300);
+    assert.equal(await page.getByText('Same drinks, or extra ones?').isVisible(), true);
+    await page.getByRole('button', { name: /Extra drinks/ }).click();
+    await page.waitForTimeout(1200);
+    assert.equal(await page.locator('#rounds li').count(), 3);
     assert.deepEqual(errors, []);
     await page.close();
   }]
