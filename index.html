@@ -322,6 +322,11 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .star path{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;transition:fill .2s}
 .star[aria-pressed="true"]{color:var(--amber)}
 .star[aria-pressed="true"] path{fill:currentColor}
+.fav-size{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px 0 4px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--text);font-weight:600;text-align:left}
+.fav-size .star{width:36px;height:36px}
+.fav-size .star::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z'/></svg>") center/contain no-repeat;opacity:.45}
+.fav-size[aria-pressed="true"] .star{color:var(--amber)}
+.fav-size[aria-pressed="true"] .star::before{opacity:1}
 .star.pop svg{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
 @keyframes pop{0%{transform:scale(.6) rotate(-20deg)}60%{transform:scale(1.3) rotate(8deg)}100%{transform:none}}
 .pick-group.favs h4{color:var(--amber)}
@@ -651,6 +656,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <p class="label">How much of each was yours</p>
       <div class="chips" id="shareChips"></div>
     </div>
+    <button class="fav-size" id="cfgFav" type="button" aria-pressed="false" hidden><span class="star" aria-hidden="true"></span><span id="cfgFavText">Save this size as a favourite</span></button>
     <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
     <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
   </div>
@@ -715,7 +721,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, fed: false, driveAt: null, water: null, drinks: [] };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.slice() };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
   }
   function load() {
     const d = defaults();
@@ -726,7 +732,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
           profile: Object.assign(d.profile, s.profile),
           session: Object.assign({ fed: false, driveAt: null, water: null }, s.session),
           history: Array.isArray(s.history) ? s.history : [],
-          favs: Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS.slice()
+          favs: D.normalizeFavs(Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS)
         };
       }
     } catch (e) {}
@@ -1004,10 +1010,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   const sheet = $('#sheet');
   let pick = null;
   const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z"/></svg>';
-  const isFav = (id) => (state.favs || []).includes(id);
+  // A favourite is a drink in a size, so the same beer can be a favourite as a 330 ml and a 440 ml.
+  const isFav = (id, ml) => (state.favs || []).some((f) => f.id === id && f.ml === ml);
+  const favKey = (it) => it.id + '|' + it.ml;
   function buildList(popId, popGroup) {
     const box = $('#pickList'), y = sheet.scrollTop; box.innerHTML = '';
-    const favItems = (state.favs || []).map(D.byId).filter((it) => it && !it.custom);
+    const favItems = (state.favs || []).map(D.favOf).filter(Boolean);
     const groups = (favItems.length ? [{ group: 'Favourites', items: favItems, favs: true }] : []).concat(DRINKS);
     groups.forEach((g) => {
       const wrap = document.createElement('div'); wrap.className = 'pick-group' + (g.favs ? ' favs' : '');
@@ -1024,9 +1032,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         if (!it.custom) {
           const st = document.createElement('button'); st.type = 'button'; st.className = 'star';
           st.innerHTML = STAR;
-          st.dataset.id = it.id; st.dataset.group = g.group;
-          st.setAttribute('aria-pressed', String(isFav(it.id)));
-          st.setAttribute('aria-label', (isFav(it.id) ? 'Remove ' : 'Add ') + it.name + (isFav(it.id) ? ' from favourites' : ' to favourites'));
+          const on = isFav(it.id, it.ml);
+          st.dataset.id = favKey(it); st.dataset.group = g.group;
+          st.setAttribute('aria-pressed', String(on));
+          st.setAttribute('aria-label', (on ? 'Remove ' : 'Add ') + it.name + ' ' + it.ml + ' ml' + (on ? ' from favourites' : ' to favourites'));
           st.addEventListener('click', () => toggleFav(it, g.group));
           row.appendChild(st);
         }
@@ -1040,20 +1049,23 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       if (el) { el.classList.add('pop'); el.focus({ preventScroll: true }); }
     }
   }
-  function toggleFav(it, group) {
-    const favs = state.favs || [];
-    const on = !favs.includes(it.id);
-    state.favs = on ? favs.concat([it.id]) : favs.filter((x) => x !== it.id);
+  function setFav(id, ml, on) {
+    const favs = (state.favs || []).filter((f) => !(f.id === id && f.ml === ml));
+    state.favs = on ? favs.concat([{ id, ml }]) : favs;
     save();
-    buildList(it.id, group === 'Favourites' && !on ? null : group);
-    toast(on ? it.name + ' pinned to Favourites' : it.name + ' unpinned');
+  }
+  function toggleFav(it, group) {
+    const on = !isFav(it.id, it.ml);
+    setFav(it.id, it.ml, on);
+    buildList(favKey(it), group === 'Favourites' && !on ? null : group);
+    toast(on ? it.name + ' ' + it.ml + ' ml pinned to Favourites' : it.name + ' ' + it.ml + ' ml unpinned');
   }
   function showList() {
     $('#pickList').hidden = false; $('#pickCfg').hidden = true; $('#sheetBack').hidden = true;
     $('#sheetTitle').textContent = 'Pick a drink';
   }
   function choose(it) {
-    pick = { name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
+    pick = { id: it.custom ? null : it.id, name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
     $('#pickList').hidden = true; $('#pickCfg').hidden = false; $('#sheetBack').hidden = false;
     $('#sheetTitle').textContent = it.custom ? 'Your own drink' : it.name;
     $('#nameField').hidden = !it.custom;
@@ -1064,6 +1076,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     sheet.scrollTop = 0;
   }
   function renderCfg() {
+    const fb = $('#cfgFav'), favOn = !!pick.id && isFav(pick.id, pick.ml);
+    fb.hidden = !pick.id;
+    fb.setAttribute('aria-pressed', String(favOn));
+    $('#cfgFavText').textContent = favOn ? pick.ml + ' ml is a favourite' : 'Save ' + pick.ml + ' ml as a favourite';
     const sc = $('#sizeChips'); sc.innerHTML = '';
     SIZES.forEach((ml) => {
       const c = document.createElement('button'); c.type = 'button'; c.className = 'chip';
@@ -1084,6 +1100,13 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const valid = pick.abv >= 0 && pick.ml > 0;
     $('#cfgGrams').textContent = valid ? gramsOf(pick).toFixed(1) + ' g' : 'Check the numbers';
   }
+  $('#cfgFav').addEventListener('click', () => {
+    if (!pick.id) return;
+    const on = !isFav(pick.id, pick.ml);
+    setFav(pick.id, pick.ml, on);
+    renderCfg();
+    toast(on ? pick.name + ' ' + pick.ml + ' ml pinned to Favourites' : pick.name + ' ' + pick.ml + ' ml unpinned');
+  });
   $('#cfgAbv').addEventListener('input', (e) => { pick.abv = parseFloat(e.target.value) || 0; renderCfg(); });
   $('#cfgMl').addEventListener('input', (e) => { pick.ml = parseFloat(e.target.value) || 0; renderCfg(); });
   $('#cfgName').addEventListener('input', (e) => { pick.name = e.target.value; });
@@ -1283,7 +1306,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       has, status: st, bac: b, peak: sim.peak, start: sim.start, clearAt, underAt: u,
       risk: riskNow, danger: dangerNow,
       last: L ? { key: keyOf(L), name: L.name, short: shortName(L.name), ml: L.ml, abv: L.abv, share: L.share } : null,
-      favs: (state.favs || []).map(D.byId).filter((x) => x && !x.custom).map((x) => ({ key: keyOf(x), name: x.name, short: x.short || x.name, ml: x.ml, abv: x.abv, share: 1 })),
+      favs: (state.favs || []).map(D.favOf).filter(Boolean).map((x) => ({ key: keyOf(x), name: x.name, short: x.short || x.name, ml: x.ml, abv: x.abv, share: 1 })),
       water: state.session.water,
       fmt: {
         bac: fmtBac(b), clear: fmtTime(clearAt), clearedAt: fmtTime(clearAt), clearDay: dayLabel(clearAt),
