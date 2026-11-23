@@ -3,10 +3,10 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '4.3.0';
+self.DRY_VERSION = '5.0.0';
 self.DRY_CHANGES = [
-  "Fixed: on recent iPhones the island was hiding blurred behind the real Dynamic Island. iOS frosts the strip under the status bar for home screen apps, so the island now hangs just below it, always sharp.",
-  'A drop falls from your real Dynamic Island and springs into the pill when it appears.',
-  'The middle of the pill now shows your clear time, with the mug on the left and time to go on the right.',
-  'The header makes room for the island so nothing overlaps.'
+  'Log drinks you already had: set when you started and stopped on a 24 hour dial, and see straight away when you will be fully sober.',
+  'A night can have several rounds. Alcohol still in your system from an earlier round counts toward the next one.',
+  'Your horizon is now your night: the hills show your level, round by round.',
+  'Favourites remember their size. Heineken 330 ml and Heineken Silver 330 ml are the new defaults.'
 ];
