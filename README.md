@@ -2,6 +2,14 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 5.1: the 3D hero
+
+* **A cold bottle and a real glass.** The hero is now a small 3D scene at dusk. A clear lager bottle with a Dry Season label stands beaded with condensation beside a glass that refracts the sunset behind it, with a wedge of lime waiting.
+* **The first pour.** When your night begins, the cap pops, the bottle tips and pours, and the glass fills with a foam head and rising bubbles. The glass then empties as you sober up, and is empty when you are clear.
+* **Your night is the landscape.** The hills behind the drinks are your blood alcohol, round by round, with the leftover line, a dot for now and a moon at your sober time.
+* **Depth you can feel.** Stars, far hills, an acacia and the land sit at different depths and slide as you tilt your phone (on iPhone, tap the scene once to allow motion) or drag.
+* **Made to last a night out.** It is drawn in code with no image files, saved for offline use, matches light and dark, only draws while something moves, and pauses when off screen. With Reduce Motion on, it holds still. Phones without 3D support keep the flat glass.
+
 ## New in 5.0: late logging
 
 * **Log drinks you already had.** Tap **Log earlier drinks**, set when you started and stopped on a 24 hour dial, and see straight away when you'll be fully sober, even if that time has already passed. Quick chips (*2 h ago*, *4 h ago*, *Lunch*, *Last night*, *Just now*) and 15 minute nudges make it a few taps. Your favourites sit right there as cards, so one round can mix Heineken and Silver.

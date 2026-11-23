@@ -131,7 +131,7 @@ const checks = [
     await page.getByRole('button', { name: 'Remove round' }).click();
     await page.waitForTimeout(1200);
     assert.equal(await page.locator('#rounds li').count(), 0);
-    assert.equal((await text(page, '#clearTime')).trim(), '--:--');
+    assert.equal((await text(page, '#clearTime')).trim(), 'Clear');
     const ridge = await page.locator('#horizon .hz-ridge').getAttribute('d');
     assert.ok(ridge.split('L').every((pt) => pt.trim().endsWith(' 142.0')), 'horizon is flat');
     await page.locator('#historyList li button').first().click();
@@ -190,13 +190,34 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['the 3D hero: a sealed bottle when empty, a pour for the first round, then the night', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    page.on('dialog', (d) => d.accept());
+    assert.equal(await page.locator('#hero.three').count(), 1, '3D hero is on');
+    assert.equal(await page.locator('#scene3d').getAttribute('data-state'), 'empty');
+    assert.equal((await text(page, '#clearTime')).trim(), 'Clear');
+    assert.equal(await page.locator('#hero.empty').count(), 1);
+    await logRound(page, { from: '2 h ago', until: 'Just now', heineken: 2 });
+    await page.click('#lateAdd');
+    await page.waitForFunction(() => document.querySelector('#scene3d').dataset.state === 'night', null, { timeout: 30000 });
+    assert.equal(await page.locator('#hero.empty').count(), 0);
+    await page.locator('#rounds li .rc-open').first().click();
+    await page.waitForTimeout(300);
+    await page.getByRole('button', { name: 'Remove round' }).click();
+    await page.waitForTimeout(800);
+    assert.equal(await page.locator('#scene3d').getAttribute('data-state'), 'empty');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {
   const port = await freePort();
   const srv = spawn('python3', ['-m', 'http.server', String(port), '--bind', '127.0.0.1', '--directory', ROOT], { stdio: 'ignore' });
   await new Promise((r) => setTimeout(r, 800));
-  const browser = await chromium.launch();
+  // Software WebGL, so the 3D hero runs in headless Chromium too
+  const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   let failed = 0;
   try {
     for (const [name, fn] of checks) {

@@ -25,6 +25,8 @@ const SHELL = [
   './night.js',
   './horizon.js',
   './dial.js',
+  './vendor/three.min.js',
+  './scene3d.js',
   './drinks.js',
   './mug.js',
   './island.js',
