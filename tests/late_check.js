@@ -1,6 +1,6 @@
 /* Browser check of late logging: rounds, the dial, the horizon and History.
  *
- * Run from the repo root:  node tests/late_check.js
+ * Run from the repo root:  node tests/late_check.js   (ONLY=Appearance node tests/late_check.js for one)
  * Needs Playwright for Node with Chromium (preinstalled in the dev container).
  * The clock is fixed at 22:00 on 23 November 2026 so the numbers are stable.
  */
@@ -22,8 +22,8 @@ function freePort() {
   });
 }
 
-async function open(browser, url, saved) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+async function open(browser, url, saved, scheme) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: scheme || 'dark' });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -210,6 +210,30 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['Appearance: choose Dark or Light for the whole app; the 3D hero stays at dusk', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY, 'light');
+    const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    const heroText = () => page.evaluate(() => getComputedStyle(document.getElementById('clearTime')).color);
+    assert.equal(await bg(), 'rgb(245, 238, 225)', 'follows a light phone by default');
+    assert.equal(await heroText(), 'rgb(246, 237, 218)', 'the 3D hero stays at dusk in light mode');
+    await page.click('#bodyDetails summary');
+    await page.click('#themeSeg [data-theme-choice="dark"]');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+    assert.equal(await bg(), 'rgb(22, 18, 14)');
+    await page.reload(); await page.waitForTimeout(400);
+    assert.equal(await bg(), 'rgb(22, 18, 14)', 'the choice is remembered');
+    assert.equal(await page.locator('#themeSeg [data-theme-choice="dark"]').getAttribute('aria-pressed'), 'true');
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.click('#bodyDetails summary');
+    await page.click('#themeSeg [data-theme-choice="light"]');
+    assert.equal(await bg(), 'rgb(245, 238, 225)', 'Light wins over a dark phone');
+    await page.click('#themeSeg [data-theme-choice="auto"]');
+    assert.equal(await page.evaluate(() => document.documentElement.hasAttribute('data-theme')), false);
+    assert.equal(await bg(), 'rgb(22, 18, 14)', 'Automatic follows the phone again');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {
@@ -220,7 +244,8 @@ const checks = [
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   let failed = 0;
   try {
-    for (const [name, fn] of checks) {
+    // ONLY=<words> runs just the scenarios whose name contains them
+    for (const [name, fn] of checks.filter(([n]) => !process.env.ONLY || n.includes(process.env.ONLY))) {
       try { await fn(browser, `http://127.0.0.1:${port}/`); console.log('ok   ' + name); }
       catch (e) { failed++; console.log('FAIL ' + name + '\n     ' + String(e.message).split('\n').slice(0, 6).join('\n     ')); }
     }

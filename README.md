@@ -2,6 +2,11 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 5.2: choose your look
+
+* **Appearance setting** under **Your body**: *Automatic* follows your phone, or pick *Light* or *Dark* for the whole app. Your choice applies before the first paint, so there is no flash.
+* **Always dusk.** The 3D night scene at the top stays at dusk in every theme. In Light it sits as a rounded dusk card above the cream page.
+
 ## New in 5.1: the 3D hero
 
 * **A cold bottle and a real glass.** The hero is now a small 3D scene at dusk. A clear lager bottle with a Dry Season label stands beaded with condensation beside a glass that refracts the sunset behind it, with a wedge of lime waiting.
