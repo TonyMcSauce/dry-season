@@ -31,7 +31,7 @@ test('355 ml is a common size and every default size is offered', () => {
 test('drink ids are unique and favourites point at real drinks', () => {
   const ids = D.all().map((d) => d.id);
   assert.equal(new Set(ids).size, ids.length);
-  D.DEFAULT_FAVS.forEach((id) => assert.ok(D.byId(id) && !D.byId(id).custom, id));
+  D.DEFAULT_FAVS.forEach((f) => assert.ok(D.byId(f.id) && !D.byId(f.id).custom, f.id));
 });
 
 test('every built-in drink has a sensible strength and size', () => {
@@ -61,4 +61,15 @@ test('every file the app needs is saved for offline use', () => {
   const refs = [...html.matchAll(/(?:src|href)="((?:fonts|icons)\/[^"]+|[a-z]+\.(?:js|css))"/g)].map((m) => m[1]);
   refs.forEach((r) => assert.ok(shell.includes(r), r + ' is not in the offline list'));
   assert.ok(!/fonts\.googleapis|gstatic/.test(html), 'no third-party fonts');
+});
+
+test('default favourites are Heineken and Heineken Silver, both 330 ml', () => {
+  assert.deepEqual(D.DEFAULT_FAVS, [{ id: 'hein', ml: 330 }, { id: 'hsil', ml: 330 }]);
+  assert.equal(grams(D.favOf(D.DEFAULT_FAVS[1])).toFixed(1), '10.4');
+  assert.equal(grams(D.favOf(D.DEFAULT_FAVS[0])).toFixed(1), '13.0');
+});
+
+test('old favourites keep working with their usual size', () => {
+  assert.deepEqual(D.normalizeFavs(['hsil', 'corona', 'gone']), [{ id: 'hsil', ml: 440 }, { id: 'corona', ml: 355 }]);
+  assert.equal(D.favOf('corona').ml, 355);
 });

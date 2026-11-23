@@ -35,28 +35,51 @@
   }
 
   /**
-   * o: { drinks, start, end, kg, sex, beta, fed, extra:[{t, g}] }
-   * Drinks are spread evenly from start to end. extra adds single doses at a time.
+   * The night as rounds, sorted by start. Each round's drinks are spread evenly
+   * from its start to its end. o.rounds wins; otherwise the legacy single window
+   * { drinks, start, end } is one round.
+   */
+  function roundsOf(o) {
+    const src = o.rounds || [{ drinks: o.drinks || [], start: o.start, end: o.end }];
+    return src
+      .map((r) => ({ start: r.start, end: Math.max(r.end, r.start), drinks: r.drinks || [] }))
+      .sort((a, b) => a.start - b.start);
+  }
+
+  /** The same night with every round stopped by time t (nothing drunk after t). */
+  function stopAt(o, t) {
+    const rounds = roundsOf(o).map((r) => Object.assign({}, r, { end: Math.max(r.start, Math.min(r.end, t)) }));
+    return Object.assign({}, o, { rounds });
+  }
+
+  const gramsIn = (drinks) => (drinks || []).reduce((a, d) => a + gramsOf(d), 0);
+
+  /**
+   * o: { rounds:[{start, end, drinks}] | drinks, start, end, kg, sex, beta, fed, extra:[{t, g}] }
+   * Each round's drinks are spread evenly over that round. extra adds single doses at a time.
    */
   function simulate(o) {
     const { r, halfLife, bio } = factors(o);
     const vd = r * o.kg * 10;
-    const G = (o.drinks || []).reduce((a, d) => a + gramsOf(d), 0);
+    const rs = roundsOf(o);
+    const G = rs.reduce((a, x) => a + gramsIn(x.drinks), 0);
     const extra = (o.extra || []).filter((e) => e.g > 0);
-    const start = o.start;
-    const end = Math.max(o.end, start);
+    const start = rs.length ? rs[0].start : o.start;
     const out = { G, start, points: [], clear: null, peak: 0, peakAt: start };
     if (!(G > 0) && !extra.length) return out;
 
-    const durMin = Math.max(1, Math.round((end - start) / MIN));
-    const rate = G / durMin;
+    const plan = rs.map((x) => {
+      const dur = Math.max(1, Math.round((x.end - x.start) / MIN));
+      return { off: Math.round((x.start - start) / MIN), dur, rate: gramsIn(x.drinks) / dur };
+    });
+    const lastEnd = plan.reduce((a, p) => Math.max(a, p.off + p.dur), 0);
     const ka = 1 - Math.exp(-Math.LN2 / halfLife);
     const vmax = o.beta * (1 + KM / 0.08) / 60;   // so the rate matches beta at everyday levels
     const lastExtra = extra.reduce((a, e) => Math.max(a, Math.round((e.t - start) / MIN)), 0);
     let pool = 0, B = 0;
 
     for (let m = 0; m < 60 * 96; m++) {
-      if (m < durMin) pool += rate * bio;
+      for (const p of plan) if (m >= p.off && m < p.off + p.dur) pool += p.rate * bio;
       for (const e of extra) if (Math.round((e.t - start) / MIN) === m) pool += e.g * bio;
       const abs = pool * ka;
       pool -= abs;
@@ -66,7 +89,7 @@
       out.points.push(B);
       if (B > out.peak) { out.peak = B; out.peakAt = t; }
       // Clear once drinking is over, BAC reads zero and too little is left to absorb to lift it again.
-      if (m >= durMin && m >= lastExtra && B < CLEAR && pool * ka / vd < vmax * CLEAR / (KM + CLEAR)) { out.clear = t; return out; }
+      if (m >= lastEnd && m >= lastExtra && B < CLEAR && pool * ka / vd < vmax * CLEAR / (KM + CLEAR)) { out.clear = t; return out; }
     }
     out.clear = start + out.points.length * MIN;
     return out;
@@ -74,7 +97,7 @@
 
   function bacAt(sim, t) {
     const i = Math.floor((t - sim.start) / MIN) - 1;
-    if (i < 0 || i >= sim.points.length || (sim.clear && t >= sim.clear)) return 0;
+    if (!(i >= 0) || i >= sim.points.length || (sim.clear && t >= sim.clear)) return 0;
     return sim.points[i];
   }
 
@@ -91,13 +114,14 @@
     return (bacAt(sim, now) - bacAt(sim, now - 30 * MIN)) * 2;
   }
 
-  /** Standard drinks logged over the last hour, given drinks spread from start to end. */
+  /** Standard drinks logged over the last hour, given each round's drinks spread over that round. */
   function stdLastHour(o, now) {
-    const G = (o.drinks || []).reduce((a, d) => a + gramsOf(d), 0);
-    const end = Math.max(o.end, o.start);
-    if (end - o.start < MIN) return (o.start <= now && o.start > now - HOUR) ? G / STD_G : 0;
-    const overlap = Math.max(0, Math.min(end, now) - Math.max(o.start, now - HOUR));
-    return (G * overlap / (end - o.start)) / STD_G;
+    return roundsOf(o).reduce((sum, r) => {
+      const G = gramsIn(r.drinks);
+      if (r.end - r.start < MIN) return sum + ((r.start <= now && r.start > now - HOUR) ? G / STD_G : 0);
+      const overlap = Math.max(0, Math.min(r.end, now) - Math.max(r.start, now - HOUR));
+      return sum + (G * overlap / (r.end - r.start)) / STD_G;
+    }, 0);
   }
 
   function status(bNow, limit) {
@@ -127,7 +151,7 @@
    * Returns null when no wait within 3 h keeps it under.
    */
   function pacingGap(o, now, nextGrams, ceiling) {
-    const base = Object.assign({}, o, { end: Math.min(o.end, now) });
+    const base = stopAt(o, now);
     for (let g = 0; g <= 180; g += 5) {
       const sim = simulate(Object.assign({}, base, { extra: [{ t: now + g * MIN, g: nextGrams }] }));
       if (sim.peak < ceiling) return g;
@@ -142,16 +166,20 @@
    */
   function drivePlan(o, now, driveAt, marginMin, stillDrinking) {
     const margin = (marginMin || 60) * MIN;
-    const stopNow = simulate(Object.assign({}, o, { end: stillDrinking ? now : o.end }));
+    const stopNow = simulate(stillDrinking ? stopAt(o, now) : o);
     const clearAt = stopNow.G ? stopNow.clear : now;
     const ok = clearAt + margin <= driveAt;
     let latestStop = null;
-    if (stillDrinking && ok && now - o.start >= 10 * MIN && stopNow.G > 0) {
-      const pace = stopNow.G / (now - o.start);         // grams per ms so far
+    const rs = roundsOf(stillDrinking ? stopAt(o, now) : o);
+    // Only the round still going is extended, at its own pace; earlier rounds stay as they were.
+    const live = rs.reduce((a, r) => (!a || r.end >= a.end ? r : a), null);
+    if (stillDrinking && ok && live && now - live.start >= 10 * MIN && stopNow.G > 0) {
+      const pace = gramsIn(live.drinks) / (now - live.start);   // grams per ms in this round
       const clearIfStopAt = (T) => {
-        const grams = pace * (T - o.start);
+        const grams = pace * (T - live.start);
         const dose = { name: 'pace', abv: 100, ml: grams / ETHANOL, qty: 1, share: 1 };
-        return simulate(Object.assign({}, o, { drinks: [dose], end: T })).clear;
+        const rounds = rs.map((r) => (r === live ? { start: live.start, end: T, drinks: [dose] } : r));
+        return simulate(Object.assign({}, o, { rounds })).clear;
       };
       let lo = now, hi = driveAt;
       if (clearIfStopAt(hi) + margin <= driveAt) latestStop = hi;
@@ -168,7 +196,7 @@
   }
 
   const api = {
-    ETHANOL, STD_G, CLEAR, KM, THRESHOLDS, gramsOf, simulate, bacAt, underLimitAt,
+    ETHANOL, STD_G, CLEAR, KM, THRESHOLDS, gramsOf, roundsOf, stopAt, simulate, bacAt, underLimitAt,
     riseRate, stdLastHour, status, blackoutRisk, pacingGap, drivePlan
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

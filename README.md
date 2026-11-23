@@ -2,6 +2,15 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 5.0: late logging
+
+* **Log drinks you already had.** Tap **Log earlier drinks**, set when you started and stopped on a 24 hour dial, and see straight away when you'll be fully sober, even if that time has already passed. Quick chips (*2 h ago*, *4 h ago*, *Lunch*, *Last night*, *Just now*) and 15 minute nudges make it a few taps. Your favourites sit right there as cards, so one round can mix Heineken and Silver.
+* **A night is made of rounds.** Each round's drinks are spread between its own start and end, and the model runs every round on one timeline. Stop for three hours, then start again, and the alcohol still in your system counts toward the next round. The app tells you: *"At 20:00 you still had 0.070% from earlier, so it counts on top."*
+* **Rounds go where they belong.** A round from an earlier day goes to History, unless it's still in your system. If tonight had already cleared, a new round starts a fresh night and the old one is saved. If a late round overlaps one on the tab, the app asks *"Same drinks, or extra ones?"* so nothing is counted twice.
+* **Your horizon is your night.** The silhouette under the countdown is now your blood alcohol: each round is a hill, a dotted line shows what's left from earlier rounds, and a small moon marks when you'll be sober. When you add a round, the sheet glides away and a glowing orb carries it to its peak.
+* **Edit, remove and look back.** Tap a round to change its times or drinks. Tap a past night in History to see its hills and sober time.
+* **Favourites remember their size.** Star a drink in the size you actually buy. Heineken 330 ml and Heineken Silver 330 ml are the new defaults.
+
 ## New in 4.3: always sharp, on every iPhone
 
 * **Fixed:** on iOS 26.1 and later, including iOS 27, the island was drawn inside the frosted status bar strip and came out blurred behind the real Dynamic Island. It now hangs just below the strip, so it's sharp on every iPhone and iOS version.

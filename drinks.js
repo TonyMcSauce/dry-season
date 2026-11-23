@@ -30,13 +30,25 @@
   ];
 
   const SIZES = [275, 330, 340, 355, 440, 500, 750, 1000];
-  const DEFAULT_FAVS = ['hsil', 'corona'];
+  // A favourite is a drink in a size: { id, ml }.
+  const DEFAULT_FAVS = [{ id: 'hein', ml: 330 }, { id: 'hsil', ml: 330 }];
 
   const all = () => GROUPS.reduce((a, g) => a.concat(g.items), []);
   const byId = (id) => all().find((d) => d.id === id) || null;
   const byName = (name) => all().find((d) => !d.custom && d.name === name) || null;
 
-  const api = { GROUPS, SIZES, DEFAULT_FAVS, all, byId, byName };
+  /** The built-in drink a favourite points at, in the favourite's size. Old saves stored bare ids. */
+  function favOf(entry) {
+    const id = typeof entry === 'string' ? entry : entry && entry.id;
+    const it = byId(id);
+    if (!it || it.custom) return null;
+    return Object.assign({}, it, { ml: typeof entry === 'object' && entry.ml > 0 ? entry.ml : it.ml });
+  }
+
+  /** Favourites as { id, ml }, with old bare ids given their drink's usual size and unknown ones dropped. */
+  const normalizeFavs = (list) => (Array.isArray(list) ? list : []).map(favOf).filter(Boolean).map((d) => ({ id: d.id, ml: d.ml }));
+
+  const api = { GROUPS, SIZES, DEFAULT_FAVS, all, byId, byName, favOf, normalizeFavs };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryDrinks = api;
 })(typeof self !== 'undefined' ? self : this);

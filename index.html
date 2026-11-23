@@ -97,7 +97,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   text-shadow:0 2px 24px rgba(242,169,59,.25);
 }
 .clear-day{margin:0;font-size:1rem;color:var(--text);white-space:pre-line}
-.stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:560px;margin:14px auto 0;padding:14px 0 96px;border-top:1px solid var(--line)}
+.stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:560px;margin:14px auto 0;padding:14px 0 168px;border-top:1px solid var(--line)}
 .stats div{min-width:0}
 .stats dt{font-size:.82rem;color:var(--muted)}
 .stats dd{margin:0;font-weight:700;font-size:1.15rem}
@@ -108,7 +108,17 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bubble:nth-child(3){animation-delay:1.7s;animation-duration:3.6s}
 .bubble:nth-child(4){animation-delay:2.3s;animation-duration:2.9s}
 @keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-150px);opacity:0}}
-.horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:78px;display:block;color:var(--ground)}
+.horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:150px;display:block;color:var(--ground);overflow:visible}
+.hz-hill,.hz-ground{fill:currentColor}
+.hz-hill,.hz-ridge{transition:d .9s cubic-bezier(.22,1,.36,1)}
+.hz-ridge{fill:none;stroke:var(--amber);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(242,169,59,.55))}
+.hz-ghost{fill:none;stroke:var(--text);stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:2 4}
+.hz-bands rect{fill:var(--text);fill-opacity:.07;transition:x .9s cubic-bezier(.22,1,.36,1),width .9s cubic-bezier(.22,1,.36,1)}
+.hz-labels text{font:700 10px var(--body);letter-spacing:.08em;fill:var(--text);fill-opacity:.75}
+.hz-limit{stroke:var(--text);stroke-opacity:.3;stroke-dasharray:3 5}
+.hz-now{fill:var(--russet);stroke:var(--ground);stroke-width:2;transition:cx .9s cubic-bezier(.22,1,.36,1),cy .9s cubic-bezier(.22,1,.36,1)}
+.hz-moon{fill:var(--text);filter:drop-shadow(0 0 6px rgba(246,237,218,.8));transition:cx .9s cubic-bezier(.22,1,.36,1)}
+@media (prefers-reduced-motion: reduce){.hz-hill,.hz-ridge,.hz-bands rect,.hz-now,.hz-moon{transition:none}}
 
 /* Sections */
 .block{padding:30px var(--gutter) 6px}
@@ -143,6 +153,16 @@ h2{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;
 .tab ul{list-style:none;margin:0;padding:0}
 .tab li{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:12px 0;border-top:1.5px dashed rgba(42,26,15,.22)}
 .tab li:last-child{border-bottom:1.5px dashed rgba(42,26,15,.22)}
+.tab li.round-h{display:block;padding:14px 0 4px;border-top:0;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber-deep)}
+.tab li.round-h + li{border-top:1.5px dashed rgba(42,26,15,.22)}
+.rounds{list-style:none;margin:0 0 4px;padding:0;display:grid;gap:10px}
+.round-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--field);border:1px solid var(--line)}
+.round-card .rc-body{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:0;background:transparent;color:inherit;padding:0;min-height:44px}
+.rc-when{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.rc-what{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-meta{font-size:.8rem;color:var(--muted)}
+.round-card .btn-mini{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600;flex:none}
+.rounds-empty{margin:0 0 4px}
 .li-name{font-weight:700;line-height:1.25}
 .li-meta{font-size:.86rem;color:rgba(42,26,15,.62)}
 .li-g{font-weight:700;white-space:nowrap}
@@ -192,6 +212,15 @@ input[type=range]{width:100%;accent-color:var(--amber);margin:8px 0 0}
 .history li:last-child{border-bottom:1px solid var(--line)}
 .history .h-date{font-weight:700}
 .history .h-meta{color:var(--muted);font-size:.9rem;text-align:right}
+.history li:has(.h-open){padding:0}
+.h-open{display:flex;justify-content:space-between;gap:12px;width:100%;padding:12px 0;border:0;background:transparent;color:inherit;text-align:left;min-height:56px}
+.past-sky{position:relative;height:190px;overflow:hidden;background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--sky-low) 85%,var(--horizon) 100%)}
+.past-sky .horizon{color:var(--sheet)}
+.past-body{padding:0 0 22px}
+.past-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px var(--gutter) 6px}
+.past-stats dt{font-size:.8rem;color:var(--muted)}
+.past-stats dd{margin:0;font-weight:700;font-size:1.1rem}
+.past-body .rounds{padding:0 var(--gutter)}
 .actions{display:grid;gap:10px;padding:22px var(--gutter) 0}
 footer{padding:36px var(--gutter) 40px;color:var(--muted);font-size:.85rem;text-align:center}
 
@@ -203,6 +232,80 @@ dialog.sheet{
 }
 dialog.sheet[open]{animation:sheetUp .34s cubic-bezier(.2,.8,.2,1)}
 dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+/* Late logging: the dial */
+.late-open{margin-top:12px}
+.late-main{padding:4px var(--gutter) 22px;display:grid;gap:16px}
+.dial-wrap{position:relative;width:min(76vw,290px);aspect-ratio:1;margin:6px auto 0}
+.dial-wrap::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle,rgba(242,169,59,.3),rgba(242,169,59,0) 70%);transition:background .6s}
+.late.history .dial-wrap::before{background:radial-gradient(circle,rgba(143,180,218,.3),rgba(143,180,218,0) 70%)}
+.dial{position:relative;width:100%;height:100%;display:block;overflow:visible}
+.dl-track{fill:none;stroke:var(--line);stroke-width:18}
+.dl-tick{stroke:var(--line);stroke-width:1.4;stroke-linecap:round}
+.dl-tick.major{stroke:var(--muted);stroke-width:2.2}
+.dl-hour{font:700 11px var(--body);fill:var(--muted)}
+.dl-other{fill:none;stroke:var(--text);stroke-opacity:.22;stroke-width:18;stroke-linecap:round}
+.dl-tail{fill:none;stroke:var(--text);stroke-opacity:.6;stroke-width:3;stroke-linecap:round}
+.dl-arc{fill:none;stroke:var(--amber);stroke-width:18;stroke-linecap:round;filter:drop-shadow(0 0 10px rgba(242,169,59,.55))}
+.dial.history .dl-arc{stroke:#8FB4DA;filter:drop-shadow(0 0 10px rgba(143,180,218,.6))}
+.dl-arc,.dl-tail,.dl-other{transition:stroke-dasharray .7s cubic-bezier(.22,1,.36,1),stroke-dashoffset .7s cubic-bezier(.22,1,.36,1),stroke .5s}
+.dl-handle{fill:var(--foam);stroke:var(--sheet);stroke-width:3}
+.dl-moon{fill:var(--text)}
+.dl-now{fill:var(--russet)}
+.dl-handle,.dl-moon,.dl-now{transition:cx .7s cubic-bezier(.22,1,.36,1),cy .7s cubic-bezier(.22,1,.36,1)}
+.dial-centre{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+#dlKicker{margin:0;font-size:.8rem;font-weight:600;color:var(--muted)}
+.dl-time{margin:0;font-family:var(--display);font-size:2.8rem;line-height:1.05}
+.dl-tag{margin-top:4px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;background:rgba(242,169,59,.2);color:var(--text);transition:background .4s}
+.late.history .dl-tag{background:rgba(143,180,218,.25)}
+.time-row{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.tr-label{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tnudge{justify-self:end;display:flex;align-items:center}
+.tnudge button{width:44px;height:44px;border:0;background:transparent;color:var(--text);font-size:1.4rem;border-radius:12px}
+.tnudge output{min-width:104px;text-align:center;font-weight:700}
+.tr-chips{grid-column:1/-1}
+.tr-chips .chip{transition:background .25s,border-color .25s,color .25s,transform .15s}
+.tr-chips .chip:active{transform:scale(.94)}
+.late.history .tr-chips .chip[aria-pressed="true"]{background:#8FB4DA;border-color:#8FB4DA}
+.late-favs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fav-card{display:flex;align-items:center;gap:2px;padding:4px 8px 4px 0;border-radius:16px;background:var(--field);border:1px solid var(--line);transition:background .3s,border-color .3s}
+.fav-card.on{background:rgba(242,169,59,.16);border-color:rgba(242,169,59,.55)}
+.fc-less{width:36px;height:44px;flex:none;border:0;background:transparent;font-size:1.3rem;color:inherit}
+.fc-more{flex:1;min-width:0;min-height:44px;border:0;background:transparent;text-align:left;padding:0;color:inherit}
+.fc-name{display:block;font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-meta{display:block;font-size:.75rem;color:var(--muted)}
+.fc-count{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);background:var(--field);color:var(--muted);transition:background .3s,color .3s}
+.fav-card.on .fc-count{background:var(--amber);color:var(--ink)}
+.late-extra{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.late-extra:empty{display:none}
+.late-extra li{display:flex;align-items:center;gap:4px;padding:0 4px 0 12px;border-radius:999px;background:var(--field);border:1px solid var(--line);font-weight:600;font-size:.9rem}
+.late-extra button{width:40px;height:40px;border:0;background:transparent;color:inherit;font-size:1.1rem}
+.link-btn{margin-top:6px;min-height:44px;border:0;background:transparent;color:var(--text);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0 2px}
+#lateAdd{transition:background .4s,transform .15s}
+.late.history #lateAdd{background:#8FB4DA}
+.late.leaving{transform:translateY(105%);opacity:.6;transition:transform .42s cubic-bezier(.4,0,.2,1),opacity .42s}
+.late-overlap{padding:18px var(--gutter) 24px;display:grid;gap:14px}
+.ov-art{width:120px;height:64px;margin:4px auto 0;display:block}
+.ov-art circle{fill:none;stroke:var(--text);stroke-opacity:.45;stroke-width:2}
+.ov-lens{fill:var(--russet);opacity:.75;animation:lensPulse 1.6s ease-in-out infinite}
+@keyframes lensPulse{0%,100%{opacity:.45}50%{opacity:.9}}
+.ov-title{margin:0;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.15;text-align:center}
+.ov-text{margin:0;color:var(--muted);text-align:center}
+.ov-choice{display:flex;align-items:center;gap:14px;min-height:68px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);text-align:left}
+.ov-choice > span{display:flex;flex-direction:column}
+.ov-choice strong{font-size:1.02rem}
+.ov-choice > span > span{font-size:.86rem;color:var(--muted)}
+.ov-choice svg{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.ov-choice.primary{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.ov-choice.primary > span > span{color:rgba(42,26,15,.75)}
+.ov-safe{margin:0;display:flex;gap:8px;align-items:flex-start;font-size:.88rem;color:var(--muted)}
+.ov-safe svg{width:16px;height:16px;flex:none;margin-top:3px;fill:none;stroke:currentColor;stroke-width:1.4}
+.night-note{display:flex;gap:10px;align-items:flex-start;margin:4px 0 0;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,rgba(242,169,59,.2),rgba(228,111,72,.12));border:1px solid rgba(242,169,59,.45);animation:noteIn .6s cubic-bezier(.22,1,.36,1)}
+.night-note svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--amber)}
+.night-note p{margin:0;font-size:.94rem;line-height:1.4}
+@keyframes noteIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.orb{position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:radial-gradient(circle,#FFE3B0 0%,#F2A93B 45%,rgba(242,169,59,0) 72%);pointer-events:none;z-index:60;transition:left .8s cubic-bezier(.22,1,.36,1),top .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1),opacity .45s}
+@media (prefers-reduced-motion: reduce){.ov-lens,.night-note{animation:none}.late.leaving{transition:none}}
+@media (prefers-reduced-motion: reduce){.dl-arc,.dl-tail,.dl-other,.dl-handle,.dl-moon,.dl-now,.dial-wrap::before{transition:none}}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .sheet-head{position:sticky;top:0;background:var(--sheet);display:flex;align-items:center;justify-content:space-between;padding:12px var(--gutter);border-bottom:1px solid var(--line);z-index:2}
 .sheet-head h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.2rem}
@@ -322,6 +425,11 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .star path{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;transition:fill .2s}
 .star[aria-pressed="true"]{color:var(--amber)}
 .star[aria-pressed="true"] path{fill:currentColor}
+.fav-size{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px 0 4px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--text);font-weight:600;text-align:left}
+.fav-size .star{width:36px;height:36px}
+.fav-size .star::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z'/></svg>") center/contain no-repeat;opacity:.45}
+.fav-size[aria-pressed="true"] .star{color:var(--amber)}
+.fav-size[aria-pressed="true"] .star::before{opacity:1}
 .star.pop svg{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
 @keyframes pop{0%{transform:scale(.6) rotate(-20deg)}60%{transform:scale(1.3) rotate(8deg)}100%{transform:none}}
 .pick-group.favs h4{color:var(--amber)}
@@ -448,16 +556,16 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <div><dt id="limitLabel">Under 0.05%</dt><dd id="underAt">--</dd></div>
   </dl>
 
-  <svg class="horizon" viewBox="0 0 400 78" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-    <g fill="currentColor">
-      <path d="M0 62 Q90 52 200 58 T400 55 V78 H0 Z"/>
-      <path d="M58 60 L61 40 L48 30 L50 29 L62 37 L63 26 L65 26 L65 37 L80 28 L82 30 L67 41 L66 60 Z"/>
-      <ellipse cx="64" cy="25" rx="30" ry="5.5"/>
-      <ellipse cx="46" cy="28" rx="16" ry="4.5"/>
-      <ellipse cx="84" cy="27" rx="17" ry="4.5"/>
-      <ellipse cx="66" cy="21" rx="18" ry="4"/>
-      <path d="M318 57 L320 50 L322 57 Z"/><ellipse cx="320" cy="49" rx="9" ry="2.2"/>
-    </g>
+  <svg class="horizon" id="horizon" viewBox="0 0 400 150" aria-hidden="true">
+    <g class="hz-bands"></g>
+    <line class="hz-limit" x1="0" x2="400" y1="78" y2="78"/>
+    <path class="hz-hill" d="M0 142L400 142L400 142L0 142Z"/>
+    <rect class="hz-ground" x="0" y="141.5" width="400" height="9"/>
+    <path class="hz-ghost"/>
+    <path class="hz-ridge" d="M0 142L400 142"/>
+    <g class="hz-labels"></g>
+    <circle class="hz-moon" r="4.5" cx="0" cy="135"/>
+    <circle class="hz-now" r="5.5" cx="0" cy="142"/>
   </svg>
 </header>
 
@@ -504,32 +612,25 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   <section class="block" aria-labelledby="nightH">
     <h2 id="nightH">The night</h2>
-    <div class="times">
-      <label class="field">Started
-        <input type="datetime-local" id="startAt">
-      </label>
-      <label class="field">Stopped
-        <input type="datetime-local" id="endAt">
-      </label>
+    <ul class="rounds" id="rounds"></ul>
+    <p class="hint rounds-empty" id="roundsEmpty">Nothing on tonight's tab yet. Had a few already? Log them with the times you drank.</p>
+    <div class="night-note" id="nightNote" role="status" hidden>
+      <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M3 11h10M9 6l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="11" r="2.5" fill="currentColor"/></svg>
+      <p><strong id="nnTitle"></strong> <span id="nnText"></span></p>
     </div>
-    <label class="switch">
-      <input type="checkbox" id="stillGoing">
-      <span class="track" aria-hidden="true"></span>
-      I'm still drinking
-    </label>
+    <button class="btn quiet late-open" id="openLate" type="button">Log earlier drinks</button>
     <label class="switch">
       <input type="checkbox" id="fed">
       <span class="track" aria-hidden="true"></span>
       I ate a proper meal
     </label>
     <p class="hint">Food slows how fast alcohol reaches your blood, so your peak is lower and arrives later.</p>
-    <p class="warn" id="timeWarn" hidden>Your stop time is before your start time. Move one of them.</p>
   </section>
 
   <div class="tab-wrap">
     <section class="tab" aria-labelledby="tabH">
       <h2 id="tabH">Tonight's tab</h2>
-      <p class="tab-sub" id="tabSub">Drinks are spread evenly between your start and stop times.</p>
+      <p class="tab-sub" id="tabSub">Drinks in each round are spread evenly between its start and end.</p>
       <ul id="tabList"></ul>
       <p class="tab-empty" id="tabEmpty">Nothing on the tab yet.</p>
       <div class="tab-total" id="tabTotal" hidden><span>Pure alcohol</span><span id="tabTotalVal"></span></div>
@@ -651,8 +752,86 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <p class="label">How much of each was yours</p>
       <div class="chips" id="shareChips"></div>
     </div>
+    <button class="fav-size" id="cfgFav" type="button" aria-pressed="false" hidden><span class="star" aria-hidden="true"></span><span id="cfgFavText">Save this size as a favourite</span></button>
     <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
     <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
+  </div>
+</dialog>
+
+<dialog class="sheet late" id="late" aria-labelledby="lateTitle">
+  <div class="sheet-head">
+    <button class="icon-btn" id="lateBack" type="button" aria-label="Back to the round" hidden>&#8249;</button>
+    <h3 id="lateTitle">Log earlier drinks</h3>
+    <button class="icon-btn" id="lateClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="late-main" id="lateMain">
+    <div class="dial-wrap">
+      <svg class="dial" id="dial" aria-hidden="true"></svg>
+      <div class="dial-centre" aria-live="polite">
+        <p id="dlKicker">Fully sober at</p>
+        <p class="dl-time" id="dlTime">--:--</p>
+        <span class="dl-tag" id="dlTag"></span>
+      </div>
+    </div>
+    <div class="time-row">
+      <span class="tr-label">From</span>
+      <div class="tnudge"><button type="button" id="fromDown" aria-label="Start 15 minutes earlier">&#8249;</button><output id="fromVal"></output><button type="button" id="fromUp" aria-label="Start 15 minutes later">&#8250;</button></div>
+      <div class="chips tr-chips" id="fromChips"></div>
+    </div>
+    <div class="time-row">
+      <span class="tr-label">Until</span>
+      <div class="tnudge"><button type="button" id="untilDown" aria-label="Stop 15 minutes earlier">&#8249;</button><output id="untilVal"></output><button type="button" id="untilUp" aria-label="Stop 15 minutes later">&#8250;</button></div>
+      <div class="chips tr-chips" id="untilChips"></div>
+    </div>
+    <div>
+      <div class="late-favs" id="lateFavs"></div>
+      <ul class="late-extra" id="lateExtra"></ul>
+      <button class="link-btn" id="lateAll" type="button">All drinks</button>
+    </div>
+    <button class="btn" id="lateAdd" type="button">Add round to tonight</button>
+    <button class="btn quiet" id="lateRemove" type="button" hidden>Remove round</button>
+  </div>
+  <div class="late-overlap" id="lateOverlap" hidden>
+    <svg class="ov-art" viewBox="0 0 120 64" aria-hidden="true"><circle cx="44" cy="32" r="26"/><circle cx="76" cy="32" r="26"/><path class="ov-lens" d="M60 10.7a26 26 0 0 1 0 42.6a26 26 0 0 1 0-42.6z"/></svg>
+    <h4 class="ov-title">Same drinks, or extra ones?</h4>
+    <p class="ov-text" id="ovText"></p>
+    <button class="ov-choice" id="ovSame" type="button">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="10" cy="13" r="7"/><circle cx="16" cy="13" r="7"/></svg>
+      <span><strong>Same drinks</strong><span id="ovSameSub">Merge them into one round</span></span>
+    </button>
+    <button class="ov-choice primary" id="ovExtra" type="button">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M13 5v16M5 13h16"/></svg>
+      <span><strong>Extra drinks</strong><span>Count both rounds</span></span>
+    </button>
+    <p class="ov-safe"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l5.5 2v4c0 3.4-2.3 6-5.5 7-3.2-1-5.5-3.6-5.5-7v-4z"/></svg>Not sure? Counting both keeps your estimate on the safe side.</p>
+  </div>
+</dialog>
+
+<dialog class="sheet past" id="past" aria-labelledby="pastTitle">
+  <div class="sheet-head">
+    <h3 id="pastTitle">Past night</h3>
+    <button class="icon-btn" id="pastClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="past-body">
+    <div class="past-sky">
+      <svg class="horizon" id="pastHorizon" viewBox="0 0 400 150" aria-hidden="true">
+        <g class="hz-bands"></g>
+        <line class="hz-limit" x1="0" x2="400" y1="78" y2="78"/>
+        <path class="hz-hill" d="M0 142L400 142L400 142L0 142Z"/>
+        <rect class="hz-ground" x="0" y="141.5" width="400" height="9"/>
+        <path class="hz-ghost"/>
+        <path class="hz-ridge" d="M0 142L400 142"/>
+        <g class="hz-labels"></g>
+        <circle class="hz-moon" r="4.5" cx="0" cy="135"/>
+        <circle class="hz-now" r="5.5" cx="0" cy="142"/>
+      </svg>
+    </div>
+    <dl class="past-stats">
+      <div><dt>Peak</dt><dd id="pastPeak"></dd></div>
+      <div><dt>Fully sober</dt><dd id="pastClear"></dd></div>
+      <div><dt>Drinks</dt><dd id="pastCount"></dd></div>
+    </dl>
+    <ul class="rounds" id="pastRounds"></ul>
   </div>
 </dialog>
 
@@ -683,6 +862,9 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 <script src="version.js"></script>
 <script src="drinks.js"></script>
 <script src="model.js"></script>
+<script src="night.js"></script>
+<script src="horizon.js"></script>
+<script src="dial.js"></script>
 <script src="mug.js"></script>
 <script src="island.js"></script>
 <script>
@@ -699,6 +881,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   const LIMIT_PRESETS = [['Botswana 0.05', 0.05], ['0.08', 0.08], ['0.02', 0.02]];
 
   const D = window.DryDrinks;
+  const N = window.DryNight;
   const DRINKS = D.GROUPS;
   const SIZES = D.SIZES;
   const SHARES = [[1, 'All mine'], [0.5, 'Half'], [1/3, 'A third'], [0.25, 'A quarter']];
@@ -710,22 +893,21 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   const round5 = (ms) => Math.floor(ms / 300000) * 300000;
 
   function newSession() {
-    const now = Date.now();
-    return { start: round5(now - 2 * 3600e3), end: round5(now), still: true, fed: false, driveAt: null, water: null, drinks: [] };
+    return { v: 5, rounds: [], fed: false, driveAt: null, water: null };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.slice() };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
   }
   function load() {
     const d = defaults();
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
-      if (s && s.profile && s.session && Array.isArray(s.session.drinks)) {
+      if (s && s.profile && s.session && (Array.isArray(s.session.drinks) || Array.isArray(s.session.rounds))) {
         return {
           profile: Object.assign(d.profile, s.profile),
-          session: Object.assign({ fed: false, driveAt: null, water: null }, s.session),
+          session: N.migrate(Object.assign({ fed: false, driveAt: null, water: null }, s.session)),
           history: Array.isArray(s.history) ? s.history : [],
-          favs: Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS.slice()
+          favs: D.normalizeFavs(Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS)
         };
       }
     } catch (e) {}
@@ -733,13 +915,13 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
-  let state = load();
+  let state = N.settle(load(), Date.now());
 
   const gramsOf = M.gramsOf;
-  const effectiveEnd = () => state.session.still ? Date.now() : state.session.end;
+  const isLive = () => !!N.liveRound(state.session);
+  const allDrinks = () => state.session.rounds.reduce((a, r) => a.concat(r.drinks), []);
   function opts(extra) {
-    const p = state.profile, s = state.session;
-    return Object.assign({ drinks: s.drinks, start: s.start, end: effectiveEnd(), kg: p.kg, sex: p.sex, beta: p.beta, fed: !!s.fed }, extra || {});
+    return Object.assign(N.simOpts(state.session, state.profile, Date.now()), extra || {});
   }
   const simulate = () => M.simulate(opts());
   const bacAt = M.bacAt;
@@ -770,8 +952,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     nowBac: $('#nowBac'), peakBac: $('#peakBac'), liquid: $('#liquid')
   };
   let lastSim = null;
+  let lastHorizon = null;
+  function renderHorizon(sim, now) {
+    const o = opts(), rounds = o.rounds;
+    let prevSim = null;
+    if (rounds.length > 1) {
+      const latest = rounds.reduce((a, r) => (r.start > a.start ? r : a), rounds[0]);
+      prevSim = M.simulate(Object.assign({}, o, { rounds: rounds.filter((r) => r !== latest) }));
+    }
+    lastHorizon = window.DryHorizon.render($('#horizon'), { sim, rounds, now, limit: state.profile.limit, prevSim });
+  }
   function renderHero(sim) {
     const now = Date.now();
+    renderHorizon(sim, now);
     const bNow = bacAt(sim, now);
     let frac = 0;
     if (!sim.G) {
@@ -883,50 +1076,89 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   // Tab
   function shareLabel(v) { const f = SHARES.find((s) => Math.abs(s[0] - v) < 1e-6); return f ? f[1].toLowerCase() : Math.round(v * 100) + '%'; }
+  function roundWhen(r) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const pre = r.start < today.getTime() ? dayLabel(r.start) + ' ' : '';
+    return pre + fmtTime(r.start) + ' to ' + (r.end == null ? 'now' : fmtTime(r.end));
+  }
+  function roundWhat(r) { return r.drinks.map((d) => d.qty + ' × ' + d.name).join(' + '); }
   function renderTab() {
     const list = $('#tabList');
-    const drinks = state.session.drinks;
+    const rounds = state.session.rounds;
     list.innerHTML = '';
-    drinks.forEach((d, i) => {
-      const li = document.createElement('li');
-      const share = d.share < 1 ? ', ' + shareLabel(d.share) + ' each' : '';
-      li.innerHTML = '<div><div class="li-name"></div><div class="li-meta"></div></div><span class="li-g"></span><button class="rm" type="button">&#215;</button>';
-      li.querySelector('.li-name').textContent = d.qty + ' × ' + d.name;
-      li.querySelector('.li-meta').textContent = d.ml + ' ml at ' + d.abv + '%' + share;
-      li.querySelector('.li-g').textContent = gramsOf(d).toFixed(1) + ' g';
-      const rm = li.querySelector('.rm');
-      rm.setAttribute('aria-label', 'Remove ' + d.name);
-      rm.addEventListener('click', () => { state.session.drinks.splice(i, 1); save(); renderAll(); toast('Removed from the tab'); });
-      list.appendChild(li);
+    rounds.forEach((r, ri) => {
+      if (rounds.length > 1) {
+        const h = document.createElement('li'); h.className = 'round-h';
+        h.textContent = 'Round ' + (ri + 1) + ' · ' + roundWhen(r);
+        list.appendChild(h);
+      }
+      r.drinks.forEach((d, i) => {
+        const li = document.createElement('li');
+        const share = d.share < 1 ? ', ' + shareLabel(d.share) + ' each' : '';
+        li.innerHTML = '<div><div class="li-name"></div><div class="li-meta"></div></div><span class="li-g"></span><button class="rm" type="button">&#215;</button>';
+        li.querySelector('.li-name').textContent = d.qty + ' × ' + d.name;
+        li.querySelector('.li-meta').textContent = d.ml + ' ml at ' + d.abv + '%' + share;
+        li.querySelector('.li-g').textContent = gramsOf(d).toFixed(1) + ' g';
+        const rm = li.querySelector('.rm');
+        rm.setAttribute('aria-label', 'Remove ' + d.name);
+        rm.addEventListener('click', () => {
+          const drinks = r.drinks.filter((_, j) => j !== i);
+          nightNote = null;
+          state = drinks.length ? N.editRound(state, r.id, { drinks }) : N.removeRound(state, r.id);
+          save(); renderAll(); toast('Removed from the tab');
+        });
+        list.appendChild(li);
+      });
     });
+    const drinks = allDrinks();
     const G = drinks.reduce((a, d) => a + gramsOf(d), 0);
     $('#tabEmpty').hidden = drinks.length > 0;
     $('#tabTotal').hidden = drinks.length === 0;
     $('#tabTotalVal').textContent = G.toFixed(1) + ' g, about ' + (G / STD_G).toFixed(1) + ' standard drinks';
   }
 
-  // Times
   function toLocalInput(ms) { const d = new Date(ms); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
   function fromLocalInput(v) {
     const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || '');
     return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : null;
   }
-  function renderTimes() {
-    const s = state.session;
-    $('#startAt').value = toLocalInput(s.start);
-    $('#endAt').value = toLocalInput(effectiveEnd());
-    $('#endAt').disabled = s.still;
-    $('#stillGoing').checked = s.still;
-    $('#fed').checked = !!s.fed;
-    $('#timeWarn').hidden = s.still || s.end >= s.start;
+
+  // The night: one card per round
+  function renderNight() {
+    const ul = $('#rounds'), rounds = state.session.rounds;
+    ul.innerHTML = '';
+    rounds.forEach((r) => {
+      const li = document.createElement('li'); li.className = 'round-card'; li.dataset.id = r.id;
+      li.innerHTML = '<button type="button" class="rc-open rc-body"><span class="rc-when"></span><span class="rc-what"></span><span class="rc-meta"></span></button>';
+      li.querySelector('.rc-open').setAttribute('aria-label', 'Edit round ' + roundWhen(r) + ', ' + roundWhat(r));
+      li.querySelector('.rc-open').addEventListener('click', () => openLate(r));
+      li.querySelector('.rc-when').textContent = roundWhen(r);
+      li.querySelector('.rc-what').textContent = roundWhat(r);
+      li.querySelector('.rc-meta').textContent = r.end == null ? 'still going' : r.late ? 'logged late' : 'logged as you went';
+      if (r.end == null) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-mini'; b.textContent = 'Finished drinking';
+        b.addEventListener('click', () => { nightNote = null; state = N.finishLive(state, Date.now()); save(); renderAll(); });
+        li.appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+    $('#roundsEmpty').hidden = rounds.length > 0 || !!nightNote;
+    renderNote();
+    $('#fed').checked = !!state.session.fed;
   }
-  $('#startAt').addEventListener('change', (e) => { const v = fromLocalInput(e.target.value); if (v) { state.session.start = v; save(); renderAll(); } });
-  $('#endAt').addEventListener('change', (e) => { const v = fromLocalInput(e.target.value); if (v) { state.session.end = v; save(); renderAll(); } });
-  $('#stillGoing').addEventListener('change', (e) => {
-    state.session.still = e.target.checked;
-    if (!e.target.checked) state.session.end = Date.now();
-    save(); renderAll();
-  });
+  // The note under the rounds after a late round: what happened and why.
+  let nightNote = null;
+  function renderNote() {
+    const box = $('#nightNote');
+    box.hidden = !nightNote;
+    if (nightNote) { $('#nnTitle').textContent = nightNote[0]; $('#nnText').textContent = nightNote[1]; }
+  }
+  /** Toast for what happened to the night when a drink or round was added. */
+  function announce(outcome) {
+    nightNote = null;
+    if (outcome.action === 'fresh' && outcome.archived) { toast('New night started. The last one is saved in History.'); return true; }
+    return false;
+  }
 
   // Body settings
   function renderBody() {
@@ -962,24 +1194,50 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       const li = document.createElement('li');
       const { h: hh, m } = dur(n.clear - n.start);
       const date = new Date(n.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-      li.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
-      li.querySelector('.h-date').textContent = date;
-      li.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
-      li.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
+      const wrap = n.rounds && n.rounds.length ? document.createElement('button') : li;
+      wrap.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
+      wrap.querySelector('.h-date').textContent = date;
+      wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
+      wrap.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
+      if (wrap !== li) {
+        wrap.type = 'button'; wrap.className = 'h-open';
+        wrap.addEventListener('click', () => openPast(n));
+        li.appendChild(wrap);
+      }
       ul.appendChild(li);
     });
   }
+  const past = $('#past');
+  function openPast(n) {
+    $('#pastTitle').textContent = new Date(n.start).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' });
+    $('#pastPeak').textContent = fmtBac(n.peak);
+    $('#pastClear').textContent = fmtTime(n.clear);
+    $('#pastCount').textContent = String(n.count);
+    const ul = $('#pastRounds'); ul.innerHTML = '';
+    n.rounds.forEach((r) => {
+      const li = document.createElement('li'); li.className = 'round-card';
+      li.innerHTML = '<span class="rc-body"><span class="rc-when"></span><span class="rc-what"></span></span>';
+      li.querySelector('.rc-when').textContent = fmtTime(r.start) + ' to ' + fmtTime(r.end);
+      li.querySelector('.rc-what').textContent = roundWhat(r);
+      ul.appendChild(li);
+    });
+    past.showModal();
+    // Seen from the moment it cleared, so no "now" marker sits on the hills.
+    const o = N.simOpts({ rounds: n.rounds, fed: false }, state.profile, n.clear);
+    const sim = M.simulate(o);
+    window.DryHorizon.render($('#pastHorizon'), { sim, rounds: o.rounds, now: n.clear, limit: state.profile.limit, prevSim: null });
+    $('#pastHorizon .hz-now').style.display = 'none';
+  }
+  $('#pastClose').addEventListener('click', () => past.close());
+  past.addEventListener('click', (e) => { if (e.target === past) past.close(); });
   $('#saveNight').addEventListener('click', () => {
-    const sim = simulate();
-    if (!sim.G) { toast('Add a drink before saving'); return; }
-    state.history = (state.history || []).concat([{
-      start: sim.start, clear: sim.clear, G: sim.G, peak: sim.peak,
-      count: state.session.drinks.reduce((a, d) => a + d.qty, 0)
-    }]).slice(-20);
+    const entry = N.summarize(state.session, state.profile, Date.now());
+    if (!entry.G) { toast('Add a drink before saving'); return; }
+    state.history = (state.history || []).concat([entry]).slice(-20);
     save(); renderHistory(); toast('Night saved');
   });
   $('#newNight').addEventListener('click', () => {
-    if (state.session.drinks.length && !confirm('Clear the tab and start a new night?')) return;
+    if (state.session.rounds.length && !confirm('Clear the tab and start a new night?')) return;
     state.session = newSession(); save(); renderAll(); toast('Fresh tab, fresh night');
   });
 
@@ -1002,11 +1260,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   // Drink picker
   const sheet = $('#sheet');
   let pick = null;
+  let pickFor = 'tab';                 // 'late' when the picker was opened from the dial sheet
   const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z"/></svg>';
-  const isFav = (id) => (state.favs || []).includes(id);
+  // A favourite is a drink in a size, so the same beer can be a favourite as a 330 ml and a 440 ml.
+  const isFav = (id, ml) => (state.favs || []).some((f) => f.id === id && f.ml === ml);
+  const favKey = (it) => it.id + '|' + it.ml;
   function buildList(popId, popGroup) {
     const box = $('#pickList'), y = sheet.scrollTop; box.innerHTML = '';
-    const favItems = (state.favs || []).map(D.byId).filter((it) => it && !it.custom);
+    const favItems = (state.favs || []).map(D.favOf).filter(Boolean);
     const groups = (favItems.length ? [{ group: 'Favourites', items: favItems, favs: true }] : []).concat(DRINKS);
     groups.forEach((g) => {
       const wrap = document.createElement('div'); wrap.className = 'pick-group' + (g.favs ? ' favs' : '');
@@ -1023,9 +1284,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         if (!it.custom) {
           const st = document.createElement('button'); st.type = 'button'; st.className = 'star';
           st.innerHTML = STAR;
-          st.dataset.id = it.id; st.dataset.group = g.group;
-          st.setAttribute('aria-pressed', String(isFav(it.id)));
-          st.setAttribute('aria-label', (isFav(it.id) ? 'Remove ' : 'Add ') + it.name + (isFav(it.id) ? ' from favourites' : ' to favourites'));
+          const on = isFav(it.id, it.ml);
+          st.dataset.id = favKey(it); st.dataset.group = g.group;
+          st.setAttribute('aria-pressed', String(on));
+          st.setAttribute('aria-label', (on ? 'Remove ' : 'Add ') + it.name + ' ' + it.ml + ' ml' + (on ? ' from favourites' : ' to favourites'));
           st.addEventListener('click', () => toggleFav(it, g.group));
           row.appendChild(st);
         }
@@ -1039,22 +1301,26 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       if (el) { el.classList.add('pop'); el.focus({ preventScroll: true }); }
     }
   }
-  function toggleFav(it, group) {
-    const favs = state.favs || [];
-    const on = !favs.includes(it.id);
-    state.favs = on ? favs.concat([it.id]) : favs.filter((x) => x !== it.id);
+  function setFav(id, ml, on) {
+    const favs = (state.favs || []).filter((f) => !(f.id === id && f.ml === ml));
+    state.favs = on ? favs.concat([{ id, ml }]) : favs;
     save();
-    buildList(it.id, group === 'Favourites' && !on ? null : group);
-    toast(on ? it.name + ' pinned to Favourites' : it.name + ' unpinned');
+  }
+  function toggleFav(it, group) {
+    const on = !isFav(it.id, it.ml);
+    setFav(it.id, it.ml, on);
+    buildList(favKey(it), group === 'Favourites' && !on ? null : group);
+    toast(on ? it.name + ' ' + it.ml + ' ml pinned to Favourites' : it.name + ' ' + it.ml + ' ml unpinned');
   }
   function showList() {
     $('#pickList').hidden = false; $('#pickCfg').hidden = true; $('#sheetBack').hidden = true;
     $('#sheetTitle').textContent = 'Pick a drink';
   }
   function choose(it) {
-    pick = { name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
+    pick = { id: it.custom ? null : it.id, name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
     $('#pickList').hidden = true; $('#pickCfg').hidden = false; $('#sheetBack').hidden = false;
     $('#sheetTitle').textContent = it.custom ? 'Your own drink' : it.name;
+    $('#cfgAdd').textContent = pickFor === 'late' ? 'Add to this round' : 'Add to the tab';
     $('#nameField').hidden = !it.custom;
     $('#cfgName').value = pick.name;
     $('#cfgNote').hidden = !it.note; $('#cfgNote').textContent = it.note || '';
@@ -1063,6 +1329,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     sheet.scrollTop = 0;
   }
   function renderCfg() {
+    const fb = $('#cfgFav'), favOn = !!pick.id && isFav(pick.id, pick.ml);
+    fb.hidden = !pick.id;
+    fb.setAttribute('aria-pressed', String(favOn));
+    $('#cfgFavText').textContent = favOn ? pick.ml + ' ml is a favourite' : 'Save ' + pick.ml + ' ml as a favourite';
     const sc = $('#sizeChips'); sc.innerHTML = '';
     SIZES.forEach((ml) => {
       const c = document.createElement('button'); c.type = 'button'; c.className = 'chip';
@@ -1083,6 +1353,13 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const valid = pick.abv >= 0 && pick.ml > 0;
     $('#cfgGrams').textContent = valid ? gramsOf(pick).toFixed(1) + ' g' : 'Check the numbers';
   }
+  $('#cfgFav').addEventListener('click', () => {
+    if (!pick.id) return;
+    const on = !isFav(pick.id, pick.ml);
+    setFav(pick.id, pick.ml, on);
+    renderCfg();
+    toast(on ? pick.name + ' ' + pick.ml + ' ml pinned to Favourites' : pick.name + ' ' + pick.ml + ' ml unpinned');
+  });
   $('#cfgAbv').addEventListener('input', (e) => { pick.abv = parseFloat(e.target.value) || 0; renderCfg(); });
   $('#cfgMl').addEventListener('input', (e) => { pick.ml = parseFloat(e.target.value) || 0; renderCfg(); });
   $('#cfgName').addEventListener('input', (e) => { pick.name = e.target.value; });
@@ -1091,14 +1368,230 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   $('#cfgAdd').addEventListener('click', () => {
     if (!(pick.ml > 0) || !(pick.abv >= 0) || pick.abv > 80) { toast('Check the strength and size'); return; }
     const name = (pick.name || '').trim() || 'Custom drink';
-    state.session.drinks.push({ name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share });
-    save(); sheet.close(); renderAll(); toast(pick.qty + ' × ' + name + ' added');
+    if (pickFor === 'late') {
+      pickFor = 'tab';
+      sheet.close();
+      changeDrink({ name, abv: pick.abv, ml: pick.ml, qty: 0, share: pick.share }, pick.qty);
+      return;
+    }
+    const r = N.addLiveDrink(state, { name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share }, Date.now());
+    state = r.state;
+    save(); sheet.close(); renderAll();
+    if (!announce(r.outcome)) toast(pick.qty + ' × ' + name + ' added');
     if (island) island.celebrate('pour', { label: '+' + pick.qty + ' ' + shortName(name) });
   });
-  $('#openPicker').addEventListener('click', () => { buildList(); showList(); sheet.showModal(); });
+  sheet.addEventListener('close', () => { if (!late.open) pickFor = 'tab'; });
+  $('#openPicker').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
   $('#sheetClose').addEventListener('click', () => sheet.close());
   $('#sheetBack').addEventListener('click', showList);
   sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
+
+  // Late logging: set a round you already had on the dial
+  const late = $('#late');
+  const HOUR = 3600e3;
+  let draft = null;
+  function newDraft() {
+    const now = Date.now();
+    const f = (state.favs || []).map(D.favOf).filter(Boolean)[0];
+    const first = f ? { name: f.name, abv: f.abv, ml: f.ml, qty: 1, share: 1 } : { name: 'Heineken', abv: 5, ml: 330, qty: 1, share: 1 };
+    return { start: round5(now - 2 * HOUR), end: now, drinks: [first] };
+  }
+  const atToday = (h) => { const d = new Date(); d.setHours(h, 0, 0, 0); return d.getTime(); };
+  const atYesterday = (h) => atToday(h) - 24 * HOUR;
+  function fromChips(now) {
+    const out = [['2 h ago', round5(now - 2 * HOUR)], ['4 h ago', round5(now - 4 * HOUR)]];
+    if (atToday(13) < now - 15 * MIN) out.push(['Lunch', atToday(13)]);
+    out.push(['Last night', atYesterday(20), atYesterday(23)]);
+    return out;
+  }
+  const untilChips = (now) => [['Just now', now], ['1 h ago', round5(now - HOUR)], ['2 h ago', round5(now - 2 * HOUR)], ['4 h ago', round5(now - 4 * HOUR)]];
+  function setDraft(patch) {
+    const now = Date.now();
+    draft = Object.assign({}, draft, patch);
+    if ('end' in patch && !('live' in patch)) draft.live = false;   // a chosen end time stops a live round
+    draft.end = draft.live ? now : Math.min(draft.end, now);
+    if (draft.end - draft.start < 15 * MIN) {
+      if (patch.start != null) draft.end = Math.min(now, draft.start + HOUR);
+      if (draft.end - draft.start < 15 * MIN) draft.start = draft.end - 15 * MIN;
+    }
+    renderLate();
+  }
+  /** Where the draft would go, and the night it would make: what the preview and the button show. */
+  function lateView() {
+    const now = Date.now();
+    const cand = { start: draft.start, end: draft.end, drinks: draft.drinks };
+    if (editing) {
+      const rounds = state.session.rounds.map((r) => (r.id === editing.id ? cand : r));
+      const sim = M.simulate(N.simOpts({ rounds, fed: state.session.fed }, state.profile, now));
+      return { p: { action: 'continue', carried: 0, overlap: null }, sim, now, soberAt: sim.G > 0 ? sim.clear : draft.end };
+    }
+    const p = N.place(state.session, state.profile, cand, now);
+    const rounds = p.action === 'continue' ? state.session.rounds.concat([cand]) : [cand];
+    const sim = M.simulate(N.simOpts({ rounds, fed: state.session.fed }, state.profile, now));
+    return { p, sim, now, soberAt: sim.G > 0 ? sim.clear : draft.end };
+  }
+  function chipRow(box, list, key) {
+    box.innerHTML = '';
+    list.forEach(([label, v, end]) => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
+      c.setAttribute('aria-pressed', String(draft[key] === v && (end == null || draft.end === end)));
+      // "Just now" on a round that is still going keeps it going
+      const keepLive = key === 'end' && label === 'Just now' && editing && editing.end == null;
+      c.addEventListener('click', () => setDraft(end != null ? { start: v, end } : keepLive ? { end: v, live: true } : { [key]: v }));
+      box.appendChild(c);
+    });
+  }
+  const dkey = (d) => d.name + '|' + d.ml + '|' + d.abv + '|' + d.share;
+  function changeDrink(d, by) {
+    const drinks = draft.drinks.map((x) => Object.assign({}, x));
+    const i = drinks.findIndex((x) => dkey(x) === dkey(d));
+    if (i < 0 && by > 0) drinks.push(Object.assign({}, d, { qty: by }));
+    else if (i >= 0) drinks[i].qty = Math.min(48, drinks[i].qty + by);
+    const kept = drinks.filter((x) => x.qty > 0);
+    if (!kept.length) return;                     // a round always has at least one drink
+    setDraft({ drinks: kept });
+  }
+  function renderLateDrinks() {
+    const favs = (state.favs || []).map(D.favOf).filter(Boolean).slice(0, 4);
+    const favKeys = favs.map((f) => dkey({ name: f.name, ml: f.ml, abv: f.abv, share: 1 }));
+    const box = $('#lateFavs'); box.innerHTML = '';
+    favs.forEach((f) => {
+      const d = { name: f.name, abv: f.abv, ml: f.ml, qty: 1, share: 1 };
+      const have = draft.drinks.find((x) => dkey(x) === dkey(d));
+      const q = have ? have.qty : 0;
+      const card = document.createElement('div'); card.className = 'fav-card' + (q ? ' on' : '');
+      card.innerHTML = '<button type="button" class="fc-less">&#8722;</button><button type="button" class="fc-more"><span class="fc-name"></span><span class="fc-meta"></span></button><span class="fc-count" aria-live="polite"></span>';
+      const label = f.name + ' ' + f.ml + ' ml';
+      card.querySelector('.fc-less').setAttribute('aria-label', 'Remove one ' + label);
+      card.querySelector('.fc-more').setAttribute('aria-label', 'Add one ' + label);
+      card.querySelector('.fc-name').textContent = f.name;
+      card.querySelector('.fc-meta').textContent = f.ml + ' ml · ' + f.abv + '%';
+      card.querySelector('.fc-count').textContent = q;
+      card.querySelector('.fc-less').addEventListener('click', () => changeDrink(d, -1));
+      card.querySelector('.fc-more').addEventListener('click', () => changeDrink(d, 1));
+      box.appendChild(card);
+    });
+    const ex = $('#lateExtra'); ex.innerHTML = '';
+    draft.drinks.filter((x) => !favKeys.includes(dkey(x))).forEach((x) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span></span><button type="button">&#215;</button>';
+      li.firstChild.textContent = x.qty + ' × ' + x.name;
+      li.lastChild.setAttribute('aria-label', 'Remove ' + x.name + ' from this round');
+      li.lastChild.addEventListener('click', () => changeDrink(x, -x.qty));
+      ex.appendChild(li);
+    });
+  }
+  function renderLate() {
+    if (draft.live) draft.end = Date.now();          // a live round's end follows the clock
+    const v = lateView(), now = v.now, hist = v.p.action === 'history';
+    late.classList.toggle('history', hist);
+    chipRow($('#fromChips'), fromChips(now), 'start');
+    chipRow($('#untilChips'), untilChips(now), 'end');
+    $('#fromVal').textContent = (draft.start < atToday(0) ? dayLabel(draft.start) + ' ' : '') + fmtTime(draft.start);
+    $('#untilVal').textContent = draft.live || draft.end >= now ? 'Now' : (draft.end < atToday(0) ? dayLabel(draft.end) + ' ' : '') + fmtTime(draft.end);
+    renderLateDrinks();
+    const others = v.p.action === 'continue' ? state.session.rounds.filter((r) => !editing || r.id !== editing.id).map((r) => ({ start: r.start, end: N.endOf(r, now) })) : [];
+    DryDial.render($('#dial'), { round: { start: draft.start, end: draft.end }, others, soberAt: v.soberAt, now, tone: hist ? 'history' : 'amber' });
+    const clear = v.soberAt <= now;
+    $('#dlKicker').textContent = hist ? 'That night, sober at' : clear ? 'Sober since' : 'Fully sober at';
+    $('#dlTime').textContent = fmtTime(v.soberAt);
+    const { h, m } = dur(v.soberAt - now);
+    $('#dlTag').textContent = hist ? dayLabel(draft.start) + ' · History' : clear ? 'Already clear' : dayLabel(v.soberAt) + ' · ' + h + ' h ' + pad(m) + ' m';
+    $('#lateAdd').textContent = editing ? 'Save round' : hist ? 'Save to History'
+      : v.p.action === 'continue' && state.session.rounds.length ? 'Add round · continues tonight' : 'Add round to tonight';
+  }
+  function showLateMain() {
+    $('#lateMain').hidden = false; $('#lateOverlap').hidden = true; $('#lateBack').hidden = true;
+    $('#lateTitle').textContent = editing ? 'Edit round' : 'Log earlier drinks';
+    $('#lateRemove').hidden = !editing;
+  }
+  let editing = null;                   // the round being edited, or null when logging a new one
+  function openLate(round) {
+    editing = round && round.id ? round : null;
+    draft = editing
+      ? { start: editing.start, end: editing.end == null ? Date.now() : editing.end, live: editing.end == null, drinks: editing.drinks.map((d) => Object.assign({}, d)) }
+      : newDraft();
+    late.classList.remove('leaving');
+    showLateMain();
+    renderLate();
+    late.showModal();
+  }
+  function saveEdit() {
+    const now = Date.now();
+    nightNote = null;
+    state = N.editRound(state, editing.id, { start: draft.start, end: draft.live ? null : Math.min(draft.end, now), drinks: draft.drinks });
+    save();
+    handOff();
+  }
+  function showOverlap(ov) {
+    const r = state.session.rounds.find((x) => x.id === ov.roundId);
+    const end = r.end == null ? 'now' : fmtTime(Math.max(r.end, draft.end));
+    $('#ovText').textContent = 'Your new round (' + fmtTime(draft.start) + ' to ' + fmtTime(draft.end) + ') overlaps a round already on tonight\'s tab, from '
+      + fmtTime(ov.from) + ' to ' + fmtTime(ov.to) + '. We don\'t want to count anything twice.';
+    $('#ovSameSub').textContent = 'Merge them into one round, ' + fmtTime(Math.min(r.start, draft.start)) + ' to ' + end;
+    $('#lateMain').hidden = true; $('#lateOverlap').hidden = false; $('#lateBack').hidden = false;
+    $('#lateTitle').textContent = 'Check the times';
+    late.scrollTop = 0;
+  }
+  /** Add the draft. choice answers an overlap with a round already on the tab. */
+  function commitLate(choice) {
+    const now = Date.now();
+    const cand = { start: draft.start, end: draft.end, drinks: draft.drinks, late: true };
+    const p = N.place(state.session, state.profile, cand, now);
+    if (p.overlap && !choice) { showOverlap(p.overlap); return; }
+    const hadRounds = state.session.rounds.length > 0;
+    const r = N.addRound(state, cand, now, choice);
+    state = r.state;
+    save();
+    const o = r.outcome;
+    nightNote = o.action === 'history' ? ['Saved to History.', 'That night does not change tonight\'s numbers.']
+      : o.action === 'fresh' && o.archived ? ['A fresh night.', 'Your earlier drinks had cleared, so that night is saved in History.']
+      : o.action === 'continue' && hadRounds && o.carried >= M.CLEAR ? ['This round continues tonight.', 'At ' + fmtTime(cand.start) + ' you still had ' + fmtBac(o.carried) + ' from earlier, so it counts on top.']
+      : null;
+    handOff();
+  }
+  /** The sheet glides away, an orb carries the round to its peak on the horizon, and the hills reshape. */
+  function handOff() {
+    if (reduceMotionPref()) { late.close(); renderAll(); return; }
+    const box = $('#dial').getBoundingClientRect();
+    const from = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    window.scrollTo(0, 0);
+    late.classList.add('leaving');
+    setTimeout(() => {
+      late.close();
+      late.classList.remove('leaving');
+      renderAll();
+      if (!lastHorizon || !state.session.rounds.length) return;
+      const hz = $('#horizon').getBoundingClientRect();
+      const to = { x: hz.left + lastHorizon.peakX, y: hz.top + lastHorizon.peakY * hz.height / 150 };
+      const orb = document.createElement('div'); orb.className = 'orb';
+      orb.style.left = from.x + 'px'; orb.style.top = from.y + 'px'; orb.style.transform = 'scale(.5)';
+      document.body.appendChild(orb);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        orb.style.left = to.x + 'px'; orb.style.top = to.y + 'px'; orb.style.transform = 'scale(1.3)';
+      }));
+      setTimeout(() => { orb.style.opacity = '0'; orb.style.transform = 'scale(3)'; }, 800);
+      setTimeout(() => orb.remove(), 1300);
+    }, 420);
+  }
+  $('#openLate').addEventListener('click', () => openLate());
+  $('#lateClose').addEventListener('click', () => late.close());
+  late.addEventListener('click', (e) => { if (e.target === late) late.close(); });
+  $('#fromDown').addEventListener('click', () => setDraft({ start: draft.start - 15 * MIN }));
+  $('#fromUp').addEventListener('click', () => setDraft({ start: Math.min(draft.start + 15 * MIN, draft.end - 15 * MIN) }));
+  $('#untilDown').addEventListener('click', () => setDraft({ end: Math.max(draft.end - 15 * MIN, draft.start + 15 * MIN) }));
+  $('#untilUp').addEventListener('click', () => setDraft({ end: draft.end + 15 * MIN }));
+  $('#lateAdd').addEventListener('click', () => (editing ? saveEdit() : commitLate()));
+  $('#lateRemove').addEventListener('click', () => {
+    if (!editing || !confirm('Remove this round?')) return;
+    nightNote = null;
+    state = N.removeRound(state, editing.id);
+    save(); late.close(); renderAll(); toast('Round removed');
+  });
+  $('#lateBack').addEventListener('click', showLateMain);
+  $('#ovSame').addEventListener('click', () => commitLate('same'));
+  $('#ovExtra').addEventListener('click', () => commitLate('extra'));
+  $('#lateAll').addEventListener('click', () => { pickFor = 'late'; buildList(); showList(); sheet.showModal(); });
 
   // Toast
   let toastT;
@@ -1151,7 +1644,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   // Blackout risk and pacing
   let gapMemo = { key: '', at: 0, val: null };
   function cachedGap(o, now, grams) {
-    const key = JSON.stringify([state.session.drinks.length, o.start, o.fed, o.kg, o.sex, o.beta, grams.toFixed(2)]);
+    const key = JSON.stringify([allDrinks().length, o.rounds.map((r) => r.start), o.fed, o.kg, o.sex, o.beta, grams.toFixed(2)]);
     if (gapMemo.key === key && now - gapMemo.at < 30000) return gapMemo.val;
     gapMemo = { key, at: now, val: M.pacingGap(o, now, grams, M.THRESHOLDS.blackout) };
     return gapMemo.val;
@@ -1191,10 +1684,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
     let msg = '';
     if (risk.level !== 'low' && bNow > 0) {
-      const drinks = state.session.drinks;
-      const last = drinks[drinks.length - 1];
+      const last = N.lastDrink(state.session);
       const name = last ? last.name : 'drink';
-      if (!state.session.still) {
+      const live = N.liveRound(state.session);
+      if (!live) {
         msg = risk.level === 'high'
           ? 'Tonight peaked in the blackout zone. Stay with people you trust, drink water, and call it a night.'
           : 'Water and something to eat will help. Stay with people you trust.';
@@ -1204,7 +1697,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         const unitG = M.gramsOf(Object.assign({}, last, { qty: 1 }));
         const peakGap = cachedGap(o, now, unitG);
         // Wait long enough that the last hour, including the next drink, holds at most 3 standard drinks.
-        const perMinG = sim.G / Math.max(1, (now - o.start) / MIN);
+        const perMinG = live.drinks.reduce((a, d) => a + gramsOf(d), 0) / Math.max(1, (now - live.start) / MIN);
         const paceGap = Math.min(60, Math.max(0, Math.ceil((60 - (T.fastStdPerHour * STD_G - unitG) / perMinG) / 5) * 5));
         const gap = peakGap === null ? null : Math.max(peakGap, paceGap);
         if (gap === null) msg = 'Switch to water for now. Another ' + name + ' would push you into the blackout zone.';
@@ -1244,18 +1737,18 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#tkDay').textContent = dayLabel(s.driveAt);
     const now = Date.now();
     if (s.driveAt <= now) { set('', 'That time has passed', 'Pick a time later than now.'); return; }
-    if (!s.drinks.length) { set('yes', 'Nothing to clear', 'The tab is empty. Make sure you sleep well before a long drive.'); return; }
-    const plan = M.drivePlan(opts(), now, s.driveAt, 60, s.still);
+    if (!s.rounds.length) { set('yes', 'Nothing to clear', 'The tab is empty. Make sure you sleep well before a long drive.'); return; }
+    const plan = M.drivePlan(opts(), now, s.driveAt, 60, isLive());
     const clearTxt = fmtTime(plan.clearAt) + ' ' + dayIn(plan.clearAt);
     if (plan.ok) {
       let d = 'Fully clear around ' + clearTxt + ', with at least an hour to spare.';
-      if (s.still && plan.latestStop) d += ' At your current pace, stop drinking by ' + fmtTime(plan.latestStop) + ' to keep it that way.';
+      if (isLive() && plan.latestStop) d += ' At your current pace, stop drinking by ' + fmtTime(plan.latestStop) + ' to keep it that way.';
       set('yes', 'Likely clear in time', d);
     } else {
       let d = plan.clearAt > s.driveAt
         ? "You'd still have alcohol in your blood until about " + clearTxt + '. Arrange a lift or move the drive.'
         : 'Clear around ' + clearTxt + ', less than an hour before you drive. Too close to call, so arrange a lift or give it more time.';
-      if (s.still) d += ' Stopping now gives you the best chance.';
+      if (isLive()) d += ' Stopping now gives you the best chance.';
       set('no', 'Not clear in time', d);
     }
   }
@@ -1275,14 +1768,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const b = has ? bacAt(sim, now) : 0;
     const st = has ? M.status(b, limit) : 'clear';
     const u = has ? M.underLimitAt(sim, limit) : null;
-    const drinks = state.session.drinks, L = drinks[drinks.length - 1];
+    const L = N.lastDrink(state.session);
     const clearAt = sim.clear || now;
     const { h, m } = dur(clearAt - now);
     return {
       has, status: st, bac: b, peak: sim.peak, start: sim.start, clearAt, underAt: u,
       risk: riskNow, danger: dangerNow,
       last: L ? { key: keyOf(L), name: L.name, short: shortName(L.name), ml: L.ml, abv: L.abv, share: L.share } : null,
-      favs: (state.favs || []).map(D.byId).filter((x) => x && !x.custom).map((x) => ({ key: keyOf(x), name: x.name, short: x.short || x.name, ml: x.ml, abv: x.abv, share: 1 })),
+      favs: (state.favs || []).map(D.favOf).filter(Boolean).map((x) => ({ key: keyOf(x), name: x.name, short: x.short || x.name, ml: x.ml, abv: x.abv, share: 1 })),
       water: state.session.water,
       fmt: {
         bac: fmtBac(b), clear: fmtTime(clearAt), clearedAt: fmtTime(clearAt), clearDay: dayLabel(clearAt),
@@ -1292,14 +1785,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     };
   }
   function addFromIsland(d) {
-    const drinks = state.session.drinks, L = drinks[drinks.length - 1];
     const share = d.share || 1;
-    if (L && keyOf(L) === keyOf(d) && L.share === share) L.qty += 1;
-    else drinks.push({ name: d.name, abv: d.abv, ml: d.ml, qty: 1, share });
-    if (!state.session.still) { state.session.still = true; state.session.end = Date.now(); }
+    const r = N.addLiveDrink(state, { name: d.name, abv: d.abv, ml: d.ml, qty: 1, share }, Date.now());
+    state = r.state;
     save(); renderAll();
     const g = M.gramsOf({ abv: d.abv, ml: d.ml, qty: 1, share });
-    if (!island || island.view === 'gone') toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
+    if (!announce(r.outcome) && (!island || island.view === 'gone')) toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
     if (island) island.celebrate('pour', { label: '+1 ' + shortName(d.name) });
   }
   function toggleWater() {
@@ -1312,7 +1803,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       return;
     }
     let min = 20;
-    const L = state.session.drinks[state.session.drinks.length - 1];
+    const L = N.lastDrink(state.session);
     if (L && riskNow !== 'low') {
       const gap = M.pacingGap(opts(), now, M.gramsOf(Object.assign({}, L, { qty: 1 })), M.THRESHOLDS.blackout);
       if (gap) min = Math.max(10, Math.min(45, gap));
@@ -1328,16 +1819,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner();
     if (island) island.update(islandSnap(lastSim));
   }
-  function renderAll() { renderTimes(); renderTab(); renderBody(); renderHistory(); buildScale(); renderLive(); }
+  function renderAll() { renderNight(); renderTab(); renderBody(); renderHistory(); buildScale(); renderLive(); }
   buildList();
   renderAll();
   let ticks = 0;
   setInterval(() => {
     ticks++;
-    if (state.session.still) lastSim = simulate();
+    if (isLive() && ticks % 60 === 0) {
+      const settled = N.settle(state, Date.now());
+      if (settled !== state) { state = settled; save(); renderAll(); }
+    }
+    if (isLive()) lastSim = simulate();
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim);
-    if (state.session.still || ticks % 30 === 0) renderChart(lastSim);
-    if (state.session.still && ticks % 30 === 0) renderTimes();
+    if (isLive() || ticks % 30 === 0) renderChart(lastSim);
     if (ticks % 15 === 0) renderPlanner();
     if (island) island.update(islandSnap(lastSim));
   }, 1000);
@@ -1345,7 +1839,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   if (window.DryIsland) {
     island = DryIsland.create({
       onAddLast: () => {
-        const L = state.session.drinks[state.session.drinks.length - 1];
+        const L = N.lastDrink(state.session);
         if (L) addFromIsland(L); else { buildList(); showList(); sheet.showModal(); }
       },
       onAdd: addFromIsland,
