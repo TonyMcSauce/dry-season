@@ -58,7 +58,7 @@ test('every file the app needs is saved for offline use', () => {
   const shell = [...sw.matchAll(/'\.\/([^']*)'/g)].map((m) => m[1]).filter(Boolean);
   shell.forEach((f) => assert.ok(fs.existsSync(path.join(root, f)), 'missing ' + f));
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  const refs = [...html.matchAll(/(?:src|href)="((?:fonts|icons)\/[^"]+|[a-z]+\.(?:js|css))"/g)].map((m) => m[1]);
+  const refs = [...html.matchAll(/(?:src|href)="((?:fonts|icons|vendor)\/[^"]+|[a-z0-9]+\.(?:js|css))"/g)].map((m) => m[1]);
   refs.forEach((r) => assert.ok(shell.includes(r), r + ' is not in the offline list'));
   assert.ok(!/fonts\.googleapis|gstatic/.test(html), 'no third-party fonts');
 });

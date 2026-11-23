@@ -110,6 +110,18 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 @keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-150px);opacity:0}}
 .horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:150px;display:block;color:var(--ground);overflow:visible}
 .hz-hill,.hz-ground{fill:currentColor}
+/* 3D hero: the canvas fills the hero; the readout sits on top; the drinks stand in the stage strip */
+.scene3d{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:0}
+.hero.three .scene3d{display:block}
+.hero > :not(.scene3d):not(.horizon):not(.stars){position:relative;z-index:1}
+.hero.three .stars,.hero.three .glass,.hero.three .horizon{display:none}
+.hero.three .hero-body{grid-template-columns:1fr}
+.hero.three .stats{padding-bottom:14px}
+.stage-space{height:0}
+.hero.three .stage-space{height:clamp(300px,44svh,380px);pointer-events:none}
+.hero.three{touch-action:pan-y}
+.hero.three .clear-time,.hero.three .kicker,.hero.three .clear-day{text-shadow:0 1px 14px rgba(0,0,0,.25)}
+.hero.empty .stats{visibility:hidden}
 .hz-hill,.hz-ridge{transition:d .9s cubic-bezier(.22,1,.36,1)}
 .hz-ridge{fill:none;stroke:var(--amber);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(242,169,59,.55))}
 .hz-ghost{fill:none;stroke:var(--text);stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:2 4}
@@ -505,6 +517,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 <script>try{if(sessionStorage.getItem('dry-poured'))document.getElementById('pour').classList.add('full')}catch(e){}</script>
 
 <header class="hero" id="hero" data-state="none">
+  <canvas class="scene3d" id="scene3d" aria-hidden="true"></canvas>
   <div class="stars" aria-hidden="true"></div>
   <div class="hero-top">
     <div class="brand-wrap"><span class="brand">Dry Season</span><span class="net" id="net" hidden title="No connection. Everything still works."><i aria-hidden="true"></i>Offline</span></div>
@@ -557,6 +570,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <div><dt id="limitLabel">Under 0.05%</dt><dd id="underAt">--</dd></div>
   </dl>
 
+  <div class="stage-space" id="stageSpace" aria-hidden="true"></div>
   <svg class="horizon" id="horizon" viewBox="0 0 400 150" aria-hidden="true">
     <g class="hz-bands"></g>
     <line class="hz-limit" x1="0" x2="400" y1="78" y2="78"/>
@@ -867,6 +881,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 <script src="night.js"></script>
 <script src="horizon.js"></script>
 <script src="dial.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="scene3d.js"></script>
 <script src="mug.js"></script>
 <script src="island.js"></script>
 <script>
@@ -955,6 +971,24 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   };
   let lastSim = null;
   let lastHorizon = null;
+  // The 3D hero. Without WebGL (or three.js) this stays null and the flat glass and SVG horizon remain.
+  const cssToken = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const sceneTokens = () => ({ skyTop: cssToken('--sky-top'), skyMid: cssToken('--sky-mid'), skyLow: cssToken('--sky-low'), horizon: cssToken('--horizon'),
+    ground: cssToken('--ground'), amber: cssToken('--amber'), ink: cssToken('--ink'), stars: cssToken('--stars') });
+  let scene = null, sceneStarted = false;
+  try {
+    scene = window.DryScene ? DryScene.create($('#scene3d'), $('#hero'), { tokens: sceneTokens, reduceMotion: () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches }) : null;
+  } catch (e) { scene = null; }
+  if (scene) {
+    $('#hero').classList.add('three');
+    const retheme = () => scene.setTheme(sceneTokens());
+    if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
+    new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+  function layoutScene() {
+    const hero = $('#hero'), sp = $('#stageSpace');
+    scene.setLayout({ top: sp.offsetTop + 8, base: hero.clientHeight - 30 });
+  }
   function renderHorizon(sim, now) {
     const o = opts(), rounds = o.rounds;
     let prevSim = null;
@@ -963,16 +997,23 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       prevSim = M.simulate(Object.assign({}, o, { rounds: rounds.filter((r) => r !== latest) }));
     }
     lastHorizon = window.DryHorizon.render($('#horizon'), { sim, rounds, now, limit: state.profile.limit, prevSim });
+    if (scene) {
+      const has = rounds.length > 0 && sim.G > 0;
+      const view = { has, level: has ? DryScene.glassLevel(sim.start, sim.clear, now) : 0, sim, rounds, now, limit: state.profile.limit, prevSim };
+      layoutScene();
+      if (!sceneStarted) { sceneStarted = true; scene.setNight(view); } else scene.update(view);
+    }
   }
   function renderHero(sim) {
     const now = Date.now();
     renderHorizon(sim, now);
+    $('#hero').classList.toggle('empty', !sim.G);
     const bNow = bacAt(sim, now);
     let frac = 0;
     if (!sim.G) {
-      els.kicker.textContent = 'Clear by';
-      els.time.textContent = '--:--';
-      els.day.textContent = 'Add your first drink to start the clock.';
+      els.kicker.textContent = 'Tonight';
+      els.time.textContent = 'Clear';
+      els.day.textContent = 'Nothing on the tab yet. Your first pour starts the clock.';
     } else if (now < sim.start) {
       els.kicker.textContent = 'Clear by';
       els.time.textContent = fmtTime(sim.clear);
@@ -1576,7 +1617,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       renderAll();
       if (!withOrb || !lastHorizon || !state.session.rounds.length) return;
       const hz = $('#horizon').getBoundingClientRect();
-      const to = { x: hz.left + lastHorizon.peakX, y: hz.top + lastHorizon.peakY * hz.height / 150 };
+      const to = (scene && scene.peakScreen()) || { x: hz.left + lastHorizon.peakX, y: hz.top + lastHorizon.peakY * hz.height / 150 };
       const orb = document.createElement('div'); orb.className = 'orb';
       orb.style.left = from.x + 'px'; orb.style.top = from.y + 'px'; orb.style.transform = 'scale(.5)';
       document.body.appendChild(orb);
