@@ -141,6 +141,23 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['editing a live round keeps it going, even if the edit takes a while', async (browser, url) => {
+    const { page, errors } = await open(browser, url, Object.assign({}, EMPTY, {
+      session: { v: 5, fed: false, driveAt: null, water: null, rounds: [{ id: 'l', start: local(20), end: null, drinks: [hein(2)], late: false, lastAt: local(21, 50) }] }
+    }));
+    await page.locator('#rounds li .rc-open').first().click();
+    await page.waitForTimeout(300);
+    assert.equal((await text(page, '#untilVal')).trim(), 'Now');
+    await page.clock.setFixedTime(new Date(2026, 10, 23, 22, 2));
+    await page.getByRole('button', { name: 'Add one Heineken 330 ml' }).click();
+    assert.equal((await text(page, '#untilVal')).trim(), 'Now');
+    await page.getByRole('button', { name: 'Save round' }).click();
+    await page.waitForTimeout(1200);
+    assert.match(await text(page, '#rounds li'), /still going/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {

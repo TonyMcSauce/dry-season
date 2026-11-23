@@ -915,7 +915,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
-  let state = load();
+  let state = N.settle(load(), Date.now());
 
   const gramsOf = M.gramsOf;
   const isLive = () => !!N.liveRound(state.session);
@@ -1408,7 +1408,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   function setDraft(patch) {
     const now = Date.now();
     draft = Object.assign({}, draft, patch);
-    draft.end = Math.min(draft.end, now);
+    if ('end' in patch && !('live' in patch)) draft.live = false;   // a chosen end time stops a live round
+    draft.end = draft.live ? now : Math.min(draft.end, now);
     if (draft.end - draft.start < 15 * MIN) {
       if (patch.start != null) draft.end = Math.min(now, draft.start + HOUR);
       if (draft.end - draft.start < 15 * MIN) draft.start = draft.end - 15 * MIN;
@@ -1434,7 +1435,9 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     list.forEach(([label, v, end]) => {
       const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
       c.setAttribute('aria-pressed', String(draft[key] === v && (end == null || draft.end === end)));
-      c.addEventListener('click', () => setDraft(end != null ? { start: v, end } : { [key]: v }));
+      // "Just now" on a round that is still going keeps it going
+      const keepLive = key === 'end' && label === 'Just now' && editing && editing.end == null;
+      c.addEventListener('click', () => setDraft(end != null ? { start: v, end } : keepLive ? { end: v, live: true } : { [key]: v }));
       box.appendChild(c);
     });
   }
@@ -1479,12 +1482,13 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     });
   }
   function renderLate() {
+    if (draft.live) draft.end = Date.now();          // a live round's end follows the clock
     const v = lateView(), now = v.now, hist = v.p.action === 'history';
     late.classList.toggle('history', hist);
     chipRow($('#fromChips'), fromChips(now), 'start');
     chipRow($('#untilChips'), untilChips(now), 'end');
     $('#fromVal').textContent = (draft.start < atToday(0) ? dayLabel(draft.start) + ' ' : '') + fmtTime(draft.start);
-    $('#untilVal').textContent = draft.end >= now ? 'Now' : (draft.end < atToday(0) ? dayLabel(draft.end) + ' ' : '') + fmtTime(draft.end);
+    $('#untilVal').textContent = draft.live || draft.end >= now ? 'Now' : (draft.end < atToday(0) ? dayLabel(draft.end) + ' ' : '') + fmtTime(draft.end);
     renderLateDrinks();
     const others = v.p.action === 'continue' ? state.session.rounds.filter((r) => !editing || r.id !== editing.id).map((r) => ({ start: r.start, end: N.endOf(r, now) })) : [];
     DryDial.render($('#dial'), { round: { start: draft.start, end: draft.end }, others, soberAt: v.soberAt, now, tone: hist ? 'history' : 'amber' });
@@ -1505,7 +1509,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   function openLate(round) {
     editing = round && round.id ? round : null;
     draft = editing
-      ? { start: editing.start, end: editing.end == null ? Date.now() : editing.end, drinks: editing.drinks.map((d) => Object.assign({}, d)) }
+      ? { start: editing.start, end: editing.end == null ? Date.now() : editing.end, live: editing.end == null, drinks: editing.drinks.map((d) => Object.assign({}, d)) }
       : newDraft();
     late.classList.remove('leaving');
     showLateMain();
@@ -1514,9 +1518,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   }
   function saveEdit() {
     const now = Date.now();
-    const live = editing.end == null && draft.end >= now - MIN;
     nightNote = null;
-    state = N.editRound(state, editing.id, { start: draft.start, end: live ? null : draft.end, drinks: draft.drinks });
+    state = N.editRound(state, editing.id, { start: draft.start, end: draft.live ? null : Math.min(draft.end, now), drinks: draft.drinks });
     save();
     handOff();
   }
@@ -1822,6 +1825,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   let ticks = 0;
   setInterval(() => {
     ticks++;
+    if (isLive() && ticks % 60 === 0) {
+      const settled = N.settle(state, Date.now());
+      if (settled !== state) { state = settled; save(); renderAll(); }
+    }
     if (isLive()) lastSim = simulate();
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim);
     if (isLive() || ticks % 30 === 0) renderChart(lastSim);

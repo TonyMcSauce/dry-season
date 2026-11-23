@@ -126,3 +126,21 @@ test('a second tap on the same drink adds to its count', () => {
   const twice = N.addLiveDrink(once, hein(1), local(22, 5)).state;
   assert.equal(twice.session.rounds[0].drinks[0].qty, 2);
 });
+
+test('a live round you never finished does not soak up the next day', () => {
+  let s = N.addLiveDrink(st(night()), hein(1), local(20, 0, 22)).state;
+  s = N.addLiveDrink(s, hein(1), local(20, 30, 22)).state;
+  const r = N.addLiveDrink(s, hein(1), local(10));
+  assert.equal(r.outcome.action, 'fresh');
+  assert.equal(r.state.history.length, 1);
+  assert.equal(r.state.history[0].rounds[0].end, local(20, 30, 22));
+  assert.equal(r.state.session.rounds.length, 1);
+  assert.equal(r.state.session.rounds[0].start, local(8));
+});
+
+test('settle ends a forgotten live round at the last drink once it has cleared', () => {
+  const s = N.addLiveDrink(st(night()), hein(2), local(20, 0, 22)).state;
+  assert.equal(N.settle(s, local(21, 0, 22)), s);
+  const later = N.settle(s, local(9));
+  assert.equal(later.session.rounds[0].end, local(20, 0, 22));
+});

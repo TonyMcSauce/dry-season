@@ -17,7 +17,8 @@
   /** Dash for a span of time on the ring. Spans across midnight stay one arc. */
   function arc(start, end) {
     const len = Math.max(1, Math.min(1439, Math.round((end - start) / MIN)));
-    return { dasharray: len + ' 1440', dashoffset: -minuteOfDay(start) };
+    // dash then the rest of the ring as a gap, so the pattern repeats every 1440 and wraps past midnight
+    return { dasharray: len + ' ' + (1440 - len), dashoffset: -minuteOfDay(start) };
   }
 
   function point(ms, r, cx, cy) {

@@ -159,18 +159,35 @@
    * starts two hours back, never before the last round ended, and is placed.
    */
   function addLiveDrink(state, drink, now) {
+    state = settle(state, now);
     const live = liveRound(state.session);
     const one = Object.assign({ qty: 1, share: 1 }, drink);
     if (live) {
       const drinks = copyDrinks(live.drinks), last = drinks[drinks.length - 1];
       if (last && keyOf(last) === keyOf(one)) last.qty += one.qty;
       else drinks.push(one);
-      const rounds = state.session.rounds.map((r) => (r === live ? Object.assign({}, r, { drinks }) : r));
+      const rounds = state.session.rounds.map((r) => (r === live ? Object.assign({}, r, { drinks, lastAt: now }) : r));
       return { state: withSession(state, { rounds }), outcome: { action: 'continue', carried: 0, archived: false } };
     }
     const lastEnd = state.session.rounds.reduce((a, r) => Math.max(a, endOf(r, now)), 0);
     const start = Math.max(Math.floor((now - 2 * 3600000) / 300000) * 300000, lastEnd);
-    return addRound(state, { start, end: null, drinks: [one], late: false }, now, 'extra');
+    const r = addRound(state, { start, end: null, drinks: [one], late: false }, now, 'extra');
+    const rounds = r.state.session.rounds.map((x) => (x.end == null ? Object.assign({}, x, { lastAt: now }) : x));
+    return { state: withSession(r.state, { rounds }), outcome: r.outcome };
+  }
+
+  /**
+   * A live round nobody finished: once everything drunk up to its last drink has
+   * cleared, it is over, so end it at that last drink. Rounds without a known last
+   * drink (older saves) are left running, the safe side.
+   */
+  function settle(state, now) {
+    const live = liveRound(state.session);
+    if (!live || live.lastAt == null || live.lastAt >= now) return state;
+    const rounds = state.session.rounds.map((r) => (r === live ? Object.assign({}, r, { end: Math.max(r.start, live.lastAt) }) : r));
+    const sim = simRounds(rounds, state.session, state.profile, now);
+    if (clearOf(sim, rounds, now) > now) return state;
+    return withSession(state, { rounds });
   }
 
   /** The live round stops now. */
@@ -189,7 +206,7 @@
   }
 
   const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
-    addRound, addLiveDrink, finishLive, editRound, removeRound, keyOf };
+    addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;
 })(typeof self !== 'undefined' ? self : this);
