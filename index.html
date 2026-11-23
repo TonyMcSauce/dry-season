@@ -97,7 +97,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   text-shadow:0 2px 24px rgba(242,169,59,.25);
 }
 .clear-day{margin:0;font-size:1rem;color:var(--text);white-space:pre-line}
-.stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:560px;margin:14px auto 0;padding:14px 0 96px;border-top:1px solid var(--line)}
+.stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:560px;margin:14px auto 0;padding:14px 0 168px;border-top:1px solid var(--line)}
 .stats div{min-width:0}
 .stats dt{font-size:.82rem;color:var(--muted)}
 .stats dd{margin:0;font-weight:700;font-size:1.15rem}
@@ -108,7 +108,17 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bubble:nth-child(3){animation-delay:1.7s;animation-duration:3.6s}
 .bubble:nth-child(4){animation-delay:2.3s;animation-duration:2.9s}
 @keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-150px);opacity:0}}
-.horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:78px;display:block;color:var(--ground)}
+.horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:150px;display:block;color:var(--ground);overflow:visible}
+.hz-hill,.hz-ground{fill:currentColor}
+.hz-hill,.hz-ridge{transition:d .9s cubic-bezier(.22,1,.36,1)}
+.hz-ridge{fill:none;stroke:var(--amber);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(242,169,59,.55))}
+.hz-ghost{fill:none;stroke:var(--text);stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:2 4}
+.hz-bands rect{fill:var(--text);fill-opacity:.07;transition:x .9s cubic-bezier(.22,1,.36,1),width .9s cubic-bezier(.22,1,.36,1)}
+.hz-labels text{font:700 10px var(--body);letter-spacing:.08em;fill:var(--text);fill-opacity:.75}
+.hz-limit{stroke:var(--text);stroke-opacity:.3;stroke-dasharray:3 5}
+.hz-now{fill:var(--russet);stroke:var(--ground);stroke-width:2;transition:cx .9s cubic-bezier(.22,1,.36,1),cy .9s cubic-bezier(.22,1,.36,1)}
+.hz-moon{fill:var(--text);filter:drop-shadow(0 0 6px rgba(246,237,218,.8));transition:cx .9s cubic-bezier(.22,1,.36,1)}
+@media (prefers-reduced-motion: reduce){.hz-hill,.hz-ridge,.hz-bands rect,.hz-now,.hz-moon{transition:none}}
 
 /* Sections */
 .block{padding:30px var(--gutter) 6px}
@@ -463,16 +473,16 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <div><dt id="limitLabel">Under 0.05%</dt><dd id="underAt">--</dd></div>
   </dl>
 
-  <svg class="horizon" viewBox="0 0 400 78" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-    <g fill="currentColor">
-      <path d="M0 62 Q90 52 200 58 T400 55 V78 H0 Z"/>
-      <path d="M58 60 L61 40 L48 30 L50 29 L62 37 L63 26 L65 26 L65 37 L80 28 L82 30 L67 41 L66 60 Z"/>
-      <ellipse cx="64" cy="25" rx="30" ry="5.5"/>
-      <ellipse cx="46" cy="28" rx="16" ry="4.5"/>
-      <ellipse cx="84" cy="27" rx="17" ry="4.5"/>
-      <ellipse cx="66" cy="21" rx="18" ry="4"/>
-      <path d="M318 57 L320 50 L322 57 Z"/><ellipse cx="320" cy="49" rx="9" ry="2.2"/>
-    </g>
+  <svg class="horizon" id="horizon" viewBox="0 0 400 150" aria-hidden="true">
+    <g class="hz-bands"></g>
+    <line class="hz-limit" x1="0" x2="400" y1="78" y2="78"/>
+    <path class="hz-hill" d="M0 142L400 142L400 142L0 142Z"/>
+    <rect class="hz-ground" x="0" y="141.5" width="400" height="9"/>
+    <path class="hz-ghost"/>
+    <path class="hz-ridge" d="M0 142L400 142"/>
+    <g class="hz-labels"></g>
+    <circle class="hz-moon" r="4.5" cx="0" cy="135"/>
+    <circle class="hz-now" r="5.5" cx="0" cy="142"/>
   </svg>
 </header>
 
@@ -688,6 +698,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 <script src="drinks.js"></script>
 <script src="model.js"></script>
 <script src="night.js"></script>
+<script src="horizon.js"></script>
 <script src="mug.js"></script>
 <script src="island.js"></script>
 <script>
@@ -775,8 +786,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     nowBac: $('#nowBac'), peakBac: $('#peakBac'), liquid: $('#liquid')
   };
   let lastSim = null;
+  let lastHorizon = null;
+  function renderHorizon(sim, now) {
+    const o = opts(), rounds = o.rounds;
+    let prevSim = null;
+    if (rounds.length > 1) {
+      const latest = rounds.reduce((a, r) => (r.start > a.start ? r : a), rounds[0]);
+      prevSim = M.simulate(Object.assign({}, o, { rounds: rounds.filter((r) => r !== latest) }));
+    }
+    lastHorizon = window.DryHorizon.render($('#horizon'), { sim, rounds, now, limit: state.profile.limit, prevSim });
+  }
   function renderHero(sim) {
     const now = Date.now();
+    renderHorizon(sim, now);
     const bNow = bacAt(sim, now);
     let frac = 0;
     if (!sim.G) {
