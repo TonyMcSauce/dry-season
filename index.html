@@ -221,6 +221,7 @@ input[type=range]{width:100%;accent-color:var(--amber);margin:8px 0 0}
 .past-stats dt{font-size:.8rem;color:var(--muted)}
 .past-stats dd{margin:0;font-weight:700;font-size:1.1rem}
 .past-body .rounds{padding:0 var(--gutter)}
+.past-note{margin:16px var(--gutter) 0}
 .actions{display:grid;gap:10px;padding:22px var(--gutter) 0}
 footer{padding:36px var(--gutter) 40px;color:var(--muted);font-size:.85rem;text-align:center}
 
@@ -826,6 +827,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         <circle class="hz-now" r="5.5" cx="0" cy="142"/>
       </svg>
     </div>
+    <p class="hint past-note" id="pastNote" hidden>Saved before Dry Season 5.0, so this night has no curve.</p>
     <dl class="past-stats">
       <div><dt>Peak</dt><dd id="pastPeak"></dd></div>
       <div><dt>Fully sober</dt><dd id="pastClear"></dd></div>
@@ -1079,7 +1081,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   function roundWhen(r) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const pre = r.start < today.getTime() ? dayLabel(r.start) + ' ' : '';
-    return pre + fmtTime(r.start) + ' to ' + (r.end == null ? 'now' : fmtTime(r.end));
+    return pre + fmtTime(r.start) + ' to ' + (r.end == null ? 'now' : fmtTime(Math.max(r.start, r.end)));
   }
   function roundWhat(r) { return r.drinks.map((d) => d.qty + ' × ' + d.name).join(' + '); }
   function renderTab() {
@@ -1194,16 +1196,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       const li = document.createElement('li');
       const { h: hh, m } = dur(n.clear - n.start);
       const date = new Date(n.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-      const wrap = n.rounds && n.rounds.length ? document.createElement('button') : li;
+      const wrap = document.createElement('button');
       wrap.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
       wrap.querySelector('.h-date').textContent = date;
       wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
       wrap.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
-      if (wrap !== li) {
-        wrap.type = 'button'; wrap.className = 'h-open';
-        wrap.addEventListener('click', () => openPast(n));
-        li.appendChild(wrap);
-      }
+      wrap.type = 'button'; wrap.className = 'h-open';
+      wrap.addEventListener('click', () => openPast(n));
+      li.appendChild(wrap);
       ul.appendChild(li);
     });
   }
@@ -1213,8 +1213,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#pastPeak').textContent = fmtBac(n.peak);
     $('#pastClear').textContent = fmtTime(n.clear);
     $('#pastCount').textContent = String(n.count);
+    const rounds = Array.isArray(n.rounds) ? n.rounds : [];
+    $('.past-sky').hidden = !rounds.length;
+    $('#pastNote').hidden = rounds.length > 0;
     const ul = $('#pastRounds'); ul.innerHTML = '';
-    n.rounds.forEach((r) => {
+    rounds.forEach((r) => {
       const li = document.createElement('li'); li.className = 'round-card';
       li.innerHTML = '<span class="rc-body"><span class="rc-when"></span><span class="rc-what"></span></span>';
       li.querySelector('.rc-when').textContent = fmtTime(r.start) + ' to ' + fmtTime(r.end);
@@ -1222,8 +1225,9 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       ul.appendChild(li);
     });
     past.showModal();
+    if (!rounds.length) return;
     // Seen from the moment it cleared, so no "now" marker sits on the hills.
-    const o = N.simOpts({ rounds: n.rounds, fed: false }, state.profile, n.clear);
+    const o = N.simOpts({ rounds, fed: !!n.fed }, state.profile, n.clear);
     const sim = M.simulate(o);
     window.DryHorizon.render($('#pastHorizon'), { sim, rounds: o.rounds, now: n.clear, limit: state.profile.limit, prevSim: null });
     $('#pastHorizon .hz-now').style.display = 'none';
@@ -1233,7 +1237,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   $('#saveNight').addEventListener('click', () => {
     const entry = N.summarize(state.session, state.profile, Date.now());
     if (!entry.G) { toast('Add a drink before saving'); return; }
-    state.history = (state.history || []).concat([entry]).slice(-20);
+    state.history = N.saveToHistory(state.history, entry);
     save(); renderHistory(); toast('Night saved');
   });
   $('#newNight').addEventListener('click', () => {
@@ -1521,7 +1525,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     nightNote = null;
     state = N.editRound(state, editing.id, { start: draft.start, end: draft.live ? null : Math.min(draft.end, now), drinks: draft.drinks });
     save();
-    handOff();
+    handOff(true);
   }
   function showOverlap(ov) {
     const r = state.session.rounds.find((x) => x.id === ov.roundId);
@@ -1548,11 +1552,20 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       : o.action === 'fresh' && o.archived ? ['A fresh night.', 'Your earlier drinks had cleared, so that night is saved in History.']
       : o.action === 'continue' && hadRounds && o.carried >= M.CLEAR ? ['This round continues tonight.', 'At ' + fmtTime(cand.start) + ' you still had ' + fmtBac(o.carried) + ' from earlier, so it counts on top.']
       : null;
-    handOff();
+    handOff(o.action !== 'history');
   }
-  /** The sheet glides away, an orb carries the round to its peak on the horizon, and the hills reshape. */
-  function handOff() {
-    if (reduceMotionPref()) { late.close(); renderAll(); return; }
+  /**
+   * The sheet glides away, an orb carries the round to its peak on the horizon, and the hills
+   * reshape. No orb when the round went to History: tonight did not change. With Reduce Motion,
+   * a short cross fade instead (Web Animations, which the global no-motion CSS leaves alone).
+   */
+  function handOff(withOrb) {
+    if (reduceMotionPref()) {
+      const fade = late.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out' });
+      fade.onfinish = () => { late.close(); renderAll(); };
+      $('#horizon').animate([{ opacity: 0.25 }, { opacity: 1 }], { duration: 420, easing: 'ease-out' });
+      return;
+    }
     const box = $('#dial').getBoundingClientRect();
     const from = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
     window.scrollTo(0, 0);
@@ -1561,7 +1574,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       late.close();
       late.classList.remove('leaving');
       renderAll();
-      if (!lastHorizon || !state.session.rounds.length) return;
+      if (!withOrb || !lastHorizon || !state.session.rounds.length) return;
       const hz = $('#horizon').getBoundingClientRect();
       const to = { x: hz.left + lastHorizon.peakX, y: hz.top + lastHorizon.peakY * hz.height / 150 };
       const orb = document.createElement('div'); orb.className = 'orb';

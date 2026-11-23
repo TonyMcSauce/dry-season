@@ -42,7 +42,7 @@
   function roundsOf(o) {
     const src = o.rounds || [{ drinks: o.drinks || [], start: o.start, end: o.end }];
     return src
-      .map((r) => ({ start: r.start, end: Math.max(r.end, r.start), drinks: r.drinks || [] }))
+      .map((r) => ({ start: r.start, end: Math.max(r.end, r.start), drinks: r.drinks || [], live: !!r.live }))
       .sort((a, b) => a.start - b.start);
   }
 
@@ -172,7 +172,8 @@
     let latestStop = null;
     const rs = roundsOf(stillDrinking ? stopAt(o, now) : o);
     // Only the round still going is extended, at its own pace; earlier rounds stay as they were.
-    const live = rs.reduce((a, r) => (!a || r.end >= a.end ? r : a), null);
+    // A round marked live wins; otherwise the one that ended last.
+    const live = rs.find((r) => r.live) || rs.reduce((a, r) => (!a || r.end >= a.end ? r : a), null);
     if (stillDrinking && ok && live && now - live.start >= 10 * MIN && stopNow.G > 0) {
       const pace = gramsIn(live.drinks) / (now - live.start);   // grams per ms in this round
       const clearIfStopAt = (T) => {

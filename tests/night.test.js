@@ -144,3 +144,27 @@ test('settle ends a forgotten live round at the last drink once it has cleared',
   const later = N.settle(s, local(9));
   assert.equal(later.session.rounds[0].end, local(20, 0, 22));
 });
+
+// Small fixes after 5.0
+test('a History entry remembers whether you ate', () => {
+  const s = Object.assign(night({ start: local(14), end: local(18), drinks: [hein(6)] }), { fed: true });
+  assert.equal(N.summarize(s, P, local(22)).fed, true);
+});
+
+test('saving a night and later starting fresh keeps one History entry for it', () => {
+  const s = st(night({ start: local(12), end: local(13), drinks: [hein(1)] }));
+  const saved = Object.assign({}, s, { history: N.saveToHistory(s.history, N.summarize(s.session, P, local(14))) });
+  const r = N.addRound(saved, { start: local(20), end: local(21), drinks: [hein(2)] }, local(22));
+  assert.equal(r.outcome.action, 'fresh');
+  assert.equal(r.state.history.length, 1);
+});
+
+test('an old save that stopped before it started becomes a sensible round', () => {
+  const s = N.migrate({ start: local(20), end: local(19), still: false, drinks: [hein(1)] });
+  assert.equal(s.rounds[0].end, local(20));
+});
+
+test('simOpts marks the round that is still going', () => {
+  const s = night({ start: local(14), end: local(18), drinks: [hein(6)] }, { start: local(20), end: null, drinks: [hein(1)] });
+  assert.deepEqual(N.simOpts(s, P, local(22)).rounds.map((r) => !!r.live), [false, true]);
+});
