@@ -223,6 +223,57 @@ dialog.sheet{
 }
 dialog.sheet[open]{animation:sheetUp .34s cubic-bezier(.2,.8,.2,1)}
 dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+/* Late logging: the dial */
+.late-open{margin-top:12px}
+.late-main{padding:4px var(--gutter) 22px;display:grid;gap:16px}
+.dial-wrap{position:relative;width:min(76vw,290px);aspect-ratio:1;margin:6px auto 0}
+.dial-wrap::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle,rgba(242,169,59,.3),rgba(242,169,59,0) 70%);transition:background .6s}
+.late.history .dial-wrap::before{background:radial-gradient(circle,rgba(143,180,218,.3),rgba(143,180,218,0) 70%)}
+.dial{position:relative;width:100%;height:100%;display:block;overflow:visible}
+.dl-track{fill:none;stroke:var(--line);stroke-width:18}
+.dl-tick{stroke:var(--line);stroke-width:1.4;stroke-linecap:round}
+.dl-tick.major{stroke:var(--muted);stroke-width:2.2}
+.dl-hour{font:700 11px var(--body);fill:var(--muted)}
+.dl-other{fill:none;stroke:var(--text);stroke-opacity:.22;stroke-width:18;stroke-linecap:round}
+.dl-tail{fill:none;stroke:var(--text);stroke-opacity:.6;stroke-width:3;stroke-linecap:round}
+.dl-arc{fill:none;stroke:var(--amber);stroke-width:18;stroke-linecap:round;filter:drop-shadow(0 0 10px rgba(242,169,59,.55))}
+.dial.history .dl-arc{stroke:#8FB4DA;filter:drop-shadow(0 0 10px rgba(143,180,218,.6))}
+.dl-arc,.dl-tail,.dl-other{transition:stroke-dasharray .7s cubic-bezier(.22,1,.36,1),stroke-dashoffset .7s cubic-bezier(.22,1,.36,1),stroke .5s}
+.dl-handle{fill:var(--foam);stroke:var(--sheet);stroke-width:3}
+.dl-moon{fill:var(--text)}
+.dl-now{fill:var(--russet)}
+.dl-handle,.dl-moon,.dl-now{transition:cx .7s cubic-bezier(.22,1,.36,1),cy .7s cubic-bezier(.22,1,.36,1)}
+.dial-centre{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+#dlKicker{margin:0;font-size:.8rem;font-weight:600;color:var(--muted)}
+.dl-time{margin:0;font-family:var(--display);font-size:2.8rem;line-height:1.05}
+.dl-tag{margin-top:4px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;background:rgba(242,169,59,.2);color:var(--text);transition:background .4s}
+.late.history .dl-tag{background:rgba(143,180,218,.25)}
+.time-row{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.tr-label{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tnudge{justify-self:end;display:flex;align-items:center}
+.tnudge button{width:44px;height:44px;border:0;background:transparent;color:var(--text);font-size:1.4rem;border-radius:12px}
+.tnudge output{min-width:104px;text-align:center;font-weight:700}
+.tr-chips{grid-column:1/-1}
+.tr-chips .chip{transition:background .25s,border-color .25s,color .25s,transform .15s}
+.tr-chips .chip:active{transform:scale(.94)}
+.late.history .tr-chips .chip[aria-pressed="true"]{background:#8FB4DA;border-color:#8FB4DA}
+.late-favs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fav-card{display:flex;align-items:center;gap:2px;padding:4px 8px 4px 0;border-radius:16px;background:var(--field);border:1px solid var(--line);transition:background .3s,border-color .3s}
+.fav-card.on{background:rgba(242,169,59,.16);border-color:rgba(242,169,59,.55)}
+.fc-less{width:36px;height:44px;flex:none;border:0;background:transparent;font-size:1.3rem;color:inherit}
+.fc-more{flex:1;min-width:0;min-height:44px;border:0;background:transparent;text-align:left;padding:0;color:inherit}
+.fc-name{display:block;font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-meta{display:block;font-size:.75rem;color:var(--muted)}
+.fc-count{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);background:var(--field);color:var(--muted);transition:background .3s,color .3s}
+.fav-card.on .fc-count{background:var(--amber);color:var(--ink)}
+.late-extra{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.late-extra:empty{display:none}
+.late-extra li{display:flex;align-items:center;gap:4px;padding:0 4px 0 12px;border-radius:999px;background:var(--field);border:1px solid var(--line);font-weight:600;font-size:.9rem}
+.late-extra button{width:40px;height:40px;border:0;background:transparent;color:inherit;font-size:1.1rem}
+.link-btn{margin-top:6px;min-height:44px;border:0;background:transparent;color:var(--text);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0 2px}
+#lateAdd{transition:background .4s,transform .15s}
+.late.history #lateAdd{background:#8FB4DA}
+@media (prefers-reduced-motion: reduce){.dl-arc,.dl-tail,.dl-other,.dl-handle,.dl-moon,.dl-now,.dial-wrap::before{transition:none}}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .sheet-head{position:sticky;top:0;background:var(--sheet);display:flex;align-items:center;justify-content:space-between;padding:12px var(--gutter);border-bottom:1px solid var(--line);z-index:2}
 .sheet-head h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.2rem}
@@ -531,6 +582,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <h2 id="nightH">The night</h2>
     <ul class="rounds" id="rounds"></ul>
     <p class="hint rounds-empty" id="roundsEmpty">Nothing on tonight's tab yet. Had a few already? Log them with the times you drank.</p>
+    <button class="btn quiet late-open" id="openLate" type="button">Log earlier drinks</button>
     <label class="switch">
       <input type="checkbox" id="fed">
       <span class="track" aria-hidden="true"></span>
@@ -670,6 +722,40 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
 </dialog>
 
+<dialog class="sheet late" id="late" aria-labelledby="lateTitle">
+  <div class="sheet-head">
+    <button class="icon-btn" id="lateBack" type="button" aria-label="Back to the round" hidden>&#8249;</button>
+    <h3 id="lateTitle">Log earlier drinks</h3>
+    <button class="icon-btn" id="lateClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="late-main" id="lateMain">
+    <div class="dial-wrap">
+      <svg class="dial" id="dial" aria-hidden="true"></svg>
+      <div class="dial-centre" aria-live="polite">
+        <p id="dlKicker">Fully sober at</p>
+        <p class="dl-time" id="dlTime">--:--</p>
+        <span class="dl-tag" id="dlTag"></span>
+      </div>
+    </div>
+    <div class="time-row">
+      <span class="tr-label">From</span>
+      <div class="tnudge"><button type="button" id="fromDown" aria-label="Start 15 minutes earlier">&#8249;</button><output id="fromVal"></output><button type="button" id="fromUp" aria-label="Start 15 minutes later">&#8250;</button></div>
+      <div class="chips tr-chips" id="fromChips"></div>
+    </div>
+    <div class="time-row">
+      <span class="tr-label">Until</span>
+      <div class="tnudge"><button type="button" id="untilDown" aria-label="Stop 15 minutes earlier">&#8249;</button><output id="untilVal"></output><button type="button" id="untilUp" aria-label="Stop 15 minutes later">&#8250;</button></div>
+      <div class="chips tr-chips" id="untilChips"></div>
+    </div>
+    <div>
+      <div class="late-favs" id="lateFavs"></div>
+      <ul class="late-extra" id="lateExtra"></ul>
+      <button class="link-btn" id="lateAll" type="button">All drinks</button>
+    </div>
+    <button class="btn" id="lateAdd" type="button">Add round to tonight</button>
+  </div>
+</dialog>
+
 <div class="toast" id="toast" role="status"></div>
 
 <aside class="coaster" id="coaster" hidden aria-labelledby="coasterH">
@@ -699,6 +785,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 <script src="model.js"></script>
 <script src="night.js"></script>
 <script src="horizon.js"></script>
+<script src="dial.js"></script>
 <script src="mug.js"></script>
 <script src="island.js"></script>
 <script>
@@ -1053,6 +1140,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   // Drink picker
   const sheet = $('#sheet');
   let pick = null;
+  let pickFor = 'tab';                 // 'late' when the picker was opened from the dial sheet
   const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z"/></svg>';
   // A favourite is a drink in a size, so the same beer can be a favourite as a 330 ml and a 440 ml.
   const isFav = (id, ml) => (state.favs || []).some((f) => f.id === id && f.ml === ml);
@@ -1112,6 +1200,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     pick = { id: it.custom ? null : it.id, name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
     $('#pickList').hidden = true; $('#pickCfg').hidden = false; $('#sheetBack').hidden = false;
     $('#sheetTitle').textContent = it.custom ? 'Your own drink' : it.name;
+    $('#cfgAdd').textContent = pickFor === 'late' ? 'Add to this round' : 'Add to the tab';
     $('#nameField').hidden = !it.custom;
     $('#cfgName').value = pick.name;
     $('#cfgNote').hidden = !it.note; $('#cfgNote').textContent = it.note || '';
@@ -1159,16 +1248,155 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   $('#cfgAdd').addEventListener('click', () => {
     if (!(pick.ml > 0) || !(pick.abv >= 0) || pick.abv > 80) { toast('Check the strength and size'); return; }
     const name = (pick.name || '').trim() || 'Custom drink';
+    if (pickFor === 'late') {
+      pickFor = 'tab';
+      sheet.close();
+      changeDrink({ name, abv: pick.abv, ml: pick.ml, qty: 0, share: pick.share }, pick.qty);
+      return;
+    }
     const r = N.addLiveDrink(state, { name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share }, Date.now());
     state = r.state;
     save(); sheet.close(); renderAll();
     if (!announce(r.outcome)) toast(pick.qty + ' × ' + name + ' added');
     if (island) island.celebrate('pour', { label: '+' + pick.qty + ' ' + shortName(name) });
   });
-  $('#openPicker').addEventListener('click', () => { buildList(); showList(); sheet.showModal(); });
+  sheet.addEventListener('close', () => { if (!late.open) pickFor = 'tab'; });
+  $('#openPicker').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
   $('#sheetClose').addEventListener('click', () => sheet.close());
   $('#sheetBack').addEventListener('click', showList);
   sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
+
+  // Late logging: set a round you already had on the dial
+  const late = $('#late');
+  const HOUR = 3600e3;
+  let draft = null;
+  function newDraft() {
+    const now = Date.now();
+    const f = (state.favs || []).map(D.favOf).filter(Boolean)[0];
+    const first = f ? { name: f.name, abv: f.abv, ml: f.ml, qty: 1, share: 1 } : { name: 'Heineken', abv: 5, ml: 330, qty: 1, share: 1 };
+    return { start: round5(now - 2 * HOUR), end: now, drinks: [first] };
+  }
+  const atToday = (h) => { const d = new Date(); d.setHours(h, 0, 0, 0); return d.getTime(); };
+  const atYesterday = (h) => atToday(h) - 24 * HOUR;
+  function fromChips(now) {
+    const out = [['2 h ago', round5(now - 2 * HOUR)], ['4 h ago', round5(now - 4 * HOUR)]];
+    if (atToday(13) < now - 15 * MIN) out.push(['Lunch', atToday(13)]);
+    out.push(['Last night', atYesterday(20), atYesterday(23)]);
+    return out;
+  }
+  const untilChips = (now) => [['Just now', now], ['1 h ago', round5(now - HOUR)], ['2 h ago', round5(now - 2 * HOUR)], ['4 h ago', round5(now - 4 * HOUR)]];
+  function setDraft(patch) {
+    const now = Date.now();
+    draft = Object.assign({}, draft, patch);
+    draft.end = Math.min(draft.end, now);
+    if (draft.end - draft.start < 15 * MIN) {
+      if (patch.start != null) draft.end = Math.min(now, draft.start + HOUR);
+      if (draft.end - draft.start < 15 * MIN) draft.start = draft.end - 15 * MIN;
+    }
+    renderLate();
+  }
+  /** Where the draft would go, and the night it would make: what the preview and the button show. */
+  function lateView() {
+    const now = Date.now();
+    const cand = { start: draft.start, end: draft.end, drinks: draft.drinks };
+    const p = N.place(state.session, state.profile, cand, now);
+    const rounds = p.action === 'continue' ? state.session.rounds.concat([cand]) : [cand];
+    const sim = M.simulate(N.simOpts({ rounds, fed: state.session.fed }, state.profile, now));
+    return { p, sim, now, soberAt: sim.G > 0 ? sim.clear : draft.end };
+  }
+  function chipRow(box, list, key) {
+    box.innerHTML = '';
+    list.forEach(([label, v, end]) => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
+      c.setAttribute('aria-pressed', String(draft[key] === v && (end == null || draft.end === end)));
+      c.addEventListener('click', () => setDraft(end != null ? { start: v, end } : { [key]: v }));
+      box.appendChild(c);
+    });
+  }
+  const dkey = (d) => d.name + '|' + d.ml + '|' + d.abv + '|' + d.share;
+  function changeDrink(d, by) {
+    const drinks = draft.drinks.map((x) => Object.assign({}, x));
+    const i = drinks.findIndex((x) => dkey(x) === dkey(d));
+    if (i < 0 && by > 0) drinks.push(Object.assign({}, d, { qty: by }));
+    else if (i >= 0) drinks[i].qty = Math.min(48, drinks[i].qty + by);
+    const kept = drinks.filter((x) => x.qty > 0);
+    if (!kept.length) return;                     // a round always has at least one drink
+    setDraft({ drinks: kept });
+  }
+  function renderLateDrinks() {
+    const favs = (state.favs || []).map(D.favOf).filter(Boolean).slice(0, 4);
+    const favKeys = favs.map((f) => dkey({ name: f.name, ml: f.ml, abv: f.abv, share: 1 }));
+    const box = $('#lateFavs'); box.innerHTML = '';
+    favs.forEach((f) => {
+      const d = { name: f.name, abv: f.abv, ml: f.ml, qty: 1, share: 1 };
+      const have = draft.drinks.find((x) => dkey(x) === dkey(d));
+      const q = have ? have.qty : 0;
+      const card = document.createElement('div'); card.className = 'fav-card' + (q ? ' on' : '');
+      card.innerHTML = '<button type="button" class="fc-less">&#8722;</button><button type="button" class="fc-more"><span class="fc-name"></span><span class="fc-meta"></span></button><span class="fc-count" aria-live="polite"></span>';
+      const label = f.name + ' ' + f.ml + ' ml';
+      card.querySelector('.fc-less').setAttribute('aria-label', 'Remove one ' + label);
+      card.querySelector('.fc-more').setAttribute('aria-label', 'Add one ' + label);
+      card.querySelector('.fc-name').textContent = f.name;
+      card.querySelector('.fc-meta').textContent = f.ml + ' ml · ' + f.abv + '%';
+      card.querySelector('.fc-count').textContent = q;
+      card.querySelector('.fc-less').addEventListener('click', () => changeDrink(d, -1));
+      card.querySelector('.fc-more').addEventListener('click', () => changeDrink(d, 1));
+      box.appendChild(card);
+    });
+    const ex = $('#lateExtra'); ex.innerHTML = '';
+    draft.drinks.filter((x) => !favKeys.includes(dkey(x))).forEach((x) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span></span><button type="button">&#215;</button>';
+      li.firstChild.textContent = x.qty + ' × ' + x.name;
+      li.lastChild.setAttribute('aria-label', 'Remove ' + x.name + ' from this round');
+      li.lastChild.addEventListener('click', () => changeDrink(x, -x.qty));
+      ex.appendChild(li);
+    });
+  }
+  function renderLate() {
+    const v = lateView(), now = v.now, hist = v.p.action === 'history';
+    late.classList.toggle('history', hist);
+    chipRow($('#fromChips'), fromChips(now), 'start');
+    chipRow($('#untilChips'), untilChips(now), 'end');
+    $('#fromVal').textContent = (draft.start < atToday(0) ? dayLabel(draft.start) + ' ' : '') + fmtTime(draft.start);
+    $('#untilVal').textContent = draft.end >= now ? 'Now' : (draft.end < atToday(0) ? dayLabel(draft.end) + ' ' : '') + fmtTime(draft.end);
+    renderLateDrinks();
+    const others = v.p.action === 'continue' ? state.session.rounds.map((r) => ({ start: r.start, end: N.endOf(r, now) })) : [];
+    DryDial.render($('#dial'), { round: { start: draft.start, end: draft.end }, others, soberAt: v.soberAt, now, tone: hist ? 'history' : 'amber' });
+    const clear = v.soberAt <= now;
+    $('#dlKicker').textContent = hist ? 'That night, sober at' : clear ? 'Sober since' : 'Fully sober at';
+    $('#dlTime').textContent = fmtTime(v.soberAt);
+    const { h, m } = dur(v.soberAt - now);
+    $('#dlTag').textContent = hist ? dayLabel(draft.start) + ' · History' : clear ? 'Already clear' : dayLabel(v.soberAt) + ' · ' + h + ' h ' + pad(m) + ' m';
+    $('#lateAdd').textContent = hist ? 'Save to History'
+      : v.p.action === 'continue' && state.session.rounds.length ? 'Add round · continues tonight' : 'Add round to tonight';
+  }
+  function openLate() {
+    draft = newDraft();
+    $('#lateTitle').textContent = 'Log earlier drinks';
+    renderLate();
+    late.showModal();
+  }
+  /** Add the draft. choice answers an overlap with a round already on the tab. */
+  function commitLate(choice) {
+    const now = Date.now();
+    const cand = { start: draft.start, end: draft.end, drinks: draft.drinks, late: true };
+    const r = N.addRound(state, cand, now, choice);
+    state = r.state;
+    save();
+    late.close();
+    renderAll();
+    if (!announce(r.outcome) && r.outcome.action === 'history') toast('Saved to History');
+  }
+  $('#openLate').addEventListener('click', openLate);
+  $('#lateClose').addEventListener('click', () => late.close());
+  late.addEventListener('click', (e) => { if (e.target === late) late.close(); });
+  $('#fromDown').addEventListener('click', () => setDraft({ start: draft.start - 15 * MIN }));
+  $('#fromUp').addEventListener('click', () => setDraft({ start: Math.min(draft.start + 15 * MIN, draft.end - 15 * MIN) }));
+  $('#untilDown').addEventListener('click', () => setDraft({ end: Math.max(draft.end - 15 * MIN, draft.start + 15 * MIN) }));
+  $('#untilUp').addEventListener('click', () => setDraft({ end: draft.end + 15 * MIN }));
+  $('#lateAdd').addEventListener('click', () => commitLate());
+  $('#lateAll').addEventListener('click', () => { pickFor = 'late'; buildList(); showList(); sheet.showModal(); });
 
   // Toast
   let toastT;

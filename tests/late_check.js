@@ -39,6 +39,19 @@ async function open(browser, url, saved) {
 }
 
 const text = (page, sel) => page.locator(sel).first().textContent();
+const EMPTY = { profile: PROFILE, session: { v: 5, rounds: [], fed: false, driveAt: null, water: null }, history: [], favs: [{ id: 'hein', ml: 330 }, { id: 'hsil', ml: 330 }] };
+
+/** Open the dial sheet and set a round: a From chip plus 15 minute nudges, an Until chip, and Heinekens. */
+async function logRound(page, o) {
+  await page.getByRole('button', { name: 'Log earlier drinks' }).click();
+  await page.waitForTimeout(300);
+  await page.locator('#fromChips .chip', { hasText: o.from }).click();
+  for (let i = 0; i < (o.fromUp || 0); i++) await page.click('#fromUp');
+  await page.locator('#untilChips .chip', { hasText: o.until }).click();
+  const have = Number((await text(page, '#lateFavs .fav-card:first-child .fc-count')).trim());
+  for (let i = have; i < o.heineken; i++) await page.getByRole('button', { name: 'Add one Heineken 330 ml' }).click();
+  await page.waitForTimeout(200);
+}
 
 const checks = [
   ['an old live session upgrades to one live round, and can be finished', async (browser, url) => {
@@ -52,6 +65,23 @@ const checks = [
     assert.match(await text(page, '#rounds li'), /still going/);
     await page.getByRole('button', { name: 'Finished drinking' }).click();
     assert.match(await text(page, '#rounds li'), /20:00 to 22:00/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['log a round you already had on the dial, then see it on the night', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await logRound(page, { from: 'Lunch', fromUp: 4, until: '4 h ago', heineken: 6 });
+    assert.equal((await text(page, '#dlTime')).trim(), '01:16');
+    assert.equal((await text(page, '#lateAdd')).trim(), 'Add round to tonight');
+    await page.click('#lateAdd');
+    await page.waitForTimeout(1200);
+    assert.equal((await text(page, '#clearTime')).trim(), '01:16');
+    assert.equal(await page.locator('#rounds li').count(), 1);
+    assert.match(await text(page, '#rounds li'), /14:00 to 18:00/);
+    await page.getByRole('button', { name: 'Log earlier drinks' }).click();
+    await page.locator('#fromChips .chip', { hasText: 'Last night' }).click();
+    assert.equal((await text(page, '#lateAdd')).trim(), 'Save to History');
     assert.deepEqual(errors, []);
     await page.close();
   }]
