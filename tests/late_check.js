@@ -545,6 +545,49 @@ const checks = [
     await page.close();
   }]
   ,
+  ['stash polish: running low is flagged, Restock and Buy more refill it, and Plan shows the same list', async (browser, url) => {
+    const cor = { name: 'Corona Extra', abv: 4.5, ml: 355, share: 1 }, sil = { name: 'Heineken Silver', abv: 4, ml: 330, share: 1 };
+    const saved = Object.assign({}, EMPTY, { stash: [{ id: 'c', drink: cor, left: 2 }, { id: 's', drink: sil, left: 4 }] });
+    const { page, errors } = await open(browser, url, saved);
+    const corRow = page.locator('#stashRows li', { hasText: 'Corona' }), silRow = page.locator('#stashRows li', { hasText: 'Silver' });
+    assert.match(await text(corRow, '.sr-left'), /2 left · Running low/);
+    assert.equal(await corRow.locator('.sr-restock').isVisible(), true);
+    assert.equal(await silRow.locator('.sr-restock').isVisible(), false, 'a healthy stock has no nudge');
+    // Plan shows the same list
+    await page.click('[data-go=plan]');
+    assert.deepEqual(await page.$$eval('#planStashList li', (r) => r.map((x) => x.textContent)), ['4Heineken Silver', '2Corona Extra · running low']);
+    assert.match(await text(page, '#planStashTotal'), /6 drinks/);
+    // Restock from Tonight opens the options for that very drink
+    await page.click('[data-go=tonight]');
+    await corRow.locator('.sr-restock').click();
+    assert.equal((await text(page, '#sheetTitle')).trim(), 'Corona Extra');
+    assert.equal((await text(page, '#cfgAdd')).trim(), 'Add to your stash');
+    assert.equal(await page.inputValue('#cfgMl'), '355');
+    for (let i = 0; i < 3; i++) await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.match(await text(corRow, '.sr-left'), /^6 left$/, 'refilled, so no longer low');
+    assert.equal(await corRow.locator('.sr-restock').isVisible(), false);
+    // Buy more from History
+    await page.click('[data-go=history]');
+    await page.locator('#stashEdit li', { hasText: 'Silver' }).locator('.se-buy').click();
+    assert.equal((await text(page, '#sheetTitle')).trim(), 'Heineken Silver');
+    await page.click('#cfgAdd');
+    assert.deepEqual(await stashEditRows(page), ['Heineken Silver:5', 'Corona Extra:6']);
+    assert.match(await text(page, '#stashEditTotal'), /11 on hand/);
+    // Plan follows, and its button leads to the History editor
+    await page.click('[data-go=plan]');
+    assert.match(await text(page, '#planStashTotal'), /11 drinks/);
+    await page.click('#planStashBtn');
+    assert.equal(await page.evaluate(() => document.body.dataset.tab), 'history');
+    // one left reads as the last one
+    await page.locator('#stashEdit li', { hasText: 'Corona' }).locator('.se-n').waitFor();
+    for (let i = 0; i < 5; i++) await page.locator('#stashEdit li', { hasText: 'Corona' }).locator('.se-less').click();
+    await page.click('[data-go=tonight]');
+    assert.match(await text(corRow, '.sr-left'), /^Last one$/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
   ['with a stash, the first button opens the next one', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
       stash: { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1 }, total: 6, opened: 1 },

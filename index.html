@@ -853,6 +853,19 @@ html.intro .quick{animation:riseIn .6s 1.05s var(--ease) both}
 #stashManage{padding-bottom:8px}
 .pick-stock{position:absolute;left:14px;bottom:14px;font-size:.72rem;font-weight:700;color:var(--ink-amber)}
 
+/* Stash polish (v6.7): low stock, restock, and what is on hand on Plan */
+.sr-left.low{color:var(--ink-amber);font-weight:700}
+.sr-restock,.se-buy{align-self:flex-start;min-height:44px;padding:0;border:0;background:none;color:var(--ink-amber);font:inherit;font-size:.82rem;font-weight:700;text-align:left;cursor:pointer}
+.sr-restock{margin-top:-6px}
+.se-buy{margin:-4px 0 -10px}
+.stash-edit li.low .se-meta{color:var(--ink-amber);font-weight:600}
+.plan-stash{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.plan-stash li{display:flex;align-items:baseline;gap:12px;padding:10px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.ps-n{min-width:2ch;font-family:var(--display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.ps-name{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-stash li.low .ps-n,.plan-stash li.low .ps-name{color:var(--ink-amber)}
+#planStashEmpty{margin:0 0 12px;padding:16px;border-radius:var(--r-card);border:1px dashed var(--line);text-align:center}
+
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
@@ -1044,6 +1057,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
 
   <header class="screen-head" data-panel="plan"><p class="screen-kicker">Ahead of you</p><h1>Plan</h1></header>
+  <section class="block" data-panel="plan" aria-labelledby="planStashH" id="planStash">
+    <h2 id="planStashH">On hand <span class="stash-total" id="planStashTotal"></span></h2>
+    <ul class="plan-stash" id="planStashList"></ul>
+    <p class="hint" id="planStashEmpty">Nothing in your stash yet.</p>
+    <button class="btn quiet" id="planStashBtn" type="button">Edit your stash</button>
+  </section>
   <section class="block" data-panel="plan" aria-labelledby="curveH">
     <h2 id="curveH">How the night plays out</h2>
     <div id="chartBox"></div>
@@ -2435,6 +2454,15 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   }
 
   // Tonight's stash
+  const LOW_STASH = 2;   // at or below this a drink is running low
+  const stockNote = (left) => (left === 1 ? 'Last one' : left <= LOW_STASH ? left + ' left · Running low' : left + ' left');
+  /** Open the options for a drink that is already in the stash, ready to add more of it. */
+  function buyMore(row) {
+    const base = D.byName(row.drink.name);
+    const it = base ? Object.assign({}, base, { abv: row.drink.abv, ml: row.drink.ml }) : { custom: true, name: row.drink.name, abv: row.drink.abv, ml: row.drink.ml };
+    pickFor = 'stash'; buildList(); sheet.showModal(); choose(it);
+    if (it.custom) { pick.name = row.drink.name; $('#cfgName').value = row.drink.name; }
+  }
   function renderStash() {
     const rows = N.stashOf(state).slice().reverse(), box = $('#stash');   // most recent first
     box.hidden = rows.length === 0;
@@ -2442,9 +2470,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const ul = $('#stashRows'); ul.innerHTML = '';
     rows.forEach((row, i) => {
       const li = document.createElement('li'); li.className = 'stash-row'; li.dataset.id = row.id;
-      li.innerHTML = '<div class="sr-main"><span class="sr-name"></span><span class="sr-left"></span><div class="sr-dots" aria-hidden="true"></div></div><button type="button" class="btn sr-open">Open next</button>';
+      li.innerHTML = '<div class="sr-main"><span class="sr-name"></span><span class="sr-left"></span><div class="sr-dots" aria-hidden="true"></div><button type="button" class="sr-restock" hidden>Restock</button></div><button type="button" class="btn sr-open">Open next</button>';
       li.querySelector('.sr-name').textContent = row.drink.name;
-      li.querySelector('.sr-left').textContent = row.left + ' left';
+      const low = row.left <= LOW_STASH, leftEl = li.querySelector('.sr-left');
+      leftEl.textContent = stockNote(row.left); leftEl.classList.toggle('low', low);
+      const rs = li.querySelector('.sr-restock');
+      rs.hidden = !low; rs.setAttribute('aria-label', 'Restock ' + row.drink.name); rs.addEventListener('click', () => buyMore(row));
       const dots = li.querySelector('.sr-dots');
       for (let k = 0; k < Math.min(row.left, 12); k++) dots.appendChild(document.createElement('i'));
       const b = li.querySelector('.sr-open');
@@ -2472,9 +2503,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#stashEditTotal').textContent = rows.length ? '· ' + N.stashCount(state) + ' on hand' : '';
     rows.forEach((row) => {
       const li = document.createElement('li'); li.dataset.id = row.id;
-      li.innerHTML = '<span class="se-main"><span class="se-name"></span><span class="se-meta"></span></span><span class="se-step"><button type="button" class="se-less">&#8722;</button><output class="se-n"></output><button type="button" class="se-more">+</button></span>';
+      li.innerHTML = '<span class="se-main"><span class="se-name"></span><span class="se-meta"></span><button type="button" class="se-buy">Buy more</button></span><span class="se-step"><button type="button" class="se-less">&#8722;</button><output class="se-n"></output><button type="button" class="se-more">+</button></span>';
       li.querySelector('.se-name').textContent = row.drink.name;
-      li.querySelector('.se-meta').textContent = row.drink.ml + ' ml, ' + row.drink.abv + '%';
+      li.querySelector('.se-meta').textContent = row.drink.ml + ' ml, ' + row.drink.abv + '%' + (row.left <= LOW_STASH ? ' · Running low' : '');
+      li.classList.toggle('low', row.left <= LOW_STASH);
+      li.querySelector('.se-buy').setAttribute('aria-label', 'Buy more ' + row.drink.name);
+      li.querySelector('.se-buy').addEventListener('click', () => buyMore(row));
       li.querySelector('.se-n').textContent = row.left;
       li.querySelector('.se-less').setAttribute('aria-label', 'One fewer ' + row.drink.name);
       li.querySelector('.se-more').setAttribute('aria-label', 'One more ' + row.drink.name);
@@ -2487,6 +2521,27 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     });
   }
   $('#stashAdd').addEventListener('click', () => { pickFor = 'stash'; buildList(); showList(); sheet.showModal(); });
+  // What is on hand, shown on Plan too: the same list, read-only, with a way to change it.
+  function renderPlanStash() {
+    const rows = N.stashOf(state).slice().reverse(), ul = $('#planStashList');
+    ul.innerHTML = '';
+    $('#planStashEmpty').hidden = rows.length > 0;
+    $('#planStashTotal').textContent = rows.length ? '· ' + N.stashCount(state) + ' drinks' : '';
+    rows.forEach((row) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="ps-n"></span><span class="ps-name"></span>';
+      li.querySelector('.ps-n').textContent = row.left;
+      li.querySelector('.ps-name').textContent = row.drink.name + (row.left <= LOW_STASH ? ' · running low' : '');
+      li.classList.toggle('low', row.left <= LOW_STASH);
+      ul.appendChild(li);
+    });
+    $('#planStashBtn').textContent = rows.length ? 'Edit in History' : 'Add beer to your stash';
+  }
+  $('#planStashBtn').addEventListener('click', () => {
+    if (!N.stashOf(state).length) { pickFor = 'stash'; buildList(); showList(); sheet.showModal(); return; }
+    setTab('history');
+    requestAnimationFrame(() => $('#stashManage').scrollIntoView({ behavior: reduceMotionPref() ? 'auto' : 'smooth', block: 'start' }));
+  });
 
   // Catch up: one question when you come back after a while
   const cu = $('#catchup');
@@ -3033,7 +3088,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner(); renderQuick();
     if (island) island.update(islandSnap(lastSim));
   }
-  function renderAll() { renderNight(); renderStash(); renderStashEdit(); renderAnother(); renderTab(); renderBody(); renderSetSum(); renderHistory(); renderFavs(); buildScale(); renderLive(); }
+  function renderAll() { renderNight(); renderStash(); renderStashEdit(); renderPlanStash(); renderAnother(); renderTab(); renderBody(); renderSetSum(); renderHistory(); renderFavs(); buildScale(); renderLive(); }
   buildList();
   renderAll();
   let ticks = 0;
