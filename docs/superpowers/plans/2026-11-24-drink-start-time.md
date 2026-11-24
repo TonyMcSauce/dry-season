@@ -1,70 +1,58 @@
-# Drink start time: plan
+# Logging real nights: plan
 
-**Goal:** When you log a drink you say when you started it, so the app stops guessing. A night with a break in it (one drink, a pause, then more) is recorded the way it really happened.
+**Goal:** Logging matches how nights actually go. You can say when you started, plan a stash ahead, catch up after a gap, and log one more without browsing. Help and a proper Settings screen follow in Part 2.
 
-## The scenario this must get right
+## Scenarios this must get right
 
-You open a beer at 9:30 and finish it at 10:00. From 10:00 to 12:00 you have five more. You log the beer at 9:30 and the five at 11:30.
+**A. A break in the night.** One beer 9:30 to 10:00, then five from 10:00 to 12:00. Logged at 9:30 and 11:30.
+Today: the first round auto closes at 9:30 once the beer clears, and the five land at 9:30 only because of a clamp.
+After: at 11:30 the first start option reads **Right after your last round (9:30)**, selected by default, so the five fill the gap honestly. Two back to back rounds.
 
-**What today's code does:** the 9:30 beer opens a live round. A single beer clears in about an hour, so by 11:30 `settle()` closes that round at 9:30. The five then open a new round placed two hours back, clamped to the last round's end, so they land at 9:30 by accident, not by design.
+**B. A six pack for the night.** You log 6 beers at 9:30 meaning "the first of 6".
+Today: the app thinks all six went down in a minute, then rewrites history as time passes.
+After: logging more than one with nothing in progress asks **Log all 6** or **Open 1, save 5 for later**. The second makes a stash: **1 of 6 opened** with an **Open next** button.
 
-**What the plan does:**
+**C. Logging late.** One beer logged at 9:30, one opened at 10:00 unlogged, one at 10:30, then you log 2 at 10:30.
+Today and after: both join the open round, spread 9:30 to 10:30, close to reality and slightly ahead of you (the safe side).
+After, also: opening the app 30 minutes or more after your last log, with a round open or a stash waiting, asks **How many have you opened since?** first.
 
-1. **9:30:** Add a beer with **Just now** selected. A live round starts at 9:30.
-2. **10:00 (optional):** Tap **Finished**. The round becomes 9:30 to 10:00. If you forget, the round closes on its own once the beer has cleared, and you can fix the finish time later with one tap.
-3. **11:30:** Add 5 beers. Because a round ended earlier tonight, the first chip reads **Right after your last round (10:00)** and is selected by default. A new live round starts at 10:00 holding the five.
-4. **12:00:** Tap **Finished**, or later choose **Finished 15 min ago** and so on.
+## Part 1 (this release, 5.3.0)
 
-**Result:** two back to back rounds, 1 beer from 9:30 to 10:00 and 5 beers from 10:00 to 12:00. The BAC curve sees the real pace, a slow start and then a faster stretch, instead of spreading all six evenly across the night. Both rounds sit on tonight's tab as one continuous sitting.
+### 1. Choose when you started (`night.js`, add drink sheet)
+* Shown only when nothing is in progress. Drinks added to an open round join it.
+* Options: **Right after your last round (h:mm)** (default when a round is on tonight's tab), **Just now** (default otherwise), **15 min**, **30 min**, **1 hr**, **2 hrs ago**, **Custom** (a time today, never in the future).
+* `addLiveDrink(state, drink, now, startAt)` uses the chosen start; the two hour lookback is removed.
+* A start inside an earlier round asks **Add to that round** (it reopens) or **Start right after it**.
 
-## Behaviour
+### 2. Tonight's stash (`night.js` + main screen)
+* `session.stash = { drink, total, opened }`.
+* `openStash(state, now)` logs one drink from the stash into the open round, or starts a round now.
+* Carries over through breaks and into a fresh night. Clears on **Finished drinking**, when the last one is opened, or with **Clear stash**.
+* Panel above **Add a drink**: *2 of 6 Heineken opened*, **Open next**, **Clear**.
 
-### 1. "Started" chips on the add drink sheet
-They show only when the drink **opens a new round**. A drink added to a round already in progress needs no time; it joins that round.
+### 3. Catch up (`night.js` + a small dialog)
+* `catchUpDue(session, now)`: true when a round is open or a stash is waiting and the last log (or the last time we asked) is 30 minutes or more ago.
+* `catchUp(state, n, now)`: adds n drinks (stash drink, else the last drink) to the open round, or a new round starting right after the last one. Counts against the stash.
+* **None** records that we asked, so it stays quiet for another 30 minutes.
 
-| Chip | Start time | When it shows |
-|---|---|---|
-| Right after your last round (h:mm) | that round's end | a round ended earlier tonight; selected by default |
-| Just now | now | always; default when there is no earlier round |
-| 15 min ago / 30 min ago / 1 hr ago / 2 hrs ago | now minus that | always |
-| Custom | time wheel, limited to tonight and never in the future | always |
+### 4. One more shortcut (`manifest.webmanifest`, startup)
+* `./?action=one` opens the next stash drink, else repeats your last drink, else opens the picker. Shows a confirmation toast. The catch up question is skipped on this path.
+* A short iPhone how-to (Shortcuts, Back Tap, Action Button) goes into the Part 2 help guide.
 
-### 2. No more two hour guess
-`addLiveDrink` takes the chosen start. The `now - 2h` default goes away.
+### 5. Quick time fixes (round cards)
+* **Adjust times** on each round card opens **Started h:mm −15 / +15** and, once finished, **Ended h:mm −15 / +15**.
+* `nudgeRound(state, id, edge, deltaMs, now)` keeps start ≤ end ≤ now and never crosses a neighbouring round.
+* This also covers "I finished earlier": tap Finished, then nudge the end back.
 
-### 3. Overlaps ask, never clamp
-If the chosen start falls inside an earlier round, reuse the existing overlap prompt (**same round** merges, **extra** keeps them separate) rather than silently moving the start.
+### Tests
+* Node (`tests/night.test.js`): scenarios A, B and C; start options defaults; overlap choice; no future start; stash lifecycle and carry over; catch up timing and counts; nudge limits.
+* Browser (`tests/late_check.js`): start chips, stash panel, catch up dialog, One more shortcut, nudges.
+* Existing suites still pass.
 
-### 4. "Finished" chips
-Finishing the live round offers **Just now / 15 min ago / 30 min ago / Custom**. The finish time can't fall before the round's start or after now.
-
-### 5. One tap fixes on tonight's tab
-Tapping a round's start or end time opens a small inline control: **−15 / +15 min** nudges plus the same chips, saved right away. The full round editor stays for changing drinks or deleting a round.
-
-### 6. Backdating inside a live round
-Choosing **Earlier?** on a drink added to a live round with a time before the round's start moves the round's start earlier. Drinks keep being spread evenly within each round; per drink timestamps are out of scope.
-
-## Implementation steps
-
-1. **`night.js`**
-   * `addLiveDrink(state, drink, now, startAt)`: when a new round is opened, use `startAt` (default `now`). Remove the two hour lookback. Route overlaps through the existing `place()` and choice flow instead of passing `'extra'` unconditionally.
-   * `lastEndTonight(session, now)`: the latest finished round end, for the "Right after your last round" chip.
-   * `finishLive(state, now, endAt)`: accept an end time, clamped to between the start and now.
-   * `nudgeRound(state, id, edge, deltaMs, now)`: shift the start or end, keeping start ≤ end ≤ now, and never past a neighbouring round.
-2. **`index.html`**
-   * Chip row on the add drink sheet, shown only when no round is live.
-   * Chip row on Finish.
-   * Inline time control on round start and end times on tonight's tab.
-   * Feed the overlap prompt from the new placement result.
-3. **Tests (`tests/`)**
-   * The 9:30 / 10:00 / 11:30 / 12:00 scenario end to end: two rounds, correct windows, correct drink counts.
-   * Default chip is "Right after your last round" when a round ended tonight, "Just now" otherwise.
-   * Backdated start that overlaps an earlier round triggers the prompt; both answers behave correctly.
-   * Future times are rejected; finish before start is clamped.
-   * Nudge respects neighbours and now.
-   * The existing suite still passes.
-4. **Version bump** in `version.js` and the service worker cache name, following the repo's usual release pattern.
+## Part 2 (next release)
+* **?** help guide: how it works, logging your night, reading the screen, what it can't know, plus a replayable first run walkthrough.
+* Gear icon opening Settings with **Appearance** first, then **Your body**. Appearance leaves the Your body panel.
 
 ## Out of scope
 * Per drink timestamps inside a round.
-* Changing how `settle()` decides to auto close a round.
+* Notifications while the app is closed (it has no server).

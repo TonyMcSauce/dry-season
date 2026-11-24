@@ -234,6 +234,90 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['start options, then a six pack as a stash you open one by one', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null,
+      rounds: [{ id: 'a', start: local(20), end: local(21), drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Heineken' }).first().click();
+    assert.equal(await page.locator('#startWrap').isVisible(), true);
+    assert.equal(await page.locator('#startChips .chip[aria-pressed="true"]').textContent(), 'Right after your last round (21:00)');
+    await page.locator('#startChips .chip', { hasText: 'Just now' }).click();
+    for (let i = 1; i < 6; i++) await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.equal(await page.locator('#cfgAsk').isVisible(), true);
+    assert.match(await text(page, '#askTitle'), /All 6 right now/);
+    await page.click('#askB');
+    await page.waitForTimeout(300);
+    assert.equal((await text(page, '#stashCount')).trim(), '1 of 6 Heineken opened');
+    await page.click('#stashOpen');
+    assert.equal((await text(page, '#stashCount')).trim(), '2 of 6 Heineken opened');
+    assert.match(await text(page, '#rounds li:last-child'), /22:00 to now/);
+    await page.getByRole('button', { name: 'Finished drinking' }).click();
+    assert.equal(await page.locator('#stash').isVisible(), false, 'finishing puts the stash away');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['a start inside the last round asks, and picking up again reopens it', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null,
+      rounds: [{ id: 'a', start: local(20), end: local(21, 45), drinks: [hein(2)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Heineken' }).first().click();
+    await page.locator('#startChips .chip', { hasText: '30 min ago' }).click();
+    await page.click('#cfgAdd');
+    assert.match(await text(page, '#askTitle'), /during your last round/);
+    await page.click('#askA');
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator('#rounds li').count(), 1);
+    assert.match(await text(page, '#rounds li'), /20:00 to now/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['catch up asks after a gap and spreads what you opened, counting the stash', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21),
+      stash: { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1 }, total: 6, opened: 1 },
+      rounds: [{ id: 'a', start: local(21), end: null, lastAt: local(21), drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.waitForTimeout(600);
+    assert.equal(await page.locator('#catchup').isVisible(), true);
+    assert.match(await text(page, '#cuText'), /21:00/);
+    await page.click('#cuPlus');
+    await page.click('#cuLog');
+    await page.waitForTimeout(300);
+    assert.equal((await text(page, '#stashCount')).trim(), '3 of 6 Heineken opened');
+    assert.match(await text(page, '#rounds li'), /3 × Heineken/);
+    await page.reload(); await page.waitForTimeout(800);
+    assert.equal(await page.locator('#catchup').isVisible(), false, 'quiet right after');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['the One more shortcut logs another of your last drink', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
+      rounds: [{ id: 'a', start: local(21), end: null, lastAt: local(21, 50), drinks: [hein(2)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.goto(url + '?action=one'); await page.waitForTimeout(800);
+    assert.match(await text(page, '#rounds li'), /3 × Heineken/);
+    assert.equal(await page.evaluate(() => location.search), '');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['adjust times nudges a round by 15 minutes', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null,
+      rounds: [{ id: 'a', start: local(20), end: local(21), drinks: [hein(2)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.getByRole('button', { name: 'Adjust times' }).click();
+    await page.getByRole('button', { name: 'Started 15 minutes earlier' }).click();
+    await page.getByRole('button', { name: 'Finished 15 minutes later' }).click();
+    assert.match(await text(page, '#rounds li'), /19:45 to 21:15/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {

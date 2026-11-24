@@ -147,7 +147,8 @@
     if (p.action === 'fresh') {
       outcome.archived = state.session.rounds.length > 0;
       const history = outcome.archived ? pushHistory(state.history, summarize(state.session, state.profile, now)) : state.history;
-      return { state: Object.assign({}, state, { session: emptyNight([round]), history }), outcome };
+      const session = Object.assign(emptyNight([round]), state.session.stash ? { stash: state.session.stash } : {});
+      return { state: Object.assign({}, state, { session, history }), outcome };
     }
     if (p.overlap && !choice) throw new Error('overlap choice needed');
     let rounds = state.session.rounds;
@@ -156,11 +157,46 @@
     return { state: withSession(state, { rounds: rounds.slice().sort(byStart) }), outcome };
   }
 
+  const MIN = 60000, HOUR = 3600000;
+  /** "Right after your last round" is offered when that round ended this recently. */
+  const AFTER_WINDOW = 3 * HOUR;
+  /** Catch up asks after this long without a log. */
+  const CATCHUP_GAP = 30 * MIN;
+
+  /** The finished round that ended last, or null. */
+  function lastFinished(session) {
+    return session.rounds.filter((r) => r.end != null).reduce((a, r) => (!a || r.end > a.end ? r : a), null);
+  }
+
+  /**
+   * Start options for a drink that opens a new round. after is the time to offer as
+   * "Right after your last round" (null when there is none recent enough); start is
+   * the default choice.
+   */
+  function startChoices(session, now) {
+    if (liveRound(session)) return { after: null, start: null };
+    const last = lastFinished(session);
+    const after = last && last.end <= now && now - last.end <= AFTER_WINDOW ? last.end : null;
+    return { after, start: after != null ? after : now };
+  }
+
+  /** The finished round a new round starting at start would fall inside, or null. */
+  function startClash(session, start, now) {
+    if (liveRound(session)) return null;
+    const last = lastFinished(session);
+    return last && start < last.end && start <= now ? last : null;
+  }
+
+  const stamp = (state, now, patch) => withSession(state, Object.assign({ loggedAt: now }, patch || {}));
+
   /**
    * A drink being had now. It joins the live round; with none, a new live round
-   * starts two hours back, never before the last round ended, and is placed.
+   * starts at opts.startAt (default now, never in the future) and is placed.
+   * A start inside the last round needs opts.choice: 'same' reopens that round,
+   * 'after' starts right after it.
    */
-  function addLiveDrink(state, drink, now) {
+  function addLiveDrink(state, drink, now, opts) {
+    opts = opts || {};
     state = settle(state, now);
     const live = liveRound(state.session);
     const one = Object.assign({ qty: 1, share: 1 }, drink);
@@ -169,13 +205,112 @@
       if (last && keyOf(last) === keyOf(one)) last.qty += one.qty;
       else drinks.push(one);
       const rounds = state.session.rounds.map((r) => (r === live ? Object.assign({}, r, { drinks, lastAt: now }) : r));
-      return { state: withSession(state, { rounds }), outcome: { action: 'continue', carried: 0, archived: false } };
+      return { state: stamp(state, now, { rounds }), outcome: { action: 'continue', carried: 0, archived: false } };
     }
-    const lastEnd = state.session.rounds.reduce((a, r) => Math.max(a, endOf(r, now)), 0);
-    const start = Math.max(Math.floor((now - 2 * 3600000) / 300000) * 300000, lastEnd);
+    let start = Math.min(opts.startAt == null ? now : opts.startAt, now);
+    const clash = startClash(state.session, start, now);
+    if (clash) {
+      if (!opts.choice) throw new Error('start choice needed');
+      if (opts.choice === 'same') {
+        const drinks = copyDrinks(clash.drinks), last = drinks[drinks.length - 1];
+        if (last && keyOf(last) === keyOf(one)) last.qty += one.qty;
+        else drinks.push(one);
+        const rounds = state.session.rounds.map((r) => (r === clash
+          ? Object.assign({}, r, { start: Math.min(r.start, start), end: null, drinks, lastAt: now }) : r)).sort(byStart);
+        return { state: stamp(state, now, { rounds }), outcome: { action: 'continue', carried: 0, archived: false } };
+      }
+      start = clash.end;
+    }
     const r = addRound(state, { start, end: null, drinks: [one], late: false }, now, 'extra');
     const rounds = r.state.session.rounds.map((x) => (x.end == null ? Object.assign({}, x, { lastAt: now }) : x));
-    return { state: withSession(r.state, { rounds }), outcome: r.outcome };
+    return { state: stamp(r.state, now, { rounds }), outcome: r.outcome };
+  }
+
+  // Tonight's stash: drinks you have on hand but have not opened yet.
+
+  const stashLeft = (session) => (session.stash ? session.stash.total - session.stash.opened : 0);
+
+  /** Plan a stash of total drinks, opened of them already had. */
+  function setStash(state, drink, total, opened) {
+    const d = Object.assign({ share: 1 }, drink); delete d.qty;
+    const stash = total > (opened || 0) ? { drink: d, total, opened: opened || 0 } : null;
+    return withSession(state, { stash });
+  }
+
+  function clearStash(state) { return withSession(state, { stash: null }); }
+
+  /** Count n more opened from the stash; it goes away once all are open. */
+  function useStash(state, n) {
+    const st = state.session.stash;
+    if (!st) return { state, done: false };
+    const opened = Math.min(st.total, st.opened + n);
+    if (opened >= st.total) return { state: withSession(state, { stash: null }), done: true };
+    return { state: withSession(state, { stash: Object.assign({}, st, { opened }) }), done: false };
+  }
+
+  /** Open the next drink from the stash, now. */
+  function openStash(state, now) {
+    const st = state.session.stash;
+    if (!st) return { state, outcome: null };
+    const r = addLiveDrink(state, Object.assign({ qty: 1 }, st.drink), now, { startAt: now, choice: 'after' });
+    const u = useStash(r.state, 1);
+    return { state: u.state, outcome: Object.assign({}, r.outcome, { stashDone: u.done }) };
+  }
+
+  // Catch up: one question when you come back after a while.
+
+  function catchUpDue(session, now) {
+    const live = liveRound(session);
+    if (!live && stashLeft(session) <= 0) return false;
+    // Only when we know when you last logged; older saves stay quiet.
+    const last = Math.max(session.loggedAt || 0, session.askedAt || 0, live ? (live.lastAt || 0) : 0);
+    return last > 0 && now - last >= CATCHUP_GAP;
+  }
+
+  /** The drink catch up counts: the stash drink, else the last one logged. */
+  function catchUpDrink(session) {
+    if (session.stash) return session.stash.drink;
+    const d = lastDrink(session);
+    if (!d) return null;
+    const c = Object.assign({}, d); delete c.qty;
+    return c;
+  }
+
+  /**
+   * n drinks opened since the last log. They join the live round, or start a round
+   * right after the last one, so they spread across the gap. n = 0 just records
+   * that we asked.
+   */
+  function catchUp(state, n, now) {
+    const drink = catchUpDrink(state.session);
+    if (!(n > 0) || !drink) return { state: withSession(state, { askedAt: now }), outcome: null };
+    const last = lastFinished(state.session);
+    const startAt = last ? last.end : (state.session.loggedAt || now);
+    const r = addLiveDrink(state, Object.assign({}, drink, { qty: n }), now, { startAt, choice: 'after' });
+    const u = useStash(r.state, n);
+    return { state: withSession(u.state, { askedAt: now }), outcome: Object.assign({}, r.outcome, { stashDone: u.done }) };
+  }
+
+  /**
+   * Move a round's start or end by deltaMs. The start stays after the round
+   * before and no later than its own end (or now); the end stays between its own
+   * start and the next round's start, never past now.
+   */
+  function nudgeRound(state, id, edge, deltaMs, now) {
+    const rounds = state.session.rounds.slice().sort(byStart);
+    const i = rounds.findIndex((r) => r.id === id);
+    if (i < 0) return state;
+    const r = rounds[i], prev = rounds[i - 1], next = rounds[i + 1];
+    let patch;
+    if (edge === 'start') {
+      const lo = prev ? endOf(prev, now) : -Infinity, hi = Math.min(endOf(r, now), now);
+      patch = { start: Math.max(lo, Math.min(hi, r.start + deltaMs)) };
+    } else {
+      if (r.end == null) return state;
+      const hi = Math.min(now, next ? next.start : now);
+      patch = { end: Math.max(r.start, Math.min(hi, r.end + deltaMs)) };
+    }
+    return editRound(state, id, patch);
   }
 
   /**
@@ -192,9 +327,9 @@
     return withSession(state, { rounds });
   }
 
-  /** The live round stops now. */
+  /** The live round stops now. Finishing also puts away the stash. */
   function finishLive(state, now) {
-    return withSession(state, { rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
+    return withSession(state, { stash: null, rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
   }
 
   /** Change a round's times or drinks in place. */
@@ -208,7 +343,9 @@
   }
 
   const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
-    addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf, saveToHistory: pushHistory };
+    addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf, saveToHistory: pushHistory,
+    startChoices, startClash, lastFinished, stashLeft, setStash, clearStash, openStash,
+    catchUpDue, catchUpDrink, catchUp, nudgeRound };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;
 })(typeof self !== 'undefined' ? self : this);

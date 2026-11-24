@@ -2,6 +2,14 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 5.3: log nights the way they really go
+
+* **Say when you started.** When a drink opens a new round, pick *Just now*, *15 min*, *30 min*, *1 hr* or *2 hrs ago*, a custom time, or *Right after your last round*. The app no longer guesses two hours back.
+* **Tonight's stash.** Add 6 with *Just now* and choose *Open 1, save 5 for later*. The stash shows how many are open, *Open next* logs one at that moment, and it waits through breaks until you tap *Finished drinking*.
+* **Catch up.** Come back 30 minutes or more after your last log and the app asks how many you have opened since, then spreads them across the gap.
+* **One more.** On Android, long press the app icon and tap *One more* to log the next drink from your stash, or another of your last drink.
+* **Adjust times.** Every round card has quick 15 minute nudges for when you started and finished.
+
 ## New in 5.2: choose your look
 
 * **Appearance setting** under **Your body**: *Automatic* follows your phone, or pick *Light* or *Dark* for the whole app. Your choice applies before the first paint, so there is no flash.
@@ -63,7 +71,7 @@ A Live Activity style pill that lives inside Dry Season, built to Apple's Human 
 * **Connection status.** An *Offline* badge appears next to the name when you have no signal. Under **Your body** you'll find the version, when it last checked, and a **Check for updates** button.
 * **Heineken Silver (4%, 440 ml can) and Corona Extra (4.5%, 355 ml bottle)**, plus a 355 ml size chip.
 * **Favourites.** Star any drink to pin it to the top of the picker. Heineken Silver and Corona start starred.
-* **Home screen shortcut.** On Android, long-press the icon for *Add a drink*. The install sheet also shows screenshots.
+* **Home screen shortcuts.** On Android, long-press the icon for *One more* or *Add a drink*. The install sheet also shows screenshots.
 
 ## New in V2
 
