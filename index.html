@@ -788,6 +788,21 @@ dialog.sheet[open]::backdrop{animation:fadeIn .3s ease both}
 .hero.three .vitals{padding-bottom:6px}
 .another{padding-bottom:10px}
 
+/* Gauge and number motion (v6.2) */
+.g-zone{fill:none;stroke:var(--over);stroke-width:9;opacity:.2}
+.g-fill{transition:stroke-dasharray 1.3s cubic-bezier(.3,1.25,.5,1),stroke .6s}
+.g-dotwrap{transform-origin:100px 100px;transform:rotate(0deg);transition:transform 1.3s cubic-bezier(.3,1.25,.5,1)}
+.g-dot{fill:var(--foam);stroke:var(--ok);stroke-width:2.5;transition:stroke .6s}
+.hero[data-state="impaired"] .g-dot{stroke:var(--impaired)}
+.hero[data-state="over"] .g-dot{stroke:var(--over)}
+.g-halo{fill:var(--ok);opacity:0;transform-box:fill-box;transform-origin:center}
+.hero[data-state="over"] .g-halo{fill:var(--over);animation:halo 2.2s ease-out infinite}
+.hero[data-state="impaired"] .g-halo{fill:var(--impaired);animation:halo 3.2s ease-out infinite}
+@keyframes halo{from{transform:scale(.7);opacity:.55}to{transform:scale(2.1);opacity:0}}
+@keyframes numIn{from{opacity:.2;transform:translateY(-9px)}to{opacity:1;transform:none}}
+.flip{animation:numIn .5s var(--ease) both}
+.g-read b,.stats dd,.clear-time{font-variant-numeric:tabular-nums}
+
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
@@ -857,8 +872,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <div class="gauge" role="img" id="gauge" aria-label="Estimated blood alcohol">
       <svg viewBox="0 0 200 112" aria-hidden="true">
         <path class="g-track" d="M14 100A86 86 0 0 1 186 100" pathLength="100"/>
+        <path class="g-zone" id="gZone" d="M14 100A86 86 0 0 1 186 100" pathLength="100"/>
         <path class="g-fill" id="gFill" d="M14 100A86 86 0 0 1 186 100" pathLength="100"/>
         <line class="g-limit" id="gLimit" x1="0" y1="0" x2="0" y2="0"/>
+        <g class="g-dotwrap" id="gDot"><circle class="g-halo" cx="14" cy="100" r="8"/><circle class="g-dot" cx="14" cy="100" r="5"/></g>
       </svg>
       <div class="g-read"><span class="g-label">Right now</span><b id="nowBac">0.000%</b><span class="g-sub" id="gSub"></span></div>
     </div>
@@ -1500,11 +1517,39 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     }
   }
   const setText = (el, v) => { if (el.textContent !== v) el.textContent = v; };
+  // Number motion: BAC values glide to their new value; other readouts flip in when they change.
+  const tweens = new WeakMap();
+  function tweenText(el, to, fmt, ms) {
+    const key = to.toFixed(3);
+    if (el.dataset.to === key) return;
+    el.dataset.to = key;
+    const from = parseFloat(el.dataset.v || '0'), old = tweens.get(el);
+    if (old) cancelAnimationFrame(old);
+    if (reduceMotionPref() || document.hidden || Math.abs(to - from) < 0.0005) { el.textContent = fmt(to); el.dataset.v = String(to); return; }
+    const t0 = performance.now();
+    (function step(now) {
+      const k = Math.max(0, Math.min(1, (now - t0) / ms)), e = 1 - Math.pow(1 - k, 3), v = Math.max(0, from + (to - from) * e);
+      el.textContent = fmt(v); el.dataset.v = String(v);
+      if (k < 1) tweens.set(el, requestAnimationFrame(step)); else { el.dataset.v = String(to); tweens.delete(el); }
+    })(t0);
+  }
+  function flip(el, text) {
+    if (el.textContent === text) return;
+    el.textContent = text;
+    el.classList.remove('flip'); void el.offsetWidth; el.classList.add('flip');
+  }
   // BAC gauge: a half ring from 0 to SCALE_MAX, with a tick at the legal limit.
+  let gaugeReady = false;
   function renderGauge(b, sim, now) {
-    const f = Math.max(0, Math.min(1, b / SCALE_MAX));
-    $('#gFill').style.strokeDasharray = (b > 0 ? Math.max(f * 100, 1.5) : 0).toFixed(1) + ' 100';
+    const f = Math.max(0, Math.min(1, b / SCALE_MAX)), shown = b > 0 ? Math.max(f, 0.015) : 0;
+    const paint = () => {
+      $('#gFill').style.strokeDasharray = (shown * 100).toFixed(1) + ' 100';
+      $('#gDot').style.transform = 'rotate(' + (shown * 180).toFixed(1) + 'deg)';
+    };
+    if (gaugeReady) paint();
+    else if (gaugeReady === false) { gaugeReady = null; requestAnimationFrame(() => requestAnimationFrame(() => { gaugeReady = true; paint(); })); }
     const lf = Math.min(1, state.profile.limit / SCALE_MAX), a = Math.PI * (1 - lf);
+    $('#gZone').style.strokeDasharray = '0 ' + (lf * 100).toFixed(1) + ' ' + ((1 - lf) * 100).toFixed(1) + ' 100';
     const cx = 100, cy = 100, tick = $('#gLimit');
     tick.setAttribute('x1', (cx + 78 * Math.cos(a)).toFixed(1)); tick.setAttribute('y1', (cy - 78 * Math.sin(a)).toFixed(1));
     tick.setAttribute('x2', (cx + 95 * Math.cos(a)).toFixed(1)); tick.setAttribute('y2', (cy - 95 * Math.sin(a)).toFixed(1));
@@ -1516,7 +1561,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       else if (now >= sim.clear) sess = 'Ended';
       else { const d = dur(now - sim.start); sess = d.h ? d.h + ' h ' + pad(d.m) + ' m' : d.m + ' min'; }
     }
-    $('#sessLen').textContent = sess;
+    flip($('#sessLen'), sess);
   }
   function renderHero(sim, light) {
     const now = Date.now();
@@ -1526,26 +1571,26 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     let frac = 0;
     if (!sim.G) {
       setText(els.kicker, 'Tonight');
-      setText(els.time, 'Clear');
+      flip(els.time, 'Clear');
       els.day.textContent = 'Nothing on the tab yet. Your first pour starts the clock.';
     } else if (now < sim.start) {
       els.kicker.textContent = 'Clear by';
-      els.time.textContent = fmtTime(sim.clear);
+      flip(els.time, fmtTime(sim.clear));
       els.day.textContent = dayLabel(sim.clear) + '. Your start time is still ahead.';
     } else if (now >= sim.clear) {
       els.kicker.textContent = "You're";
-      setText(els.time, 'Clear');
+      flip(els.time, 'Clear');
       els.day.textContent = 'Clear since ' + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Still worth a glass of water.';
     } else {
       const { h, m, s } = dur(sim.clear - now);
       els.kicker.textContent = 'Clear by';
-      els.time.textContent = fmtTime(sim.clear);
+      flip(els.time, fmtTime(sim.clear));
       els.day.textContent = dayLabel(sim.clear) + '\n' + h + ' h ' + pad(m) + ' m ' + pad(s) + ' s to go';
       frac = sim.peak > 0 ? Math.min(1, bNow / sim.peak) : 0;
       if (bNow === 0 && now < sim.clear) frac = 0.04;
     }
-    setText(els.nowBac, fmtBac(bNow));
-    setText(els.peakBac, fmtBac(sim.peak));
+    tweenText(els.nowBac, bNow, fmtBac, 1100);
+    tweenText(els.peakBac, sim.peak, fmtBac, 1100);
     renderGauge(bNow, sim, now);
     const y = 198 - frac * 182;               // 198 = empty, 16 = brim
     els.liquid.style.transform = 'translateY(' + y.toFixed(1) + 'px)';
@@ -2622,7 +2667,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       ? 'What you\'ve drunk is still reaching your blood, so your level will keep climbing to about ' + fmtBac(o.ahead) + '. Get a lift, take a cab, or wait until you\'re clear.'
       : 'Any alcohol slows your reactions. Get a lift, take a cab, or wait until you\'re clear.';
     const u = M.underLimitAt(sim, limit);
-    $('#underAt').textContent = u === null ? 'Never over' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u));
+    flip($('#underAt'), u === null ? 'Never over' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u)));
   }
 
   // Risk scale

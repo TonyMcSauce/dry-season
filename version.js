@@ -3,8 +3,10 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.0.1';
+self.DRY_VERSION = '6.0.2';
 self.DRY_CHANGES = [
+  'A livelier gauge: the ring springs to your level, a dot rides its end, and the over the limit zone is tinted. Your level and times glide and flip instead of jumping.',
+  'The Round 1 label on the night scene no longer sits on top of the gauge.',
   'A shorter Tonight hero: your clear time, level, bottle, glass and the one tap button now fit on the first screen.',
   'Smoother on your phone: the night scene and the countdown do less work in the background.',
   'A new look: midnight navy and cream, with a floating bar to move between Tonight, Plan, History and You.',
