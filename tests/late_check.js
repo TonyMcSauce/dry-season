@@ -134,6 +134,7 @@ const checks = [
     assert.equal((await text(page, '#clearTime')).trim(), 'Clear');
     const ridge = await page.locator('#horizon .hz-ridge').getAttribute('d');
     assert.ok(ridge.split('L').every((pt) => pt.trim().endsWith(' 142.0')), 'horizon is flat');
+    await page.click('[data-go=history]');
     await page.locator('#historyList li button').first().click();
     await page.waitForTimeout(400);
     const hm = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
@@ -164,11 +165,13 @@ const checks = [
     const live = { id: 'l', start: local(20), end: null, drinks: [hein(2)], late: false, lastAt: local(21, 50) };
     const { page, errors } = await open(browser, url, Object.assign({}, EMPTY, { history: [old],
       session: { v: 5, fed: false, driveAt: null, water: null, rounds: [live] } }));
+    await page.click('[data-go=history]');
     await page.locator('#historyList li button').first().click();
     await page.waitForTimeout(300);
     assert.equal((await text(page, '#pastClear')).trim(), '02:30');
     assert.equal(await page.locator('#pastNote').isVisible(), true);
     await page.click('#pastClose');
+    await page.click('[data-go=tonight]');
     await page.getByRole('button', { name: 'Log earlier drinks' }).click();
     await page.locator('#fromChips .chip', { hasText: 'Last night' }).click();
     await page.click('#lateAdd');
@@ -215,22 +218,22 @@ const checks = [
     const { page, errors } = await open(browser, url, EMPTY, 'light');
     const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     const heroText = () => page.evaluate(() => getComputedStyle(document.getElementById('clearTime')).color);
-    assert.equal(await bg(), 'rgb(245, 238, 225)', 'follows a light phone by default');
+    assert.equal(await bg(), 'rgb(246, 240, 228)', 'follows a light phone by default');
     assert.equal(await heroText(), 'rgb(246, 237, 218)', 'the 3D hero stays at dusk in light mode');
     await page.click('#bodyDetails summary');
     await page.click('#themeSeg [data-theme-choice="dark"]');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
-    assert.equal(await bg(), 'rgb(22, 18, 14)');
+    assert.equal(await bg(), 'rgb(14, 21, 34)');
     await page.reload(); await page.waitForTimeout(400);
-    assert.equal(await bg(), 'rgb(22, 18, 14)', 'the choice is remembered');
+    assert.equal(await bg(), 'rgb(14, 21, 34)', 'the choice is remembered');
     assert.equal(await page.locator('#themeSeg [data-theme-choice="dark"]').getAttribute('aria-pressed'), 'true');
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.click('#bodyDetails summary');
     await page.click('#themeSeg [data-theme-choice="light"]');
-    assert.equal(await bg(), 'rgb(245, 238, 225)', 'Light wins over a dark phone');
+    assert.equal(await bg(), 'rgb(246, 240, 228)', 'Light wins over a dark phone');
     await page.click('#themeSeg [data-theme-choice="auto"]');
     assert.equal(await page.evaluate(() => document.documentElement.hasAttribute('data-theme')), false);
-    assert.equal(await bg(), 'rgb(22, 18, 14)', 'Automatic follows the phone again');
+    assert.equal(await bg(), 'rgb(14, 21, 34)', 'Automatic follows the phone again');
     assert.deepEqual(errors, []);
     await page.close();
   }]
