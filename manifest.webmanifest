@@ -16,6 +16,13 @@
   ],
   "shortcuts": [
     {
+      "name": "One more",
+      "short_name": "One more",
+      "description": "Log the next drink from your stash, or another of your last one",
+      "url": "./?action=one",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
       "name": "Add a drink",
       "short_name": "Add a drink",
       "description": "Open the drink picker straight away",

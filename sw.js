@@ -98,7 +98,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Opening the app (including the Add a drink shortcut with ?action=add).
+  // Opening the app (including the Add a drink and One more shortcuts, ?action=add and ?action=one).
   if (req.mode === 'navigate') {
     event.respondWith(
       fromCache('./index.html').then((hit) => hit || networkFirst(req))
