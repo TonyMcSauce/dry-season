@@ -286,3 +286,42 @@ test('catch up stays quiet for older saves that never recorded a log time', () =
   const s = night({ start: local(20), end: null, drinks: [hein(2)] });
   assert.equal(N.catchUpDue(s, local(23)), false);
 });
+
+// One tap repeats
+test('the same drink again in the current round counts on its row, never a second row', () => {
+  const sav = { name: 'Savanna', abv: 6, ml: 330, qty: 1, share: 1 };
+  let s = N.addLiveDrink(st(night()), hein(1), local(20)).state;
+  s = N.addLiveDrink(s, sav, local(20, 20)).state;
+  s = N.addLiveDrink(s, hein(1), local(20, 40)).state;
+  const ds = s.session.rounds[0].drinks;
+  assert.equal(ds.length, 2);
+  assert.equal(ds[0].qty, 2);
+  assert.equal(N.lastDrink(s.session).name, 'Heineken', 'the last one you had, not the last row');
+});
+
+test('recent drinks: the last two different ones, most recent first', () => {
+  const sav = { name: 'Savanna', abv: 6, ml: 330, qty: 1, share: 1 };
+  const cor = { name: 'Corona', abv: 4.5, ml: 355, qty: 1, share: 1 };
+  let s = N.addLiveDrink(st(night()), cor, local(19)).state;
+  s = N.addLiveDrink(s, hein(1), local(20)).state;
+  s = N.addLiveDrink(s, sav, local(20, 20)).state;
+  s = N.addLiveDrink(s, hein(1), local(20, 40)).state;
+  const r = N.recentDrinks(s.session, 2);
+  assert.deepEqual(r.map((d) => d.name), ['Heineken', 'Savanna']);
+  assert.equal(r[0].qty, undefined);
+  assert.deepEqual(N.recentDrinks(night(), 2), []);
+});
+
+test('recent drinks look back to a finished round when nothing is going', () => {
+  const s = night({ start: local(18), end: local(19), drinks: [hein(2)] });
+  assert.deepEqual(N.recentDrinks(s, 2).map((d) => d.name), ['Heineken']);
+});
+
+test('one fewer takes one off, then the row, then the round', () => {
+  let s = st(night({ id: 'a', start: local(20), end: null, drinks: [hein(2)] }));
+  const k = N.keyOf(hein(1));
+  s = N.lessOf(s, 'a', k);
+  assert.equal(s.session.rounds[0].drinks[0].qty, 1);
+  s = N.lessOf(s, 'a', k);
+  assert.equal(s.session.rounds.length, 0);
+});

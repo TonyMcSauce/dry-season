@@ -2,6 +2,13 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 5.5: one tap for another
+
+* **Buttons under the bottle.** Once a drink is on the tab, *+ Another Corona* sits right below the glass. With two different drinks in play you get one button for each, most recent first. With a stash, the first button reads *Open next · 4 left*.
+* **Undo.** Every one tap add shows *Undo* for 5 seconds.
+* **Minus and plus** on each drink in the round you are on, on Tonight's tab. Finished rounds keep only remove.
+* **Pacing hint.** When you're drinking fast, a short line under the buttons suggests how long to wait, or to switch to water. It never blocks the tap.
+
 ## New in 5.4: help and settings
 
 * **Honest status while alcohol kicks in.** Right after you log drinks, your blood level is still low but climbing. The status now follows where you're heading, so it reads *Kicking in: over the limit by 22:09* rather than *Clear*.

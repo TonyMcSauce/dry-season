@@ -42,7 +42,8 @@
   /** The drink to repeat: last of the live round, else of the round that ended last. */
   function lastDrink(session) {
     const r = liveRound(session) || session.rounds.reduce((a, x) => (!a || x.end >= a.end ? x : a), null);
-    return r && r.drinks.length ? r.drinks[r.drinks.length - 1] : null;
+    if (!r || !r.drinks.length) return null;
+    return r.drinks.reduce((a, d, i) => ((d.at || 0) >= (a.at || 0) ? d : a), r.drinks[0]);
   }
 
   const dayStart = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
@@ -200,10 +201,11 @@
     state = settle(state, now);
     const live = liveRound(state.session);
     const one = Object.assign({ qty: 1, share: 1 }, drink);
+    one.at = now;
     if (live) {
-      const drinks = copyDrinks(live.drinks), last = drinks[drinks.length - 1];
-      if (last && keyOf(last) === keyOf(one)) last.qty += one.qty;
-      else drinks.push(one);
+      // Same drink as one already in this round: count it there, never a second row.
+      const drinks = copyDrinks(live.drinks), same = drinks.find((d) => keyOf(d) === keyOf(one));
+      if (same) { same.qty += one.qty; same.at = now; } else drinks.push(one);
       const rounds = state.session.rounds.map((r) => (r === live ? Object.assign({}, r, { drinks, lastAt: now }) : r));
       return { state: stamp(state, now, { rounds }), outcome: { action: 'continue', carried: 0, archived: false } };
     }
@@ -224,6 +226,35 @@
     const r = addRound(state, { start, end: null, drinks: [one], late: false }, now, 'extra');
     const rounds = r.state.session.rounds.map((x) => (x.end == null ? Object.assign({}, x, { lastAt: now }) : x));
     return { state: stamp(r.state, now, { rounds }), outcome: r.outcome };
+  }
+
+  /**
+   * The last n different drinks you had, most recent first: the ones to offer
+   * as one tap repeats. Each comes without a count.
+   */
+  function recentDrinks(session, n) {
+    const rounds = session.rounds.slice().sort((a, b) => (b.end == null ? Infinity : b.end) - (a.end == null ? Infinity : a.end));
+    const out = [], seen = new Set();
+    for (const r of rounds) {
+      const ds = r.drinks.map((d, i) => ({ d, i })).sort((a, b) => ((b.d.at || 0) - (a.d.at || 0)) || (b.i - a.i));
+      for (const { d } of ds) {
+        const k = keyOf(d);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        const c = Object.assign({}, d); delete c.qty; delete c.at;
+        out.push(c);
+        if (out.length >= n) return out;
+      }
+    }
+    return out;
+  }
+
+  /** One fewer of a drink in a round; the row goes at zero, the round when it is empty. */
+  function lessOf(state, roundId, key) {
+    const r = state.session.rounds.find((x) => x.id === roundId);
+    if (!r) return state;
+    const drinks = copyDrinks(r.drinks).map((d) => (keyOf(d) === key ? Object.assign(d, { qty: d.qty - 1 }) : d)).filter((d) => d.qty > 0);
+    return drinks.length ? editRound(state, roundId, { drinks }) : removeRound(state, roundId);
   }
 
   // Tonight's stash: drinks you have on hand but have not opened yet.
@@ -345,7 +376,7 @@
   const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
     addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf, saveToHistory: pushHistory,
     startChoices, startClash, lastFinished, stashLeft, setStash, clearStash, openStash,
-    catchUpDue, catchUpDrink, catchUp, nudgeRound };
+    catchUpDue, catchUpDrink, catchUp, nudgeRound, recentDrinks, lessOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;
 })(typeof self !== 'undefined' ? self : this);
