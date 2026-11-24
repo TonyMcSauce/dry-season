@@ -367,6 +367,7 @@ const checks = [
   ['the "All right now?" question follows the count as you change it', async (browser, url) => {
     const { page, errors } = await open(browser, url, EMPTY);
     await page.click('#openPicker');
+    await page.locator('#pickList .cat', { hasText: 'Regional' }).click();
     await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
     await page.click('#qtyPlus'); await page.click('#qtyPlus');
     await page.click('#cfgAdd');
@@ -378,6 +379,7 @@ const checks = [
     await page.click('#askB'); await page.waitForTimeout(300);
     assert.match(await text(page, '#stashCount'), /1 of 6 Corona/);
     await page.click('#openPicker');
+    await page.locator('#pickList .cat', { hasText: 'Regional' }).click();
     await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
     await page.locator('#startChips .chip', { hasText: 'Just now' }).click().catch(() => {});
     assert.deepEqual(errors, []);
@@ -387,6 +389,7 @@ const checks = [
   ['dropping the count back to 1 puts the question away', async (browser, url) => {
     const { page, errors } = await open(browser, url, EMPTY);
     await page.click('#openPicker');
+    await page.locator('#pickList .cat', { hasText: 'Regional' }).click();
     await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
     await page.click('#qtyPlus');
     await page.click('#cfgAdd');
