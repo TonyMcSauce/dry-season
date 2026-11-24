@@ -2298,9 +2298,16 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     return hit && hit[2] != null ? hit[2] : now;
   }
   /** "All 6 right now?" for n drinks. */
-  const manyAsk = (n) => ({ kind: 'many', title: 'All ' + n + ' right now?', text: 'Or is this the first of ' + n + ' for the night? Logging all ' + n + ' at once counts them as drunk already.',
-    a: ['Log all ' + n, 'Already had them, or having them at once', { many: 'all' }],
-    b: ['Open 1, save ' + (n - 1) + ' for later', 'Tap Open next as you go', { many: 'stash' }] });
+  const sameDrink = (a, b) => N.keyOf(Object.assign({ qty: 1 }, a)) === N.keyOf(Object.assign({ qty: 1 }, b));
+  const manyAsk = (n) => {
+    const live = !!N.liveRound(N.settle(state, Date.now()).session);
+    const st = state.session.stash, left = N.stashLeft(state.session);
+    const same = !!st && left > 0 && sameDrink(st.drink, pick), replaces = !!st && left > 0 && !same;
+    return { kind: 'many', title: 'All ' + n + ' right now?',
+      text: (live ? 'Or are you having one now and keeping the other ' + (n - 1) + ' for later? ' : 'Or is this the first of ' + n + ' for the night? ') + 'Logging all ' + n + ' at once counts them as drunk already.',
+      a: ['Log all ' + n, 'Already had them, or having them at once', { many: 'all' }],
+      b: ['Open 1, save ' + (n - 1) + ' for later', replaces ? 'Replaces your stash of ' + left + ' ' + st.drink.name : same ? 'Adds to your stash of ' + left : 'Tap Open next as you go', { many: 'stash' }] };
+  };
   function hideAsk() { askKind = null; askAnswers = {}; $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false; }
   /** The question follows the count: new numbers as it changes, gone when it is back to 1. */
   function refreshAsk() {
@@ -2325,7 +2332,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const drink = { name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share };
     const live = N.liveRound(state.session);
     const startAt = live ? null : startAtValue(now);
-    if (!live && pick.qty > 1 && startKey === 'now' && !askAnswers.many) {
+    // More than one at a time always asks, at the start of the night and while one is going.
+    if (pick.qty > 1 && (live || startKey === 'now') && !askAnswers.many) {
       return ask(manyAsk(pick.qty));
     }
     if (!live && !askAnswers.clash) {
@@ -2334,10 +2342,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         a: ['Add to that round', 'It picks up again and keeps going', { clash: 'same' }],
         b: ['Start right after it (' + fmtTime(c.end) + ')', 'A new round from ' + fmtTime(c.end), { clash: 'after' }] });
     }
-    const stash = askAnswers.many === 'stash';
+    const stash = askAnswers.many === 'stash', prev = state.session.stash;
     const r = N.addLiveDrink(state, Object.assign({}, drink, { qty: stash ? 1 : drink.qty }), now, { startAt, choice: askAnswers.clash });
     state = r.state;
-    if (stash) state = N.setStash(state, drink, drink.qty, 1);
+    if (stash) {
+      // The same drink adds to the stash you already have; a different one replaces it (the question said so).
+      const more = prev && N.stashLeft({ stash: prev }) > 0 && sameDrink(prev.drink, drink);
+      state = more ? N.setStash(state, drink, prev.total + drink.qty, prev.opened + 1) : N.setStash(state, drink, drink.qty, 1);
+    }
     askAnswers = {};
     save(); sheet.close(); renderAll();
     if (!announce(r.outcome)) toast(stash ? '1 ' + name + ' opened, ' + (drink.qty - 1) + ' saved for later' : drink.qty + ' × ' + name + ' added');

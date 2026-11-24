@@ -238,6 +238,32 @@ const checks = [
     await page.close();
   }]
   ,
+  ['while a round is going, logging several still asks, and a stash of the same drink adds up', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null,
+      rounds: [{ id: 'a', start: local(20), end: null, drinks: [hein(1)], late: false, lastAt: Date.now() }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Heineken' }).first().click();
+    assert.equal(await page.locator('#startWrap').isVisible(), false, 'no start question while a round is going');
+    await page.click('#qtyPlus'); await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.equal(await page.locator('#cfgAsk').isVisible(), true, 'it asks even though the night has begun');
+    assert.match(await text(page, '#askTitle'), /All 3 right now/);
+    await page.click('#askB');
+    await page.waitForTimeout(300);
+    assert.equal((await text(page, '#stashCount')).trim(), '1 of 3 Heineken opened');
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Heineken' }).first().click();
+    await page.click('#qtyPlus'); await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.match(await text(page, '#askBS'), /Adds to your stash of 2/);
+    await page.click('#askB');
+    await page.waitForTimeout(300);
+    assert.equal((await text(page, '#stashCount')).trim(), '2 of 6 Heineken opened', 'the stash grew by the 2 saved for later, and 4 are left');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
   ['start options, then a six pack as a stash you open one by one', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null,
       rounds: [{ id: 'a', start: local(20), end: local(21), drinks: [hein(1)], late: false }] } });
