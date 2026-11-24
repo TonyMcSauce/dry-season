@@ -217,7 +217,7 @@ const checks = [
     const heroText = () => page.evaluate(() => getComputedStyle(document.getElementById('clearTime')).color);
     assert.equal(await bg(), 'rgb(245, 238, 225)', 'follows a light phone by default');
     assert.equal(await heroText(), 'rgb(246, 237, 218)', 'the 3D hero stays at dusk in light mode');
-    await page.click('#bodyDetails summary');
+    await page.click('#settingsBtn');
     await page.click('#themeSeg [data-theme-choice="dark"]');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
     assert.equal(await bg(), 'rgb(22, 18, 14)');
@@ -225,7 +225,7 @@ const checks = [
     assert.equal(await bg(), 'rgb(22, 18, 14)', 'the choice is remembered');
     assert.equal(await page.locator('#themeSeg [data-theme-choice="dark"]').getAttribute('aria-pressed'), 'true');
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.click('#bodyDetails summary');
+    await page.click('#settingsBtn');
     await page.click('#themeSeg [data-theme-choice="light"]');
     assert.equal(await bg(), 'rgb(245, 238, 225)', 'Light wins over a dark phone');
     await page.click('#themeSeg [data-theme-choice="auto"]');
@@ -315,6 +315,102 @@ const checks = [
     await page.getByRole('button', { name: 'Started 15 minutes earlier' }).click();
     await page.getByRole('button', { name: 'Finished 15 minutes later' }).click();
     assert.match(await text(page, '#rounds li'), /19:45 to 21:15/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['Help and Settings open from the top bar; Appearance lives in Settings', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await page.getByRole('button', { name: 'How Dry Season works' }).first().click();
+    assert.equal(await page.locator('#help').isVisible(), true);
+    assert.match(await text(page, '#help'), /Never use this to decide whether you can drive/);
+    await page.click('#helpClose');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    assert.equal(await page.locator('#settings').isVisible(), true);
+    assert.equal((await text(page, '#settings .set-h')).trim(), 'Appearance', 'Appearance comes first');
+    assert.equal(await page.locator('#bodyDetails').count(), 0);
+    await page.click('#themeSeg [data-theme-choice="light"]');
+    await page.click('#settingsClose');
+    assert.match(await text(page, '#setSum'), /75 kg · Male · Light theme/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['a brand new visitor gets the walkthrough once, and can replay it from Help', async (browser, url) => {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.clock.setFixedTime(new Date(2026, 10, 23, 22, 0));
+    await page.goto(url);
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(url); await page.waitForTimeout(1400);
+    assert.equal(await page.locator('#tour').isVisible(), true);
+    assert.equal((await text(page, '#tourStep')).trim(), '1 of 5');
+    for (let i = 0; i < 4; i++) await page.click('#tourNext');
+    assert.equal((await text(page, '#tourNext')).trim(), 'Got it');
+    await page.click('#tourNext');
+    assert.equal(await page.locator('#tour').isVisible(), false);
+    await page.reload(); await page.waitForTimeout(1400);
+    assert.equal(await page.locator('#tour').isVisible(), false, 'only once');
+    await page.click('#helpBtn');
+    await page.click('#helpTour');
+    assert.equal(await page.locator('#tour').isVisible(), true);
+    await page.click('#tourSkip');
+    assert.equal(await page.locator('#tour').isVisible(), false);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['the "All right now?" question follows the count as you change it', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
+    await page.click('#qtyPlus'); await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.match(await text(page, '#askTitle'), /All 3 right now/);
+    for (let i = 0; i < 3; i++) await page.click('#qtyPlus');
+    assert.match(await text(page, '#askTitle'), /All 6 right now/);
+    assert.match(await text(page, '#askA'), /Log all 6/);
+    assert.match(await text(page, '#askB'), /Open 1, save 5 for later/);
+    await page.click('#askB'); await page.waitForTimeout(300);
+    assert.match(await text(page, '#stashCount'), /1 of 6 Corona/);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
+    await page.locator('#startChips .chip', { hasText: 'Just now' }).click().catch(() => {});
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['dropping the count back to 1 puts the question away', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
+    await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.equal(await page.locator('#cfgAsk').isVisible(), true);
+    await page.click('#qtyMinus');
+    assert.equal(await page.locator('#cfgAsk').isVisible(), false);
+    assert.equal(await page.locator('#cfgAdd').isVisible(), true);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['right after logging six, the pill warns you are heading over the limit, never clear', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 59),
+      rounds: [{ id: 'a', start: local(21, 59), end: null, lastAt: local(21, 59), drinks: [hein(6)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    assert.match(await text(page, '#pillText'), /Kicking in: over the limit by \d\d:\d\d/);
+    assert.match(await text(page, '#pillNote'), /still reaching your blood/);
+    assert.equal(await page.evaluate(() => document.getElementById('hero').dataset.state), 'over');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['one drink just logged reads impaired, not clear', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(22),
+      rounds: [{ id: 'a', start: local(22), end: null, lastAt: local(22), drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    assert.doesNotMatch(await text(page, '#pillText'), /Clear/);
     assert.deepEqual(errors, []);
     await page.close();
   }]

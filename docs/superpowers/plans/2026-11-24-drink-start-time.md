@@ -49,7 +49,7 @@ After, also: opening the app 30 minutes or more after your last log, with a roun
 * Browser (`tests/late_check.js`): start chips, stash panel, catch up dialog, One more shortcut, nudges.
 * Existing suites still pass.
 
-## Part 2 (next release)
+## Part 2 (5.4.0)
 * **?** help guide: how it works, logging your night, reading the screen, what it can't know, plus a replayable first run walkthrough.
 * Gear icon opening Settings with **Appearance** first, then **Your body**. Appearance leaves the Your body panel.
 

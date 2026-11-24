@@ -152,3 +152,28 @@ test('the planner extends the round marked live, even when another ends at the s
   assert.ok(slow.ok && fast.ok);
   assert.ok(slow.latestStop > fast.latestStop, `${slow.latestStop} vs ${fast.latestStop}`);
 });
+
+// Status counts alcohol still on its way into your blood
+test('right after logging several drinks, you are heading over the limit, not clear', () => {
+  const now = t0 + 2 * MIN;
+  const sim = M.simulate(base([beer(6)], { start: t0, end: t0 }));
+  const o = M.outlook(sim, now, 0.05);
+  assert.ok(o.b < 0.05, 'blood level is still low this early');
+  assert.equal(o.status, 'over');
+  assert.equal(o.rising, true);
+  assert.ok(o.overAt > now && o.overAt < sim.peakAt, 'crosses the limit before the peak');
+});
+
+test('one drink just logged reads impaired, never clear', () => {
+  const sim = M.simulate(base([beer(1)], { start: t0, end: t0 }));
+  assert.equal(M.outlook(sim, t0 + MIN, 0.05).status, 'impaired');
+});
+
+test('after the peak, the outlook is just where you are now', () => {
+  const sim = M.simulate(base([beer(6)], { start: t0, end: t0 }));
+  const later = sim.peakAt + 2 * H;
+  const o = M.outlook(sim, later, 0.05);
+  assert.equal(o.ahead, o.b);
+  assert.equal(o.rising, false);
+  assert.equal(M.outlook(sim, sim.clear + MIN, 0.05).status, 'clear');
+});
