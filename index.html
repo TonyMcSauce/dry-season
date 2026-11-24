@@ -628,6 +628,49 @@ dialog.sheet::backdrop{background:rgba(6,10,18,.62);backdrop-filter:none;-webkit
 .cfg-foot .preview{border-top:0;padding-top:0}
 #sheet{padding-bottom:0}
 
+/* History, stats, stash and settings (v6) */
+.now-card{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;margin:0 0 16px;padding:12px 16px;border-radius:var(--r-card);border:1px solid var(--line);background:var(--surface);color:var(--text);text-align:left;box-shadow:var(--shadow-soft)}
+.now-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(242,169,59,.22);flex:none}
+.now-body{display:flex;flex-direction:column;flex:1;min-width:0}
+.now-t{font-weight:700}
+.now-s{font-size:.86rem;color:var(--muted)}
+.now-go{font-size:1.6rem;color:var(--muted)}
+.hstats{margin:0 0 16px;padding:16px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
+.hstats dl{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 12px;margin:0}
+.hstats dt{font-size:.78rem;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.hstats dd{margin:2px 0 0;font-family:var(--display);font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.hstats .hint{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.hchart{margin:0 0 22px;padding:16px 14px 8px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
+.hchart .label{margin:0 0 6px 2px;font-weight:600}
+#histH{margin-top:8px}
+.history li{display:block;padding:0;border:0}
+.history li:last-child{border:0}
+.history{display:grid;gap:10px}
+.history .h-month{margin:10px 2px 0;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.history .h-month:first-child{margin-top:0}
+.h-open{display:flex;align-items:center;gap:14px;width:100%;min-height:76px;padding:12px 14px;border-radius:var(--r-card);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-soft)}
+.h-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;width:50px;height:54px;border-radius:14px;background:var(--field);flex:none}
+.h-tile b{font-family:var(--display);font-weight:400;font-size:1.35rem;line-height:1}
+.h-tile i{font-style:normal;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.h-main{display:flex;flex-direction:column;flex:1;min-width:0}
+.h-main .h-date{font-weight:700}
+.h-main .h-meta{font-size:.82rem;color:var(--muted);text-align:left;line-height:1.35;white-space:pre-line}
+.h-peak{display:flex;flex-direction:column;align-items:flex-end;flex:none}
+.h-peak b{font-variant-numeric:tabular-nums}
+.h-peak i{font-style:normal;font-size:.72rem;color:var(--muted)}
+.h-open[data-tone="over"] .h-peak b{color:var(--over)}
+.stash{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:10px}
+.stash li{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 16px;border-radius:var(--r-card);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-soft)}
+.st-main{display:flex;flex-direction:column;flex:1;min-width:0}
+.st-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-meta{font-size:.82rem;color:var(--muted)}
+.st-log{min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--amber);color:var(--ink);font-weight:700;flex:none}
+.st-rm{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:1.4rem;flex:none}
+#stashEmpty{margin:0 0 14px;padding:16px;border-radius:var(--r-card);border:1px dashed var(--line);text-align:center}
+#bodyDetails .settings-body{margin-top:14px;padding:18px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
+body:not([data-tab="tonight"]) .block{padding-top:26px}
+body[data-tab="plan"] #chartBox{padding:14px 10px 6px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
+
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
@@ -821,6 +864,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </section>
 
   <header class="screen-head" data-panel="you"><p class="screen-kicker">Settings</p><h1>You</h1></header>
+  <section class="block" data-panel="you" aria-labelledby="stashH">
+    <h2 id="stashH">Your stash</h2>
+    <ul class="stash" id="stashList"></ul>
+    <p class="hint" id="stashEmpty">Star a drink in the picker and it will live here, ready to log in one tap.</p>
+    <button class="btn quiet" id="stashBrowse" type="button">Browse drinks</button>
+  </section>
   <details class="block" id="bodyDetails" data-panel="you" open>
     <summary><h2>Your body</h2><span class="chev" aria-hidden="true">&#8964;</span></summary>
     <div class="settings-body">
@@ -877,6 +926,24 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   <header class="screen-head" data-panel="history"><p class="screen-kicker">Look back</p><h1>History</h1></header>
   <section class="block" data-panel="history" aria-labelledby="histH" id="histSection">
+    <button class="now-card" id="histNow" type="button" hidden>
+      <span class="now-dot" aria-hidden="true"></span>
+      <span class="now-body"><span class="now-t">Tonight, in progress</span><span class="now-s" id="histNowSub"></span></span>
+      <span class="now-go" aria-hidden="true">&#8250;</span>
+    </button>
+    <div class="hstats" id="hstats" hidden>
+      <dl>
+        <div><dt>Nights</dt><dd id="hsNights">0</dd></div>
+        <div><dt>Drinks</dt><dd id="hsDrinks">0</dd></div>
+        <div><dt>Average peak</dt><dd id="hsAvg">0.000%</dd></div>
+        <div><dt>Highest peak</dt><dd id="hsMax">0.000%</dd></div>
+      </dl>
+      <p class="hint" id="hsOver"></p>
+    </div>
+    <div class="hchart" id="hchartBox" hidden>
+      <p class="label">Peak blood alcohol, recent nights</p>
+      <svg class="chart" id="hchart" viewBox="0 0 360 156" role="img" aria-label="Peak blood alcohol for each recent night"></svg>
+    </div>
     <h2 id="histH">Past nights</h2>
     <ul class="history" id="historyList"></ul>
     <p class="hint" id="histEmpty">No saved nights yet. Save a night from Tonight and it will appear here.</p>
@@ -1428,23 +1495,74 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   // History
   function renderHistory() {
-    const h = state.history || [];
+    const h = state.history || [], limit = state.profile.limit;
+    // Tonight, kept apart from the past
+    const cur = N.summarize(state.session, state.profile, Date.now());
+    $('#histNow').hidden = !cur.G;
+    if (cur.G) $('#histNowSub').textContent = cur.count + (cur.count === 1 ? ' drink' : ' drinks') + ', peak ' + fmtBac(cur.peak);
+    // Totals
+    $('#hstats').hidden = !h.length;
+    if (h.length) {
+      const peaks = h.map((n) => n.peak), over = peaks.filter((v) => v > limit).length;
+      $('#hsNights').textContent = String(h.length);
+      $('#hsDrinks').textContent = String(h.reduce((a, n) => a + n.count, 0));
+      $('#hsAvg').textContent = fmtBac(peaks.reduce((a, v) => a + v, 0) / h.length);
+      $('#hsMax').textContent = fmtBac(Math.max.apply(null, peaks));
+      $('#hsOver').textContent = over === 0 ? 'None of these nights peaked over ' + fmtLimit(limit) + '.'
+        : over + ' of ' + h.length + (h.length === 1 ? ' night' : ' nights') + ' peaked over ' + fmtLimit(limit) + '.';
+    }
+    renderHistChart(h, limit);
+    // The list, newest first, under a heading for each month
     const ul = $('#historyList'); ul.innerHTML = '';
+    let month = '';
     h.slice().reverse().forEach((n) => {
+      const d = new Date(n.start);
+      const m = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      if (m !== month) {
+        month = m;
+        const mh = document.createElement('li'); mh.className = 'h-month'; mh.textContent = m; ul.appendChild(mh);
+      }
       const li = document.createElement('li');
-      const { h: hh, m } = dur(n.clear - n.start);
-      const date = new Date(n.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-      const wrap = document.createElement('button');
-      wrap.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
-      wrap.querySelector('.h-date').textContent = date;
-      wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
-      wrap.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
-      wrap.type = 'button'; wrap.className = 'h-open';
+      const { h: hh, m: mm } = dur(n.clear - n.start);
+      const wrap = document.createElement('button'); wrap.type = 'button'; wrap.className = 'h-open';
+      wrap.innerHTML = '<span class="h-tile"><b></b><i></i></span><span class="h-main"><span class="h-date"></span><span class="h-meta"></span></span><span class="h-peak"><b></b><i></i></span>';
+      wrap.querySelector('.h-tile b').textContent = String(d.getDate());
+      wrap.querySelector('.h-tile i').textContent = d.toLocaleDateString(undefined, { month: 'short' });
+      wrap.querySelector('.h-date').textContent = d.toLocaleDateString(undefined, { weekday: 'long' });
+      wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g\n' + fmtTime(n.start) + ' to ' + fmtTime(n.clear) + ', ' + hh + ' h ' + pad(mm) + ' m';
+      wrap.querySelector('.h-peak b').textContent = fmtBac(n.peak);
+      wrap.querySelector('.h-peak i').textContent = 'peak';
+      wrap.dataset.tone = n.peak > limit ? 'over' : 'under';
       wrap.addEventListener('click', () => openPast(n));
       li.appendChild(wrap);
       ul.appendChild(li);
     });
   }
+  // Peak per night for up to the last ten nights, against the legal limit, drawn to one scale.
+  function renderHistChart(h, limit) {
+    const box = $('#hchartBox'), svg = $('#hchart');
+    box.hidden = h.length < 2;
+    if (h.length < 2) return;
+    const list = h.slice(-10), n = list.length;
+    const W = 360, left = 8, right = 8, top = 22, base = 112;
+    const max = Math.max(0.1, limit * 1.4, Math.max.apply(null, list.map((x) => x.peak)) * 1.15);
+    const y = (v) => base - (v / max) * (base - top);
+    const slot = (W - left - right) / n, bw = Math.min(26, slot * 0.58);
+    let out = '<line x1="' + left + '" x2="' + (W - right) + '" y1="' + base + '" y2="' + base + '" stroke="var(--line)"/>';
+    out += '<line x1="' + left + '" x2="' + (W - right) + '" y1="' + y(limit).toFixed(1) + '" y2="' + y(limit).toFixed(1) + '" stroke="var(--text)" stroke-opacity=".4" stroke-dasharray="3 4"/>';
+    const hi = list.reduce((a, x, k) => (x.peak > list[a].peak ? k : a), 0);
+    list.forEach((x, k) => {
+      const cx = left + slot * (k + 0.5), top0 = y(x.peak), ht = Math.max(2, base - top0);
+      const d = new Date(x.start);
+      out += '<rect x="' + (cx - bw / 2).toFixed(1) + '" y="' + (base - ht).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + ht.toFixed(1) + '" rx="5" fill="' + (x.peak > limit ? 'var(--over)' : 'var(--amber)') + '"/>';
+      if (k === hi || n <= 6) out += '<text class="peak-label" x="' + cx.toFixed(1) + '" y="' + (base - ht - 6).toFixed(1) + '" text-anchor="middle">' + x.peak.toFixed(3) + '</text>';
+      out += '<text x="' + cx.toFixed(1) + '" y="' + (base + 16) + '" text-anchor="middle">' + d.toLocaleDateString(undefined, { weekday: 'short' }) + '</text>';
+      out += '<text x="' + cx.toFixed(1) + '" y="' + (base + 29) + '" text-anchor="middle">' + d.getDate() + '</text>';
+    });
+    out += '<text class="zone-label" style="stroke:var(--surface)" x="' + left + '" y="' + (y(limit) - 6).toFixed(1) + '">Limit ' + fmtLimit(limit) + '</text>';
+    svg.innerHTML = out;
+  }
+  $('#histNow').addEventListener('click', () => setTab('tonight'));
   const past = $('#past');
   function openPast(n) {
     $('#pastTitle').textContent = new Date(n.start).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' });
@@ -1565,7 +1683,28 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const favs = (state.favs || []).filter((f) => !(f.id === id && f.ml === ml));
     state.favs = on ? favs.concat([{ id, ml }]) : favs;
     save();
+    renderStash();
   }
+  // Your stash: the pinned favourites, with a one-tap log and a remove button
+  function renderStash() {
+    const items = (state.favs || []).map(D.favOf).filter(Boolean);
+    const ul = $('#stashList'); ul.innerHTML = '';
+    $('#stashEmpty').hidden = items.length > 0;
+    items.forEach((it) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="st-main"><span class="st-name"></span><span class="st-meta"></span></span><button type="button" class="st-log"></button><button type="button" class="st-rm">&#215;</button>';
+      li.querySelector('.st-name').textContent = it.name;
+      li.querySelector('.st-meta').textContent = it.ml + ' ml' + (it.serve ? ' ' + it.serve : '') + ', ' + it.abv + '%';
+      const log = li.querySelector('.st-log'); log.textContent = 'Log one';
+      log.setAttribute('aria-label', 'Log one ' + it.name + ', ' + it.ml + ' ml');
+      log.addEventListener('click', () => { pickFor = 'tab'; commitDrink({ id: it.id, name: it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1 }); });
+      const rm = li.querySelector('.st-rm');
+      rm.setAttribute('aria-label', 'Remove ' + it.name + ' ' + it.ml + ' ml from your stash');
+      rm.addEventListener('click', () => { setFav(it.id, it.ml, false); toast(it.name + ' ' + it.ml + ' ml removed from your stash'); });
+      ul.appendChild(li);
+    });
+  }
+  $('#stashBrowse').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
   function toggleFav(it, group) {
     const on = !isFav(it.id, it.ml);
     setFav(it.id, it.ml, on);
@@ -2107,7 +2246,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner(); renderQuick();
     if (island) island.update(islandSnap(lastSim));
   }
-  function renderAll() { renderNight(); renderTab(); renderBody(); renderHistory(); buildScale(); renderLive(); }
+  function renderAll() { renderNight(); renderTab(); renderBody(); renderHistory(); renderStash(); buildScale(); renderLive(); }
   buildList();
   renderAll();
   let ticks = 0;

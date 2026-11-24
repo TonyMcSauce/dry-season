@@ -7,5 +7,7 @@ self.DRY_VERSION = '6.0.0';
 self.DRY_CHANGES = [
   'A new look: midnight navy and cream, with a floating bar to move between Tonight, Plan, History and You.',
   'Tonight now leads with a blood alcohol gauge, your risk level, session time and quick actions.',
+  'A faster drink picker: category chips, compact cards and a one-tap add.',
+  'History now shows totals, a peak chart and your nights grouped by month. Your stash of favourites lives under You.',
   'Status messages now appear at the top of the screen.'
 ];
