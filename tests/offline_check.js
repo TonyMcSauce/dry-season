@@ -98,7 +98,7 @@ const freePort = () => new Promise((r) => { const s = http.createServer().listen
     await page.waitForFunction(() => navigator.onLine);
     // Coming back online checks for an update by itself, and the card then covers the tab bar until it is answered.
     const auto = await page.waitForSelector('#coaster.show', { timeout: 8000 }).catch(() => null);
-    if (!auto) { await page.click('[data-go=you]'); await page.click('#checkNow'); await page.waitForSelector('#coaster.show', { timeout: 20000 }); }
+    if (!auto) { await page.click('[data-go=tonight]'); await page.click('#settingsBtn'); await page.click('#checkNow'); await page.waitForSelector('#coaster.show', { timeout: 20000 }); }
     ok('update card appears when a new version is published (' + next + ')');
     await page.click('#updNow');
     await page.waitForFunction((v) => document.getElementById('appVersion').textContent.includes(v), next, { timeout: 30000 });

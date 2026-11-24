@@ -145,6 +145,8 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .hero.three .hero-body{grid-template-columns:1fr}
 .stage-space{height:0}
 .hero.three .stage-space{height:clamp(300px,44svh,380px);pointer-events:none}
+.hero.three.has-another .stage-space{height:clamp(250px,calc(44svh - 70px),320px)}
+.hero.three .another{margin-top:-6px;padding-bottom:6px}
 .hero.three{touch-action:pan-y}
 .hero.three .clear-time,.hero.three .kicker,.hero.three .clear-day{text-shadow:0 1px 14px rgba(0,0,0,.25)}
 .hero.empty .stats{visibility:hidden}
@@ -199,8 +201,28 @@ h2{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;
 .rc-when{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-amber)}
 .rc-what{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-meta{font-size:.8rem;color:var(--muted)}
-.round-card .btn-mini{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600;flex:none}
+.round-card .btn-mini,.rc-actions .btn-mini{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600;flex:none}
 .rounds-empty{margin:0 0 4px}
+.round-card{flex-wrap:wrap}
+.rc-adjust{flex-basis:100%;display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.rc-row{display:flex;align-items:center;gap:8px}
+.rc-row span{flex:1;font-size:.92rem;color:var(--muted)}
+.rc-row b{color:var(--text)}
+.rc-row button{min-height:44px;min-width:64px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600}
+.stash{margin:0 0 12px;padding:14px 16px;border-radius:20px;background:var(--field);border:1px solid rgba(242,169,59,.45);display:grid;gap:12px}
+.stash-count{margin:0;font-weight:700;font-size:1.05rem}
+.stash-dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.stash-dots i{width:14px;height:22px;border-radius:4px 4px 6px 6px;border:1.5px solid var(--amber)}
+.stash-dots i.open{background:var(--amber)}
+.stash-btns{display:grid;grid-template-columns:3fr 2fr;gap:10px}
+.stash-btns .btn{white-space:nowrap;padding-left:12px;padding-right:12px}
+.rc-actions{display:flex;gap:8px;flex:none}
+.rc-actions.wide{flex-basis:100%}
+.rc-actions.wide .btn-mini{flex:1;white-space:nowrap;padding:0 8px}
+.stash .label{margin:0 0 2px}
+.cfg-ask{display:grid;gap:12px}
+.cu-body{padding:22px var(--gutter) 26px;display:grid;gap:16px}
+.cu-step{justify-content:center}
 .li-name{font-weight:700;line-height:1.25}
 .li-meta{font-size:.86rem;color:rgba(42,26,15,.62)}
 .li-g{font-weight:700;white-space:nowrap}
@@ -372,6 +394,24 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 64px);max-width:calc(100vw - 32px);white-space:normal;text-align:center;transform:translate(-50%,-16px);opacity:0;background:var(--text);color:var(--ground);padding:12px 18px;border-radius:22px;font-weight:600;transition:all .3s;z-index:60;pointer-events:none}
 .toast.show{transform:translate(-50%,0);opacity:1}
+/* Hidden means hidden: a faded toast must never catch a tap meant for what is under it */
+.toast{visibility:hidden;transition:all .3s,visibility 0s linear .3s}
+.toast.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition:all .3s}
+.toast.has-undo{display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px}
+.toast.has-undo.show{pointer-events:auto}
+.toast .undo{border:0;border-radius:999px;background:var(--amber);color:var(--ink);font-weight:700;padding:8px 14px;min-height:36px}
+.another{max-width:560px;margin:0 auto;padding:6px 0 14px;display:grid;gap:8px}
+.another-btns{display:flex;gap:10px}
+.another-btns button{flex:1;min-width:0;min-height:52px;border-radius:999px;border:0;background:var(--amber);color:var(--ink);font-weight:700;font-size:1.02rem;padding:0 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.another-btns button.second{background:rgba(22,18,14,.55);color:#F6EDDA;border:1px solid rgba(246,237,218,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.another-btns button:active{transform:scale(.97)}
+.another-hint{margin:0;text-align:center;font-size:.9rem;font-weight:600;color:var(--text);text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.another-hint::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:8px;vertical-align:1px}
+.hero:not(.three).has-another .stats{padding-bottom:14px}
+.hero:not(.three) .another{padding-bottom:160px}
+.li-step{display:flex;gap:6px}
+.li-step button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(42,26,15,.2);background:transparent;color:var(--ink);font-size:1.1rem;line-height:1;display:grid;place-items:center}
+.li-step button.more{background:var(--ink);color:#F6EDDA;border-color:var(--ink)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
 
@@ -455,6 +495,39 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 
 /* ---------- V3: offline, updates, favourites ---------- */
 .brand-wrap{display:flex;align-items:center;gap:10px;min-width:0}
+.top-btns{display:flex;align-items:center;gap:8px;flex:none}
+.ghost.round{width:38px;height:38px;padding:0;display:grid;place-items:center;font-size:1.05rem;font-weight:700}
+.ghost.round svg{width:19px;height:19px}
+.set-link{display:flex;width:100%;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);text-align:left;min-height:64px}
+.set-link > span{flex:1;display:flex;flex-direction:column;gap:2px}
+.set-link strong{font-size:1.02rem}
+.set-link .set-sum{font-size:.88rem;color:var(--muted)}
+.set-link svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.set-pad{padding:6px var(--gutter) 26px}
+.set-sec{display:grid;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}
+.set-sec:last-child{border-bottom:0}
+.set-h{margin:0;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.help-body{padding:8px var(--gutter) 28px;display:grid;gap:4px}
+.help-body section{padding:16px 0;border-bottom:1px solid var(--line)}
+.help-body section:last-of-type{border-bottom:0}
+.help-body h4{margin:0 0 8px;font-family:var(--display);font-weight:400;font-size:1.25rem}
+.help-body p{margin:0 0 10px;line-height:1.5}
+.help-body ul{margin:0 0 6px;padding-left:20px;display:grid;gap:8px;line-height:1.45}
+.help-body li strong{color:var(--text)}
+.help-body .help-lead{font-size:1.02rem;color:var(--muted)}
+.help-body details{margin-top:6px;padding:12px 14px;border-radius:14px;background:var(--field);border:1px solid var(--line)}
+.help-body summary{font-weight:700;cursor:pointer}
+.help-body details[open] summary{margin-bottom:8px}
+.help-safe{display:flex;gap:10px;padding:14px;border-radius:16px;background:rgba(228,111,72,.12);border:1px solid rgba(228,111,72,.4)}
+.help-safe p{margin:0}
+.tour{position:fixed;inset:0;z-index:1000}
+.tour-ring{position:absolute;border-radius:18px;border:2px solid var(--amber);box-shadow:0 0 0 9999px rgba(10,8,6,.74);transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none}
+.tour-card{position:absolute;left:var(--gutter);right:var(--gutter);bottom:calc(16px + env(safe-area-inset-bottom));max-width:528px;margin:0 auto;background:var(--sheet);color:var(--text);border-radius:22px;padding:18px 18px 16px;box-shadow:0 18px 40px rgba(0,0,0,.4);display:grid;gap:8px}
+.tour-card.top{bottom:auto;top:calc(16px + env(safe-area-inset-top))}
+.tour-card h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.35rem}
+.tour-card p{margin:0;line-height:1.45}
+.tour-step{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.tour-btns{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:6px}
 .net{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;animation:netIn .4s ease-out}
 .net i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor}
 @keyframes netIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
@@ -497,6 +570,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
   display:grid;grid-template-columns:1fr auto;gap:4px 14px;
   transform:translateY(140%) rotate(-7deg);transition:transform .7s cubic-bezier(.2,1.25,.4,1);
 }
+.coaster:not(.show){visibility:hidden;transition:transform .7s cubic-bezier(.2,1.25,.4,1),visibility 0s linear .7s}
 .coaster.show{transform:translateY(0) rotate(-1.4deg)}
 .coaster h3{margin:4px 0 4px;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1}
 .coaster p{margin:0;font-size:.95rem;color:rgba(42,26,15,.75)}
@@ -629,6 +703,7 @@ dialog.sheet::backdrop{background:rgba(6,10,18,.62);backdrop-filter:none;-webkit
 .cfg{padding-bottom:0}
 .cfg-foot{position:sticky;bottom:0;display:grid;gap:12px;margin:0 calc(-1 * var(--gutter));padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--sheet);border-top:1px solid var(--line)}
 .cfg-foot .preview{border-top:0;padding-top:0}
+.cfg:has(#cfgAsk:not([hidden])) .cfg-foot{position:static;margin-top:6px}
 #sheet{padding-bottom:0}
 
 /* History, stats, stash and settings (v6) */
@@ -662,14 +737,14 @@ dialog.sheet::backdrop{background:rgba(6,10,18,.62);backdrop-filter:none;-webkit
 .h-peak b{font-variant-numeric:tabular-nums}
 .h-peak i{font-style:normal;font-size:.72rem;color:var(--muted)}
 .h-open[data-tone="over"] .h-peak b{color:var(--over)}
-.stash{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:10px}
-.stash li{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 16px;border-radius:var(--r-card);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-soft)}
+.favs-list{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:10px}
+.favs-list li{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 16px;border-radius:var(--r-card);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-soft)}
 .st-main{display:flex;flex-direction:column;flex:1;min-width:0}
 .st-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .st-meta{font-size:.82rem;color:var(--muted)}
 .st-log{min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--amber);color:var(--ink);font-weight:700;flex:none}
 .st-rm{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:1.4rem;flex:none}
-#stashEmpty{margin:0 0 14px;padding:16px;border-radius:var(--r-card);border:1px dashed var(--line);text-align:center}
+#favEmpty{margin:0 0 14px;padding:16px;border-radius:var(--r-card);border:1px dashed var(--line);text-align:center}
 #bodyDetails .settings-body{margin-top:14px;padding:18px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
 body:not([data-tab="tonight"]) .block{padding-top:26px}
 body[data-tab="plan"] #chartBox{padding:14px 10px 6px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
@@ -714,7 +789,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   <div class="stars" aria-hidden="true"></div>
   <div class="hero-top">
     <div class="brand-wrap"><span class="brand">Dry Season</span><span class="net" id="net" hidden title="No connection. Everything still works."><i aria-hidden="true"></i>Offline</span></div>
-    <button class="ghost" id="shareBtn" type="button">Share</button>
+    <div class="top-btns">
+      <button class="ghost round" id="helpBtn" type="button" aria-label="How Dry Season works">?</button>
+      <button class="ghost round" id="settingsBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <button class="ghost" id="shareBtn" type="button">Share</button>
+    </div>
   </div>
 
   <div class="status" id="statusBlock" hidden>
@@ -777,6 +856,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
 
   <div class="stage-space" id="stageSpace" aria-hidden="true"></div>
+  <div class="another" id="another" hidden>
+    <div class="another-btns" id="anotherBtns"></div>
+    <p class="another-hint" id="anotherHint" role="status" hidden></p>
+  </div>
   <svg class="horizon" id="horizon" viewBox="0 0 400 150" aria-hidden="true">
     <g class="hz-bands"></g>
     <line class="hz-limit" x1="0" x2="400" y1="78" y2="78"/>
@@ -793,7 +876,6 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 <section class="quick" data-panel="tonight" aria-label="Quick actions">
   <button class="btn q-main" id="qaAdd" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Log a drink</button>
   <div class="q-row">
-    <button class="q-btn" id="qaSame" type="button" hidden><span class="q-t">Same again</span><span class="q-s" id="qaSameSub"></span></button>
     <button class="q-btn" id="qaWater" type="button"><span class="q-t" id="qaWaterT">Water break</span><span class="q-s" id="qaWaterSub">Slows the night</span></button>
     <button class="q-btn" id="qaLate" type="button"><span class="q-t">Earlier</span><span class="q-s">Log with times</span></button>
   </div>
@@ -840,7 +922,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <button class="btn quiet" id="textFriend" type="button">Text a friend my status</button>
   </section>
 
-  <section class="block" data-panel="tonight" aria-labelledby="nightH">
+  <section class="block" data-panel="tonight" aria-labelledby="nightH" id="nightSection">
     <h2 id="nightH">The night</h2>
     <ul class="rounds" id="rounds"></ul>
     <p class="hint rounds-empty" id="roundsEmpty">Nothing on tonight's tab yet. Had a few already? Log them with the times you drank.</p>
@@ -866,7 +948,20 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <div class="tab-total" id="tabTotal" hidden><span>Pure alcohol</span><span id="tabTotalVal"></span></div>
     </section>
   </div>
-  <div class="add-row" data-panel="tonight"><button class="btn" id="openPicker" type="button">Add a drink</button></div>
+  <div class="add-row" data-panel="tonight">
+    <div class="stash" id="stash" role="group" aria-labelledby="stashH" hidden>
+      <div>
+        <p class="label" id="stashH">Tonight's stash</p>
+        <p class="stash-count" id="stashCount"></p>
+        <div class="stash-dots" id="stashDots" aria-hidden="true"></div>
+      </div>
+      <div class="stash-btns">
+        <button class="btn" id="stashOpen" type="button">Open next</button>
+        <button class="btn quiet" id="stashClear" type="button">Put away</button>
+      </div>
+    </div>
+    <button class="btn" id="openPicker" type="button">Add a drink</button>
+  </div>
 
   <header class="screen-head" data-panel="plan"><p class="screen-kicker">Ahead of you</p><h1>Plan</h1></header>
   <section class="block" data-panel="plan" aria-labelledby="curveH">
@@ -875,7 +970,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <p class="hint">Estimated blood alcohol from your first sip until your body is clear.</p>
   </section>
 
-  <section class="block" data-panel="plan" aria-labelledby="driveH">
+  <section class="block" data-panel="plan" aria-labelledby="driveH" id="driveSection">
     <h2 id="driveH">Driving soon?</h2>
     <p class="hint" style="margin:0 0 14px">Set when you next need to drive or start a shift. You'll see whether you're likely to be fully clear, with an hour to spare.</p>
     <label class="field">I need to drive at
@@ -889,60 +984,18 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </section>
 
   <header class="screen-head" data-panel="you"><p class="screen-kicker">Settings</p><h1>You</h1></header>
-  <section class="block" data-panel="you" aria-labelledby="stashH">
-    <h2 id="stashH">Your stash</h2>
-    <ul class="stash" id="stashList"></ul>
-    <p class="hint" id="stashEmpty">Star a drink in the picker and it will live here, ready to log in one tap.</p>
-    <button class="btn quiet" id="stashBrowse" type="button">Browse drinks</button>
+  <section class="block" data-panel="you" aria-labelledby="favH">
+    <h2 id="favH">Favourites</h2>
+    <ul class="favs-list" id="favList"></ul>
+    <p class="hint" id="favEmpty">Star a drink in the picker and it will live here, ready to log in one tap.</p>
+    <button class="btn quiet" id="favBrowse" type="button">Browse drinks</button>
   </section>
-  <details class="block" id="bodyDetails" data-panel="you" open>
-    <summary><h2>Your body</h2><span class="chev" aria-hidden="true">&#8964;</span></summary>
-    <div class="settings-body">
-      <label class="field">Weight in kg
-        <input type="number" id="kg" inputmode="decimal" min="35" max="250" step="1">
-      </label>
-      <div>
-        <p class="label">Body type used in the formula</p>
-        <div class="seg" role="group" aria-label="Body type">
-          <button type="button" data-sex="m">Male</button>
-          <button type="button" data-sex="f">Female</button>
-        </div>
-      </div>
-      <div>
-        <div class="range-row"><span class="label" style="margin:0">How fast your body clears alcohol</span><b id="betaVal"></b></div>
-        <input type="range" id="beta" min="0.010" max="0.020" step="0.001">
-        <p class="hint">Most people clear between 0.010% and 0.020% per hour. 0.015% is a typical average.</p>
-      </div>
-      <div>
-        <label class="field">Legal driving limit (% blood alcohol)
-          <input type="number" id="limit" inputmode="decimal" min="0" max="0.2" step="0.01">
-        </label>
-        <div class="chips" id="limitChips" style="margin-top:10px"></div>
-        <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
-      </div>
-      <div>
-        <p class="label">Appearance</p>
-        <div class="seg" id="themeSeg" role="group" aria-label="Appearance">
-          <button type="button" data-theme-choice="auto">Automatic</button>
-          <button type="button" data-theme-choice="light">Light</button>
-          <button type="button" data-theme-choice="dark">Dark</button>
-        </div>
-        <p class="hint">Automatic follows your phone. The night scene at the top always stays at dusk.</p>
-      </div>
-      <label class="switch" style="margin-top:0">
-        <input type="checkbox" id="islandOn">
-        <span class="track" aria-hidden="true"></span>
-        Live island at the top of the screen
-      </label>
-      <div class="appinfo">
-        <div class="appinfo-row">
-          <div><p class="appinfo-ver" id="appVersion">Version</p><p class="hint" id="lastChecked" style="margin:2px 0 0"></p></div>
-          <span class="upd-state" id="updState" data-state="current" aria-live="polite"></span>
-        </div>
-        <button class="btn quiet" id="checkNow" type="button">Check for updates</button>
-      </div>
-    </div>
-  </details>
+  <section class="block" data-panel="you" aria-label="Settings">
+    <button class="set-link" id="openSettings" type="button">
+      <span><strong>Your body and settings</strong><span class="set-sum" id="setSum"></span></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </section>
 
   <aside class="safety" data-panel="tonight">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.4-3.4 8.2-8 9-4.6-.8-8-4.6-8-9V6l8-3z"/><path d="M12 8v5"/><path d="M12 16.5v.01"/></svg>
@@ -989,6 +1042,141 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   <button type="button" data-go="you"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.6-4 3.5-6 7-6s6.4 2 7 6"/></svg><span>You</span></button>
 </nav>
 
+<dialog class="sheet settings" id="settings" aria-labelledby="settingsTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-head">
+    <span style="width:40px" aria-hidden="true"></span>
+    <h3 id="settingsTitle">Settings</h3>
+    <button class="icon-btn" id="settingsClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="set-pad">
+    <section class="set-sec" aria-labelledby="setAppH">
+      <h4 class="set-h" id="setAppH">Appearance</h4>
+        <div>
+          <p class="label">Theme</p>
+          <div class="seg" id="themeSeg" role="group" aria-label="Appearance">
+            <button type="button" data-theme-choice="auto">Automatic</button>
+            <button type="button" data-theme-choice="light">Light</button>
+            <button type="button" data-theme-choice="dark">Dark</button>
+          </div>
+          <p class="hint">Automatic follows your phone. The night scene at the top always stays at dusk.</p>
+        </div>
+    </section>
+    <section class="set-sec" aria-labelledby="setBodyH">
+      <h4 class="set-h" id="setBodyH">Your body</h4>
+        <label class="field">Weight in kg
+          <input type="number" id="kg" inputmode="decimal" min="35" max="250" step="1">
+        </label>
+        <div>
+          <p class="label">Body type used in the formula</p>
+          <div class="seg" role="group" aria-label="Body type">
+            <button type="button" data-sex="m">Male</button>
+            <button type="button" data-sex="f">Female</button>
+          </div>
+        </div>
+        <div>
+          <div class="range-row"><span class="label" style="margin:0">How fast your body clears alcohol</span><b id="betaVal"></b></div>
+          <input type="range" id="beta" min="0.010" max="0.020" step="0.001">
+          <p class="hint">Most people clear between 0.010% and 0.020% per hour. 0.015% is a typical average.</p>
+        </div>
+        <div>
+          <label class="field">Legal driving limit (% blood alcohol)
+            <input type="number" id="limit" inputmode="decimal" min="0" max="0.2" step="0.01">
+          </label>
+          <div class="chips" id="limitChips" style="margin-top:10px"></div>
+          <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
+        </div>
+    </section>
+    <section class="set-sec" aria-labelledby="setScreenH">
+      <h4 class="set-h" id="setScreenH">On screen</h4>
+        <label class="switch" style="margin-top:0">
+          <input type="checkbox" id="islandOn">
+          <span class="track" aria-hidden="true"></span>
+          Live island at the top of the screen
+        </label>
+    </section>
+    <section class="set-sec" aria-labelledby="setAboutH">
+      <h4 class="set-h" id="setAboutH">About</h4>
+      <button class="btn quiet" id="setHelp" type="button">How Dry Season works</button>
+      <button class="btn quiet" id="setTour" type="button">Show me around</button>
+        <div class="appinfo">
+          <div class="appinfo-row">
+            <div><p class="appinfo-ver" id="appVersion">Version</p><p class="hint" id="lastChecked" style="margin:2px 0 0"></p></div>
+            <span class="upd-state" id="updState" data-state="current" aria-live="polite"></span>
+          </div>
+          <button class="btn quiet" id="checkNow" type="button">Check for updates</button>
+        </div>
+    </section>
+  </div>
+</dialog>
+
+<dialog class="sheet help" id="help" aria-labelledby="helpTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-head">
+    <span style="width:40px" aria-hidden="true"></span>
+    <h3 id="helpTitle">How Dry Season works</h3>
+    <button class="icon-btn" id="helpClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="help-body">
+    <section>
+      <p class="help-lead">You tell Dry Season what you drink and when. It estimates how much alcohol is in your blood over time and counts down to when your body should be clear.</p>
+      <button class="btn" id="helpTour" type="button">Show me around</button>
+    </section>
+    <section aria-labelledby="hLog">
+      <h4 id="hLog">Logging your night</h4>
+      <ul>
+        <li><strong>Add a drink</strong> when you open one. If nothing is going yet, choose when you started: just now, a little while ago, or right after your last round.</li>
+        <li><strong>Rounds</strong> are stretches of drinking. Drinks in a round are spread evenly from its start to its end, so it doesn't matter exactly when each one went down.</li>
+        <li><strong>Got a few on hand?</strong> Add them all with Just now and choose <em>Open 1, save the rest for later</em>. Your stash waits on the main screen. Tap <em>Open next</em> each time you crack one.</li>
+        <li><strong>Forgot to log?</strong> No problem. When you come back after a while, the app asks how many you've opened since and spreads them across the gap.</li>
+        <li><strong>Had drinks before opening the app?</strong> Use <em>Log earlier drinks</em> to set a round with the times you drank.</li>
+        <li><strong>Got a time wrong?</strong> Tap <em>Adjust times</em> on any round to move its start or finish by 15 minutes.</li>
+        <li>Tap <strong>Finished drinking</strong> when you're done for the night.</li>
+      </ul>
+    </section>
+    <section aria-labelledby="hFast">
+      <h4 id="hFast">Log without opening the app</h4>
+      <p>On Android, long press the Dry Season icon and tap <strong>One more</strong>. It logs the next drink from your stash, or another of your last drink, in a couple of seconds.</p>
+      <details>
+        <summary>Setting it up on iPhone</summary>
+        <p>iPhones don't show shortcuts on web app icons, but the Shortcuts app can do the same job.</p>
+        <ul>
+          <li>Open <strong>Shortcuts</strong>, tap <strong>+</strong>, add the <strong>Open URLs</strong> action and paste this app's address with <strong>?action=one</strong> at the end.</li>
+          <li>Name it <strong>One more</strong>. You can then run it from a home screen icon, by asking Siri, with <strong>Back Tap</strong> (Settings, Accessibility, Touch, Back Tap), or from the <strong>Action Button</strong> on newer iPhones.</li>
+        </ul>
+      </details>
+    </section>
+    <section aria-labelledby="hRead">
+      <h4 id="hRead">Reading the screen</h4>
+      <ul>
+        <li><strong>Clear by</strong> is when your blood alcohol should reach zero. The countdown runs live.</li>
+        <li><strong>The status pill</strong> tells you whether you're likely under or over your legal limit right now.</li>
+        <li><strong>The night scene</strong> shows your evening as hills: higher hills mean more alcohol. The glass empties as you sober up.</li>
+        <li><strong>The risk scale</strong> shows where you are today, from impaired to danger, with a pacing nudge when you're drinking fast.</li>
+        <li><strong>Driving soon?</strong> Set when you need to drive and you'll see whether you're likely to be clear, with an hour to spare.</li>
+      </ul>
+    </section>
+    <section aria-labelledby="hCant">
+      <h4 id="hCant">What it can't know</h4>
+      <p>Dry Season uses a well known formula with your weight, body type and how fast you clear alcohol. Real bodies vary with food, sleep, health and medication, so every number is an estimate.</p>
+      <div class="help-safe"><p><strong>Never use this to decide whether you can drive.</strong> If you're unsure, don't. Get a lift, take a cab, or stay over.</p></div>
+    </section>
+  </div>
+</dialog>
+
+<div class="tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle" hidden>
+  <div class="tour-ring" id="tourRing"></div>
+  <div class="tour-card" id="tourCard">
+    <p class="tour-step" id="tourStep"></p>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="tour-btns">
+      <button class="btn quiet" id="tourSkip" type="button">Skip</button>
+      <button class="btn" id="tourNext" type="button">Next</button>
+    </div>
+  </div>
+</div>
+
 <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
   <div class="grab" aria-hidden="true"></div>
   <div class="sheet-head">
@@ -1027,6 +1215,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <div class="chips" id="shareChips"></div>
     </div>
     <button class="fav-size" id="cfgFav" type="button" aria-pressed="false" hidden><span class="star" aria-hidden="true"></span><span id="cfgFavText">Save this size as a favourite</span></button>
+    <div id="startWrap" hidden>
+      <p class="label">When did you start?</p>
+      <div class="chips" id="startChips"></div>
+      <label class="field" id="startCustomField" hidden>Started at
+        <input type="time" id="startCustom">
+      </label>
+    </div>
+    <div class="cfg-ask" id="cfgAsk" role="group" aria-labelledby="askTitle" hidden>
+      <h4 class="ov-title" id="askTitle"></h4>
+      <p class="ov-text" id="askText"></p>
+      <button class="ov-choice" id="askA" type="button"><span><strong id="askAT"></strong><span id="askAS"></span></span></button>
+      <button class="ov-choice primary" id="askB" type="button"><span><strong id="askBT"></strong><span id="askBS"></span></span></button>
+    </div>
     <div class="cfg-foot">
       <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
       <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
@@ -1083,6 +1284,21 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
 </dialog>
 
+<dialog class="sheet catchup" id="catchup" aria-labelledby="cuTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="cu-body">
+    <h3 class="ov-title" id="cuTitle">Welcome back</h3>
+    <p class="ov-text" id="cuText"></p>
+    <div class="stepper cu-step">
+      <button type="button" id="cuMinus" aria-label="One fewer">&#8722;</button>
+      <output id="cuN" aria-live="polite">1</output>
+      <button type="button" id="cuPlus" aria-label="One more">+</button>
+    </div>
+    <button class="btn" id="cuLog" type="button" autofocus>Log 1</button>
+    <button class="btn quiet" id="cuNone" type="button">None since then</button>
+  </div>
+</dialog>
+
 <dialog class="sheet past" id="past" aria-labelledby="pastTitle">
   <div class="sheet-head">
     <h3 id="pastTitle">Past night</h3>
@@ -1112,7 +1328,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
 </dialog>
 
-<div class="toast" id="toast" role="status"></div>
+<div class="toast" id="toast" role="status"><span id="toastMsg"></span><button class="undo" id="toastUndo" type="button" hidden>Undo</button></div>
 
 <aside class="coaster" id="coaster" hidden aria-labelledby="coasterH">
   <div>
@@ -1246,7 +1462,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   }
   function layoutScene() {
     const hero = $('#hero'), sp = $('#stageSpace');
-    scene.setLayout({ top: sp.offsetTop + 8, base: hero.clientHeight - 30 });
+    const an = $('#another'), anH = an.hidden ? 0 : an.offsetHeight;
+    scene.setLayout({ top: sp.offsetTop + 8, base: hero.clientHeight - 30 - anH });
   }
   function renderHorizon(sim, now) {
     const o = opts(), rounds = o.rounds;
@@ -1416,6 +1633,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       r.drinks.forEach((d, i) => {
         const li = document.createElement('li');
         const share = d.share < 1 ? ', ' + shareLabel(d.share) + ' each' : '';
+        if (r.end == null) {
+          li.innerHTML = '<div><div class="li-name"></div><div class="li-meta"></div></div><span class="li-g"></span><span class="li-step"><button type="button" class="less">&#8722;</button><button type="button" class="more">+</button></span>';
+          li.querySelector('.li-name').textContent = d.qty + ' × ' + d.name;
+          li.querySelector('.li-meta').textContent = d.ml + ' ml at ' + d.abv + '%' + share;
+          li.querySelector('.li-g').textContent = gramsOf(d).toFixed(1) + ' g';
+          const less = li.querySelector('.less'), more = li.querySelector('.more');
+          less.setAttribute('aria-label', 'One fewer ' + d.name);
+          more.setAttribute('aria-label', 'One more ' + d.name);
+          less.addEventListener('click', () => { nightNote = null; withUndo(() => { state = N.lessOf(state, r.id, N.keyOf(d)); }, 'One fewer ' + d.name); });
+          more.addEventListener('click', () => quickAdd(d));
+          list.appendChild(li);
+          return;
+        }
         li.innerHTML = '<div><div class="li-name"></div><div class="li-meta"></div></div><span class="li-g"></span><button class="rm" type="button">&#215;</button>';
         li.querySelector('.li-name').textContent = d.qty + ' × ' + d.name;
         li.querySelector('.li-meta').textContent = d.ml + ' ml at ' + d.abv + '%' + share;
@@ -1456,16 +1686,43 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       li.querySelector('.rc-when').textContent = roundWhen(r);
       li.querySelector('.rc-what').textContent = roundWhat(r);
       li.querySelector('.rc-meta').textContent = r.end == null ? 'still going' : r.late ? 'logged late' : 'logged as you went';
+      const acts = document.createElement('div'); acts.className = 'rc-actions' + (r.end == null ? ' wide' : '');
       if (r.end == null) {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-mini'; b.textContent = 'Finished drinking';
         b.addEventListener('click', () => { nightNote = null; state = N.finishLive(state, Date.now()); save(); renderAll(); });
-        li.appendChild(b);
+        acts.appendChild(b);
       }
+      li.appendChild(acts);
+      const adj = document.createElement('button'); adj.type = 'button'; adj.className = 'btn-mini'; adj.textContent = adjusting === r.id ? 'Done' : 'Adjust times';
+      adj.setAttribute('aria-expanded', String(adjusting === r.id));
+      adj.addEventListener('click', () => { adjusting = adjusting === r.id ? null : r.id; renderNight(); });
+      acts.appendChild(adj);
+      if (adjusting === r.id) li.appendChild(adjustRow(r));
       ul.appendChild(li);
     });
     $('#roundsEmpty').hidden = rounds.length > 0 || !!nightNote;
     renderNote();
     $('#fed').checked = !!state.session.fed;
+  }
+  // Adjust times: quick 15 minute nudges on a round's start and end
+  let adjusting = null;
+  function adjustRow(r) {
+    const box = document.createElement('div'); box.className = 'rc-adjust';
+    const row = (edge, label, at) => {
+      const d = document.createElement('div'); d.className = 'rc-row';
+      d.innerHTML = '<span></span><button type="button">&#8722;15</button><button type="button">+15</button>';
+      d.querySelector('span').innerHTML = label + ' <b>' + fmtTime(at) + '</b>';
+      const [minus, plus] = d.querySelectorAll('button');
+      minus.setAttribute('aria-label', label + ' 15 minutes earlier');
+      plus.setAttribute('aria-label', label + ' 15 minutes later');
+      const go = (delta) => { nightNote = null; state = N.nudgeRound(state, r.id, edge, delta, Date.now()); save(); renderAll(); };
+      minus.addEventListener('click', () => go(-15 * 60000));
+      plus.addEventListener('click', () => go(15 * 60000));
+      return d;
+    };
+    box.appendChild(row('start', 'Started', r.start));
+    if (r.end != null) box.appendChild(row('end', 'Finished', r.end));
+    return box;
   }
   // The note under the rounds after a late round: what happened and why.
   let nightNote = null;
@@ -1480,6 +1737,65 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     if (outcome.action === 'fresh' && outcome.archived) { toast('New night started. The last one is saved in History.'); return true; }
     return false;
   }
+
+  // Settings, Help and the first run walkthrough
+  const settingsDlg = $('#settings'), helpDlg = $('#help');
+  function renderSetSum() {
+    const t = { auto: 'Automatic', light: 'Light', dark: 'Dark' }[state.profile.theme || 'auto'];
+    $('#setSum').textContent = state.profile.kg + ' kg · ' + (state.profile.sex === 'f' ? 'Female' : 'Male') + ' · ' + t + ' theme';
+  }
+  function openSettings() { if (helpDlg.open) helpDlg.close(); renderBody(); settingsDlg.showModal(); settingsDlg.scrollTop = 0; }
+  function openHelp() { if (settingsDlg.open) settingsDlg.close(); helpDlg.showModal(); helpDlg.scrollTop = 0; }
+  $('#settingsBtn').addEventListener('click', openSettings);
+  $('#openSettings').addEventListener('click', openSettings);
+  $('#settingsClose').addEventListener('click', () => settingsDlg.close());
+  $('#helpBtn').addEventListener('click', openHelp);
+  $('#setHelp').addEventListener('click', openHelp);
+  $('#helpClose').addEventListener('click', () => helpDlg.close());
+  [settingsDlg, helpDlg].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
+  settingsDlg.addEventListener('close', () => { renderSetSum(); });
+
+  const TOUR = [
+    ['.readout', 'Your clear time', 'This is when your body should be free of alcohol. It counts down live as your night goes on.'],
+    ['#qaAdd', 'Log a drink', 'Tap here when you open one and say when you started. Got a few on hand? Save them as a stash and tap Open next as you go.'],
+    ['#nightSection', 'Your night', 'Each round of drinks shows up here. Tap Adjust times to fix when you started or finished, or Log earlier drinks for ones you had before.'],
+    ['#driveSection', 'Driving soon?', 'Set when you need to drive and get a straight answer on whether you\'re likely to be clear in time.'],
+    ['.top-btns', 'Help and settings', 'Tap ? any time for the full guide, and the gear for your body details and Light or Dark mode.']
+  ];
+  let tourAt = -1;
+  const tourEl = $('#tour');
+  function placeTour() {
+    const step = TOUR[tourAt], el = document.querySelector(step[0]);
+    const panel = el && el.closest('[data-panel]');
+    if (panel && document.body.dataset.tab !== panel.dataset.panel) setTab(panel.dataset.panel, false);
+    $('#tourStep').textContent = (tourAt + 1) + ' of ' + TOUR.length;
+    $('#tourTitle').textContent = step[1];
+    $('#tourText').textContent = step[2];
+    $('#tourNext').textContent = tourAt === TOUR.length - 1 ? 'Got it' : 'Next';
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'auto' });
+    requestAnimationFrame(() => {
+      const r = el.getBoundingClientRect(), pad = 8, ring = $('#tourRing');
+      const top = Math.max(4, r.top - pad), h = Math.min(window.innerHeight - 8, r.height + pad * 2);
+      Object.assign(ring.style, { left: (r.left - pad) + 'px', top: top + 'px', width: (r.width + pad * 2) + 'px', height: h + 'px' });
+      $('#tourCard').classList.toggle('top', r.top + r.height / 2 > window.innerHeight * 0.55);
+    });
+  }
+  function startTour() {
+    if (helpDlg.open) helpDlg.close();
+    if (settingsDlg.open) settingsDlg.close();
+    setMeta({ toured: true });
+    setTab('tonight', false);
+    tourAt = 0; tourEl.hidden = false; placeTour();
+    $('#tourNext').focus();
+  }
+  function endTour() { tourEl.hidden = true; tourAt = -1; setTab('tonight'); }
+  $('#tourNext').addEventListener('click', () => { if (tourAt >= TOUR.length - 1) endTour(); else { tourAt++; placeTour(); } });
+  $('#tourSkip').addEventListener('click', endTour);
+  $('#helpTour').addEventListener('click', startTour);
+  $('#setTour').addEventListener('click', startTour);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tourAt >= 0) endTour(); });
+  window.addEventListener('resize', () => { if (tourAt >= 0) placeTour(); });
 
   // Appearance: Automatic follows the phone; Light or Dark is fixed for the whole app
   function applyTheme() {
@@ -1496,6 +1812,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   // Body settings
   function renderBody() {
+    if (typeof renderSetSum === 'function') renderSetSum();
     document.querySelectorAll('#themeSeg [data-theme-choice]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === (state.profile.theme || 'auto'))));
     $('#kg').value = state.profile.kg;
     document.querySelectorAll('[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.profile.sex)));
@@ -1694,7 +2011,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         const add = document.createElement('button'); add.type = 'button'; add.className = 'pick-add';
         add.innerHTML = PLUS;
         add.setAttribute('aria-label', (pickFor === 'late' ? 'Add one ' : 'Log one ') + it.name + ', ' + it.ml + ' ml');
-        add.addEventListener('click', () => commitDrink({ id: it.id, name: it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1 }));
+        add.addEventListener('click', () => quickPick(it));
         row.appendChild(add);
       }
       grid.appendChild(row);
@@ -1711,13 +2028,13 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const favs = (state.favs || []).filter((f) => !(f.id === id && f.ml === ml));
     state.favs = on ? favs.concat([{ id, ml }]) : favs;
     save();
-    renderStash();
+    renderFavs();
   }
-  // Your stash: the pinned favourites, with a one-tap log and a remove button
-  function renderStash() {
+  // Favourites: the pinned drinks, with a one-tap log and a remove button
+  function renderFavs() {
     const items = (state.favs || []).map(D.favOf).filter(Boolean);
-    const ul = $('#stashList'); ul.innerHTML = '';
-    $('#stashEmpty').hidden = items.length > 0;
+    const ul = $('#favList'); ul.innerHTML = '';
+    $('#favEmpty').hidden = items.length > 0;
     items.forEach((it) => {
       const li = document.createElement('li');
       li.innerHTML = '<span class="st-main"><span class="st-name"></span><span class="st-meta"></span></span><button type="button" class="st-log"></button><button type="button" class="st-rm">&#215;</button>';
@@ -1725,14 +2042,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       li.querySelector('.st-meta').textContent = it.ml + ' ml' + (it.serve ? ' ' + it.serve : '') + ', ' + it.abv + '%';
       const log = li.querySelector('.st-log'); log.textContent = 'Log one';
       log.setAttribute('aria-label', 'Log one ' + it.name + ', ' + it.ml + ' ml');
-      log.addEventListener('click', () => { pickFor = 'tab'; commitDrink({ id: it.id, name: it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1 }); });
+      log.addEventListener('click', () => { pickFor = 'tab'; quickPick(it); });
       const rm = li.querySelector('.st-rm');
-      rm.setAttribute('aria-label', 'Remove ' + it.name + ' ' + it.ml + ' ml from your stash');
-      rm.addEventListener('click', () => { setFav(it.id, it.ml, false); toast(it.name + ' ' + it.ml + ' ml removed from your stash'); });
+      rm.setAttribute('aria-label', 'Remove ' + it.name + ' ' + it.ml + ' ml from favourites');
+      rm.addEventListener('click', () => { setFav(it.id, it.ml, false); toast(it.name + ' ' + it.ml + ' ml removed from favourites'); });
       ul.appendChild(li);
     });
   }
-  $('#stashBrowse').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
+  $('#favBrowse').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
   function toggleFav(it, group) {
     const on = !isFav(it.id, it.ml);
     setFav(it.id, it.ml, on);
@@ -1754,6 +2071,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#cfgName').value = pick.name;
     $('#cfgNote').hidden = !it.note; $('#cfgNote').textContent = it.note || '';
     $('#cfgAbv').value = pick.abv; $('#cfgMl').value = pick.ml;
+    resetStart();
     renderCfg();
     sheet.scrollTop = 0;
   }
@@ -1781,6 +2099,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#qty').textContent = pick.qty;
     const valid = pick.abv >= 0 && pick.ml > 0;
     $('#cfgGrams').textContent = valid ? gramsOf(pick).toFixed(1) + ' g' : 'Check the numbers';
+    refreshAsk();
   }
   $('#cfgFav').addEventListener('click', () => {
     if (!pick.id) return;
@@ -1794,22 +2113,218 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   $('#cfgName').addEventListener('input', (e) => { pick.name = e.target.value; });
   $('#qtyMinus').addEventListener('click', () => { pick.qty = Math.max(1, pick.qty - 1); renderCfg(); });
   $('#qtyPlus').addEventListener('click', () => { pick.qty = Math.min(48, pick.qty + 1); renderCfg(); });
-  function commitDrink(p) {
+  /** Add one drink to the round being built in the late sheet. */
+  function addToLate(p) {
     if (!(p.ml > 0) || !(p.abv >= 0) || p.abv > 80) { toast('Check the strength and size'); return; }
     const name = (p.name || '').trim() || 'Custom drink';
-    if (pickFor === 'late') {
-      pickFor = 'tab';
-      sheet.close();
-      changeDrink({ name, abv: p.abv, ml: p.ml, qty: 0, share: p.share }, p.qty);
-      return;
-    }
-    const r = N.addLiveDrink(state, { name, abv: p.abv, ml: p.ml, qty: p.qty, share: p.share }, Date.now());
-    state = r.state;
-    save(); sheet.close(); renderAll();
-    if (!announce(r.outcome)) toast(p.qty + ' × ' + name + ' added');
-    if (island) island.celebrate('pour', { label: '+' + p.qty + ' ' + shortName(name) });
+    pickFor = 'tab';
+    sheet.close();
+    changeDrink({ name, abv: p.abv, ml: p.ml, qty: 0, share: p.share }, p.qty);
   }
-  $('#cfgAdd').addEventListener('click', () => commitDrink(pick));
+  $('#cfgAdd').addEventListener('click', () => {
+    if (!(pick.ml > 0) || !(pick.abv >= 0) || pick.abv > 80) { toast('Check the strength and size'); return; }
+    const name = (pick.name || '').trim() || 'Custom drink';
+    if (pickFor === 'late') { addToLate(pick); return; }
+    askAnswers = {};
+    commitTab(name);
+  });
+
+  // When did you start? Only asked when the drink opens a new round.
+  let startKey = 'now', askAnswers = {}, askKind = null;
+  const AGO = [[15, '15 min ago'], [30, '30 min ago'], [60, '1 hr ago'], [120, '2 hrs ago']];
+  function startOpts(now) {
+    const ch = N.startChoices(N.settle(state, now).session, now);
+    const out = [];
+    if (ch.after != null) out.push(['after', 'Right after your last round (' + fmtTime(ch.after) + ')', ch.after]);
+    out.push(['now', 'Just now', now]);
+    AGO.forEach(([m, l]) => out.push(['m' + m, l, now - m * 60000]));
+    out.push(['custom', 'Custom', null]);
+    return { out, def: ch.after != null ? 'after' : 'now' };
+  }
+  const needsStart = () => pickFor === 'tab' && !N.liveRound(N.settle(state, Date.now()).session);
+  function resetStart() {
+    const now = Date.now();
+    startKey = startOpts(now).def;
+    $('#startCustom').value = fmtTime(round5(now - 30 * 60000));
+    hideAsk();
+    renderStart();
+  }
+  function renderStart() {
+    const show = needsStart();
+    $('#startWrap').hidden = !show;
+    if (!show) return;
+    const box = $('#startChips'); box.innerHTML = '';
+    startOpts(Date.now()).out.forEach(([k, label]) => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
+      c.setAttribute('aria-pressed', String(startKey === k));
+      c.addEventListener('click', () => { startKey = k; hideAsk(); renderStart(); });
+      box.appendChild(c);
+    });
+    $('#startCustomField').hidden = startKey !== 'custom';
+  }
+  /** The chosen start: a custom time later than now means last night. */
+  function startAtValue(now) {
+    if (startKey === 'custom') {
+      const m = /^(\d{1,2}):(\d{2})/.exec($('#startCustom').value || '');
+      if (!m) return now;
+      const d = new Date(now); d.setHours(+m[1], +m[2], 0, 0);
+      return d.getTime() > now ? d.getTime() - 24 * 3600e3 : d.getTime();
+    }
+    const hit = startOpts(now).out.find((o) => o[0] === startKey);
+    return hit && hit[2] != null ? hit[2] : now;
+  }
+  /** "All 6 right now?" for n drinks. */
+  const manyAsk = (n) => ({ kind: 'many', title: 'All ' + n + ' right now?', text: 'Or is this the first of ' + n + ' for the night? Logging all ' + n + ' at once counts them as drunk already.',
+    a: ['Log all ' + n, 'Already had them, or having them at once', { many: 'all' }],
+    b: ['Open 1, save ' + (n - 1) + ' for later', 'Tap Open next as you go', { many: 'stash' }] });
+  function hideAsk() { askKind = null; askAnswers = {}; $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false; }
+  /** The question follows the count: new numbers as it changes, gone when it is back to 1. */
+  function refreshAsk() {
+    if (askKind !== 'many' || $('#cfgAsk').hidden) return;
+    if (pick.qty > 1) ask(manyAsk(pick.qty), true); else hideAsk();
+  }
+  function ask(o, quiet) {
+    askKind = o.kind || null;
+    $('#askTitle').textContent = o.title; $('#askText').textContent = o.text;
+    $('#askAT').textContent = o.a[0]; $('#askAS').textContent = o.a[1];
+    $('#askBT').textContent = o.b[0]; $('#askBS').textContent = o.b[1];
+    $('#askA').onclick = () => { Object.assign(askAnswers, o.a[2]); commitTab(); };
+    $('#askB').onclick = () => { Object.assign(askAnswers, o.b[2]); commitTab(); };
+    $('#cfgAdd').hidden = true; $('#cfgAsk').hidden = false;
+    if (!quiet) $('#cfgAsk').scrollIntoView({ block: 'nearest', behavior: reduceMotionPref() ? 'auto' : 'smooth' });
+  }
+  /** Add the picked drink to tonight, asking first when the answer changes the numbers. */
+  function commitTab(nameIn) {
+    const now = Date.now();
+    const name = nameIn || (pick.name || '').trim() || 'Custom drink';
+    state = N.settle(state, now);
+    const drink = { name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share };
+    const live = N.liveRound(state.session);
+    const startAt = live ? null : startAtValue(now);
+    if (!live && pick.qty > 1 && startKey === 'now' && !askAnswers.many) {
+      return ask(manyAsk(pick.qty));
+    }
+    if (!live && !askAnswers.clash) {
+      const c = N.startClash(state.session, startAt, now);
+      if (c) return ask({ title: 'That was during your last round', text: 'Your last round ran from ' + fmtTime(c.start) + ' to ' + fmtTime(c.end) + '.',
+        a: ['Add to that round', 'It picks up again and keeps going', { clash: 'same' }],
+        b: ['Start right after it (' + fmtTime(c.end) + ')', 'A new round from ' + fmtTime(c.end), { clash: 'after' }] });
+    }
+    const stash = askAnswers.many === 'stash';
+    const r = N.addLiveDrink(state, Object.assign({}, drink, { qty: stash ? 1 : drink.qty }), now, { startAt, choice: askAnswers.clash });
+    state = r.state;
+    if (stash) state = N.setStash(state, drink, drink.qty, 1);
+    askAnswers = {};
+    save(); sheet.close(); renderAll();
+    if (!announce(r.outcome)) toast(stash ? '1 ' + name + ' opened, ' + (drink.qty - 1) + ' saved for later' : drink.qty + ' × ' + name + ' added');
+    if (island) island.celebrate('pour', { label: '+' + (stash ? 1 : drink.qty) + ' ' + shortName(name) });
+  }
+  $('#startCustom').addEventListener('input', hideAsk);
+
+  /** The + on a drink card: one tap while a round is going; otherwise the options open, since a new round needs a start time. */
+  function quickPick(it) {
+    const d = { id: it.id, name: it.name, abv: it.abv, ml: it.ml, share: 1 };
+    if (pickFor === 'late') { addToLate(Object.assign({ qty: 1 }, d)); return; }
+    if (N.liveRound(N.settle(state, Date.now()).session)) { sheet.close(); quickAdd(d); return; }
+    choose(it);
+  }
+  // One tap repeats under the bottle: the stash first, else your last two different drinks
+  let paceHint = '';
+  function quickAdd(d) {
+    withUndo(() => {
+      const r = N.addLiveDrink(state, Object.assign({}, d, { qty: 1 }), Date.now(), { startAt: Date.now(), choice: 'after' });
+      state = r.state; return r.outcome;
+    }, d.name + ' added');
+    if (island) island.celebrate('pour', { label: '+1 ' + shortName(d.name) });
+  }
+  function renderAnother() {
+    const box = $('#another'), btns = $('#anotherBtns'), st = state.session.stash;
+    const recent = N.recentDrinks(state.session, 2);
+    const items = [];
+    if (st) {
+      items.push({ label: 'Open next · ' + (st.total - st.opened) + ' left', aria: 'Open the next ' + st.drink.name + ' from your stash', go: () => withUndo(() => { const r = N.openStash(state, Date.now()); state = r.state; return r.outcome; }, 'Opened another ' + st.drink.name) });
+      const other = recent.find((d) => N.keyOf(Object.assign({ qty: 1 }, d)) !== N.keyOf(Object.assign({ qty: 1 }, st.drink)));
+      if (other) items.push({ label: '+ ' + shortName(other.name), aria: 'Add another ' + other.name, go: () => quickAdd(other) });
+    } else {
+      recent.forEach((d) => items.push({ label: '+ ' + (recent.length > 1 ? shortName(d.name) : 'Another ' + shortName(d.name)), aria: 'Add another ' + d.name + ', ' + d.ml + ' ml', go: () => quickAdd(d) }));
+    }
+    const show = items.length > 0;
+    const was = !box.hidden;
+    box.hidden = !show;
+    $('#hero').classList.toggle('has-another', show);
+    btns.innerHTML = '';
+    items.forEach((it, i) => {
+      const b = document.createElement('button'); b.type = 'button';
+      if (i > 0) b.className = 'second';
+      b.textContent = it.label; b.setAttribute('aria-label', it.aria);
+      b.addEventListener('click', it.go);
+      btns.appendChild(b);
+    });
+    renderPaceHint();
+    if (scene && was !== show) layoutScene();
+  }
+  function renderPaceHint() {
+    const h = $('#anotherHint');
+    const show = !!paceHint && !$('#another').hidden;
+    h.hidden = !show;
+    if (show && h.textContent !== paceHint) h.textContent = paceHint;
+  }
+
+  // Tonight's stash
+  function renderStash() {
+    const st = state.session.stash, box = $('#stash');
+    box.hidden = !st;
+    if (!st) return;
+    $('#stashCount').textContent = st.opened + ' of ' + st.total + ' ' + st.drink.name + ' opened';
+    const dots = $('#stashDots'); dots.innerHTML = '';
+    for (let i = 0; i < st.total; i++) { const d = document.createElement('i'); if (i < st.opened) d.className = 'open'; dots.appendChild(d); }
+    $('#stashOpen').textContent = 'Open next (' + (st.total - st.opened) + ' left)';
+  }
+  function openNext() {
+    const st = state.session.stash;
+    if (!st) return false;
+    const r = N.openStash(state, Date.now());
+    state = r.state; save(); renderAll();
+    if (!announce(r.outcome)) toast(r.outcome.stashDone ? 'Last ' + st.drink.name + ' opened. That was the stash.' : 'Opened another ' + st.drink.name);
+    if (island) island.celebrate('pour', { label: '+1 ' + shortName(st.drink.name) });
+    return true;
+  }
+  $('#stashOpen').addEventListener('click', openNext);
+  $('#stashClear').addEventListener('click', () => { state = N.clearStash(state); save(); renderAll(); toast('Stash put away'); });
+
+  // Catch up: one question when you come back after a while
+  const cu = $('#catchup');
+  let cuN = 1;
+  function cuMax() { const left = N.stashLeft(state.session); return left > 0 ? left : 24; }
+  function renderCu() {
+    $('#cuN').textContent = cuN;
+    $('#cuLog').textContent = 'Log ' + cuN;
+  }
+  function maybeCatchUp() {
+    const now = Date.now();
+    if (document.querySelector('dialog[open]')) return;
+    const settled = N.settle(state, now);
+    if (settled !== state) { state = settled; save(); renderAll(); }
+    if (!N.catchUpDue(state.session, now)) return;
+    const d = N.catchUpDrink(state.session);
+    if (!d) return;
+    const last = Math.max(state.session.loggedAt || 0, (N.liveRound(state.session) || {}).lastAt || 0);
+    const st = state.session.stash;
+    $('#cuText').textContent = (last ? 'You last logged at ' + fmtTime(last) + '. ' : '') + 'How many ' + d.name + ' have you opened since?'
+      + (st ? ' (' + (st.total - st.opened) + ' left in your stash)' : '');
+    cuN = 1; renderCu();
+    cu.showModal();
+  }
+  $('#cuMinus').addEventListener('click', () => { cuN = Math.max(1, cuN - 1); renderCu(); });
+  $('#cuPlus').addEventListener('click', () => { cuN = Math.min(cuMax(), cuN + 1); renderCu(); });
+  $('#cuLog').addEventListener('click', () => {
+    const d = N.catchUpDrink(state.session);
+    const r = N.catchUp(state, cuN, Date.now());
+    state = r.state; save(); cu.close(); renderAll();
+    if (!r.outcome || !announce(r.outcome)) toast(cuN + ' × ' + (d ? d.name : 'drink') + ' added, spread since your last log');
+  });
+  $('#cuNone').addEventListener('click', () => { state = N.catchUp(state, 0, Date.now()).state; save(); cu.close(); });
+  cu.addEventListener('cancel', () => { state = N.catchUp(state, 0, Date.now()).state; save(); });
   sheet.addEventListener('close', () => { if (!late.open) pickFor = 'tab'; });
   $('#openPicker').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
   $('#sheetClose').addEventListener('click', () => sheet.close());
@@ -1972,6 +2487,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const hadRounds = state.session.rounds.length > 0;
     const r = N.addRound(state, cand, now, choice);
     state = r.state;
+    if (r.outcome.action !== 'history') state.session = Object.assign({}, state.session, { loggedAt: now });
     save();
     const o = r.outcome;
     nightNote = o.action === 'history' ? ['Saved to History.', 'That night does not change tonight\'s numbers.']
@@ -2034,7 +2550,34 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   // Toast
   let toastT;
-  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
+  let undoFn = null;
+  /** A short message. With undo, it stays 5 seconds and offers Undo. */
+  function toast(msg, undo) {
+    const t = $('#toast');
+    $('#toastMsg').textContent = msg;
+    undoFn = undo || null;
+    $('#toastUndo').hidden = !undo;
+    t.classList.toggle('has-undo', !!undo);
+    t.classList.add('show'); clearTimeout(toastT);
+    toastT = setTimeout(() => { t.classList.remove('show'); undoFn = null; setTimeout(() => { if (!t.classList.contains('show')) t.classList.remove('has-undo'); }, 350); }, undo ? 5000 : 2200);
+  }
+  $('#toastUndo').addEventListener('click', () => {
+    const f = undoFn; undoFn = null;
+    $('#toast').classList.remove('show', 'has-undo');
+    if (f) f();
+  });
+  /** Run a one tap change with an Undo that puts everything back exactly as it was. */
+  function withUndo(change, msg) {
+    const before = state;
+    const outcome = change();
+    const after = state;
+    save(); renderAll();
+    if (outcome && announce(outcome)) return;
+    toast(msg, () => {
+      if (state !== after) { toast('Too late to undo that one'); return; }
+      state = before; save(); renderAll(); toast('Undone');
+    });
+  }
 
   // Status pill and hero stats
   const hero = $('#hero');
@@ -2045,12 +2588,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       hero.dataset.state = 'none'; $('#statusBlock').hidden = true; $('#underAt').textContent = '--';
       return;
     }
-    const b = bacAt(sim, now);
-    const st = M.status(b, limit);
+    // Alcohol you have drunk keeps reaching your blood for a while, so the status
+    // follows where you are heading, not only the number right now.
+    const o = M.outlook(sim, now, limit), b = o.b, st = o.status;
     hero.dataset.state = st;
     $('#statusBlock').hidden = false;
     $('#pillNote').hidden = st === 'clear';
-    $('#pillText').textContent = st === 'over' ? 'Over the legal limit' : st === 'impaired' ? 'Under the limit, still impaired' : 'Clear, by this estimate';
+    $('#pillText').textContent = st === 'over'
+      ? (o.overAt ? 'Kicking in: over the limit by ' + fmtTime(o.overAt) : 'Over the legal limit')
+      : st === 'impaired' ? (o.rising && b < limit && b < 0.01 ? 'Kicking in: you\'re impaired' : 'Under the limit, still impaired')
+      : 'Clear, by this estimate';
+    $('#pillNote').textContent = o.rising
+      ? 'What you\'ve drunk is still reaching your blood, so your level will keep climbing to about ' + fmtBac(o.ahead) + '. Get a lift, take a cab, or wait until you\'re clear.'
+      : 'Any alcohol slows your reactions. Get a lift, take a cab, or wait until you\'re clear.';
     const u = M.underLimitAt(sim, limit);
     $('#underAt').textContent = u === null ? 'Never over' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u));
   }
@@ -2125,6 +2675,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     if (!risk.reasons.length) add(state.session.fed ? 'Steady pace, with food' : 'Steady pace so far', false);
 
     let msg = '';
+    paceHint = '';
     if (risk.level !== 'low' && bNow > 0) {
       const last = N.lastDrink(state.session);
       const name = last ? last.name : 'drink';
@@ -2135,6 +2686,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
           : 'Water and something to eat will help. Stay with people you trust.';
       } else if (sim.peak >= T.blackout) {
         msg = 'Switch to water for now. Another ' + name + ' would take you deeper into the blackout zone.';
+        paceHint = 'Water first: you\'re in the blackout zone';
       } else {
         const unitG = M.gramsOf(Object.assign({}, last, { qty: 1 }));
         const peakGap = cachedGap(o, now, unitG);
@@ -2145,18 +2697,23 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         if (gap === null) msg = 'Switch to water for now. Another ' + name + ' would push you into the blackout zone.';
         else if (gap === 0) msg = "You're drinking fast. If you have another " + name + ', sip it slowly with water alongside.';
         else msg = "You're drinking fast. Wait about " + fmtGap(gap) + ' before your next ' + name + ', and have some water in between.';
+        paceHint = gap === null ? 'Water first: another would push you into the blackout zone'
+          : gap === 0 ? 'Fast pace: sip slowly, with water alongside'
+          : 'Wait about ' + fmtGap(gap) + ' for a safer pace';
       }
     }
     $('#nudge').hidden = !msg;
     $('#nudgeText').textContent = msg;
+    renderPaceHint();
   }
 
   $('#textFriend').addEventListener('click', async () => {
     const sim = lastSim || simulate(), now = Date.now();
-    const b = bacAt(sim, now), st = M.status(b, state.profile.limit);
+    const o = M.outlook(sim, now, state.profile.limit), b = o.b, st = o.status;
     const text = (!sim.G || st === 'clear')
       ? "Checking in: my Dry Season estimate says I'm clear."
-      : 'Checking in from Dry Season. My estimate is ' + fmtBac(b) + (st === 'over' ? ', over the legal limit' : ', under the limit but still impaired')
+      : 'Checking in from Dry Season. My estimate is ' + fmtBac(b) + (o.rising ? ' and still climbing to about ' + fmtBac(o.ahead) : '')
+        + (st === 'over' ? (o.overAt ? ', heading over the legal limit' : ', over the legal limit') : ', under the limit but still impaired')
         + ", so I'm not driving. I should be fully clear around " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '.';
     try {
       if (navigator.share) { await navigator.share({ text }); return; }
@@ -2208,7 +2765,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   function islandSnap(sim) {
     const now = Date.now(), limit = state.profile.limit, has = sim.G > 0;
     const b = has ? bacAt(sim, now) : 0;
-    const st = has ? M.status(b, limit) : 'clear';
+    const st = has ? M.outlook(sim, now, limit).status : 'clear';
     const u = has ? M.underLimitAt(sim, limit) : null;
     const L = N.lastDrink(state.session);
     const clearAt = sim.clear || now;
@@ -2232,7 +2789,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     state = r.state;
     save(); renderAll();
     const g = M.gramsOf({ abv: d.abv, ml: d.ml, qty: 1, share });
-    if (!announce(r.outcome) && (!island || island.view === 'gone')) toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
+    if (!announce(r.outcome) && (d.toast || !island || island.view === 'gone')) toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
     if (island) island.celebrate('pour', { label: '+1 ' + shortName(d.name) });
   }
   function toggleWater() {
@@ -2258,15 +2815,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   // Quick actions under the hero
   function renderQuick() {
     const L = N.lastDrink(state.session), now = Date.now();
-    $('#qaSame').hidden = !L;
-    if (L) $('#qaSameSub').textContent = '+1 ' + shortName(L.name);
     const w = state.session.water, on = !!(w && w.until && w.until > now);
     $('#qaWaterT').textContent = on ? 'End break' : 'Water break';
     $('#qaWaterSub').textContent = on ? Math.max(1, Math.ceil((w.until - now) / 60000)) + ' min left' : 'Slows the night';
     $('#qaWater').setAttribute('aria-pressed', on ? 'true' : 'false');
   }
   $('#qaAdd').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
-  $('#qaSame').addEventListener('click', () => { const L = N.lastDrink(state.session); if (L) addFromIsland(L); });
   $('#qaWater').addEventListener('click', toggleWater);
   $('#qaLate').addEventListener('click', () => openLate());
 
@@ -2276,7 +2830,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner(); renderQuick();
     if (island) island.update(islandSnap(lastSim));
   }
-  function renderAll() { renderNight(); renderTab(); renderBody(); renderHistory(); renderStash(); buildScale(); renderLive(); }
+  function renderAll() { renderNight(); renderStash(); renderAnother(); renderTab(); renderBody(); renderSetSum(); renderHistory(); renderFavs(); buildScale(); renderLive(); }
   buildList();
   renderAll();
   let ticks = 0;
@@ -2315,7 +2869,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   }
   function reduceMotionPref() { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; }
   $('#islandOn').addEventListener('change', (e) => { state.profile.island = e.target.checked; save(); if (island) island.setEnabled(e.target.checked); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderAll(); maybeCatchUp(); } });
 
 
   // ---------- Offline and updates ----------
@@ -2377,6 +2931,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   async function showCoaster() {
     if (!reg || !reg.waiting || coasterDismissed || pouring) return;
     const c = $('#coaster');
+    if ($('#settings').open) $('#settings').close();
     waitingVersion = await askVersion(reg.waiting);
     const v = waitingVersion ? (waitingVersion.endsWith('.0') ? waitingVersion.slice(0, -2) : waitingVersion) : 'New';
     $('#stamp').textContent = v;
@@ -2430,7 +2985,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     (self.DRY_CHANGES || []).forEach((t) => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
     $('#news').showModal();
   }
-  $('#newsOk').addEventListener('click', () => $('#news').close());
+  $('#newsOk').addEventListener('click', () => { $('#news').close(); setTimeout(maybeCatchUp, 300); });
   $('#news').addEventListener('click', (e) => { if (e.target === $('#news')) $('#news').close(); });
 
   const wait = drainPour();
@@ -2500,10 +3055,22 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   });
   try { setTab(sessionStorage.getItem('dry-tab') || 'tonight', false); } catch (e) {}
 
-  // Home screen shortcut: Add a drink
-  if (new URLSearchParams(location.search).get('action') === 'add') {
-    history.replaceState(null, '', location.pathname);
+  // Home screen shortcuts: Add a drink, and One more
+  const action = new URLSearchParams(location.search).get('action');
+  if (action) history.replaceState(null, '', location.pathname);
+  if (action === 'add') {
     setTimeout(() => { buildList(); showList(); sheet.showModal(); }, wait);
+  } else if (action === 'one') {
+    setTimeout(() => {
+      if (openNext()) return;
+      const L = N.lastDrink(state.session);
+      if (L) addFromIsland(Object.assign({}, L, { toast: true }));
+      else { buildList(); showList(); sheet.showModal(); }
+    }, wait);
+  } else if (!hadData && !appMeta().toured) {
+    setTimeout(() => { if (!document.querySelector('dialog[open]')) startTour(); }, wait + 600);
+  } else {
+    setTimeout(maybeCatchUp, wait + 400);
   }
 })();
 </script>
