@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.0.8';
+self.DRY_VERSION = '6.0.9';
 self.DRY_CHANGES = [
+  'A calmer Tonight screen: one status pill, one card for your level, peak, time under the limit, session and blackout risk, and the night hills sit lower behind the drinks. The long note under the status is one line you can open, and it stays open when you are over the limit.',
   'Fixed: after you tap Finished drinking, the app no longer asks how many you opened since. Your stash stays, and a new drink starts a new night.',
   'Messages fade out again instead of vanishing, and phones without 3D now get a readable, shorter Tonight screen.',
   'A stash for more than one drink: 2 Corona and 4 Silver can sit side by side. The newest opens first, and you can open any of them from the stash card on Tonight.',

@@ -339,13 +339,11 @@
       const fillGr = x.createLinearGradient(0, 40, 0, 300);
       fillGr.addColorStop(0, pal.bacHill); fillGr.addColorStop(1, mix(pal.bacHill, pal.ground, 0.6));
       x.fillStyle = fillGr; x.fill(new Path2D(g.area));
-      x.save(); x.setLineDash([10, 14]); x.strokeStyle = 'rgba(246,237,218,.35)'; x.lineWidth = 2;
-      x.beginPath(); x.moveTo(-BAC_PAD, g.limitY); x.lineTo(1024, g.limitY); x.stroke(); x.restore();
       if (g.ghost) { x.save(); x.setLineDash([4, 8]); x.strokeStyle = 'rgba(246,237,218,.6)'; x.lineWidth = 3; x.stroke(new Path2D(g.ghost)); x.restore(); }
-      x.save(); x.shadowColor = 'rgba(242,169,59,.8)'; x.shadowBlur = 18; x.strokeStyle = pal.ridge; x.lineWidth = 6; x.lineJoin = 'round';
+      x.save(); x.shadowColor = 'rgba(242,169,59,.55)'; x.shadowBlur = 10; x.strokeStyle = pal.ridge; x.lineWidth = 6; x.lineJoin = 'round';
       x.stroke(new Path2D(g.ridge)); x.restore();
       x.font = '700 22px "Schibsted Grotesk", sans-serif'; x.fillStyle = 'rgba(246,237,218,.8)';
-      if (g.bands.length > 1) g.bands.forEach((b) => x.fillText(b.label, Math.max(6, b.x + 6), Math.max(30, g.limitY - 14)));
+      if (g.bands.length > 1) g.bands.forEach((b) => x.fillText(b.label, Math.max(6, b.x + 6), Math.max(30, Math.min(g.limitY - 14, 60))));
       if (view.sim.clear > view.now) { x.save(); x.shadowColor = 'rgba(246,237,218,.9)'; x.shadowBlur = 16; x.fillStyle = '#F6EDDA'; x.beginPath(); x.arc(g.moonX, 288, 9, 0, 7); x.fill(); x.restore(); }
       x.fillStyle = '#E46F48'; x.strokeStyle = pal.ground; x.lineWidth = 4; x.beginPath(); x.arc(g.nowX, g.nowY, 11, 0, 7); x.fill(); x.stroke();
       bacTex.needsUpdate = true; dirty = true;
@@ -374,7 +372,8 @@
       // The night's hills span the view at their depth, with room to slide when tilting
       const vw = 2 * (dist + 5) * Math.tan(17 * Math.PI / 180) * camera.aspect * 1.35;
       bacPlane.scale.set(vw, vw * 320 / 1024, 1);
-      bacPlane.position.set(LOOK.x, bacPlane.scale.y * (300 / 320 - 0.5), -5);
+      // The night's hills sit lower, behind the drinks, so the instrument card above them has clean sky.
+      bacPlane.position.set(LOOK.x, bacPlane.scale.y * (300 / 320 - 0.5) - 0.9, -5);
       // Tell the page where the sun sits on screen, so its soft glow overlay can breathe exactly there.
       camera.position.set(LOOK.x, LOOK.y + 0.25, dist); camera.lookAt(LOOK); camera.updateMatrixWorld();
       const sp = sun.position.clone().project(camera);
