@@ -375,6 +375,11 @@
       const vw = 2 * (dist + 5) * Math.tan(17 * Math.PI / 180) * camera.aspect * 1.35;
       bacPlane.scale.set(vw, vw * 320 / 1024, 1);
       bacPlane.position.set(LOOK.x, bacPlane.scale.y * (300 / 320 - 0.5), -5);
+      // Tell the page where the sun sits on screen, so its soft glow overlay can breathe exactly there.
+      camera.position.set(LOOK.x, LOOK.y + 0.25, dist); camera.lookAt(LOOK); camera.updateMatrixWorld();
+      const sp = sun.position.clone().project(camera);
+      host.style.setProperty('--sun-x', ((sp.x * 0.5 + 0.5) * W).toFixed(0) + 'px');
+      host.style.setProperty('--sun-y', ((-sp.y * 0.5 + 0.5) * Hh).toFixed(0) + 'px');
       dirty = true;
     }
     let drag = null;
