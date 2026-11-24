@@ -51,7 +51,7 @@
     const THREE = root.THREE;
     if (!THREE || !canvas) return null;
     let renderer;
-    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' }); }
+    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: (root.devicePixelRatio || 1) < 2, alpha: false, powerPreference: 'low-power' }); }
     catch (e) { return null; }
     if (!renderer.getContext()) return null;
     if (THREE.ColorManagement) THREE.ColorManagement.legacyMode = false;
@@ -407,7 +407,7 @@
         const bubbling = level > 0.05 && !reduce();
         bubbles.visible = level > 0.05;
         bubClock += dt;
-        if (bubbling && bubClock > 0.05) { stepBubbles(bubClock); bubClock = 0; dirty = true; }
+        if (bubbling && bubClock > 0.07) { stepBubbles(bubClock); bubClock = 0; dirty = true; }
         if (dirty) {
           camera.position.set(LOOK.x + tilt.x * 0.9, LOOK.y + 0.25 - tilt.y * 0.5, dist);
           camera.lookAt(LOOK);

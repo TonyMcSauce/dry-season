@@ -403,7 +403,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .another{max-width:560px;margin:0 auto;padding:6px 0 14px;display:grid;gap:8px}
 .another-btns{display:flex;gap:10px}
 .another-btns button{flex:1;min-width:0;min-height:52px;border-radius:999px;border:0;background:var(--amber);color:var(--ink);font-weight:700;font-size:1.02rem;padding:0 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 22px rgba(0,0,0,.28)}
-.another-btns button.second{background:rgba(22,18,14,.55);color:#F6EDDA;border:1px solid rgba(246,237,218,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.another-btns button.second{background:rgba(22,18,14,.78);color:#F6EDDA;border:1px solid rgba(246,237,218,.35)}
 .another-btns button:active{transform:scale(.97)}
 .another-hint{margin:0;text-align:center;font-size:.9rem;font-weight:600;color:var(--text);text-shadow:0 1px 8px rgba(0,0,0,.45)}
 .another-hint::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:8px;vertical-align:1px}
@@ -649,7 +649,7 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
 .gauge svg{display:block;width:100%;height:auto;overflow:visible}
 .g-track,.g-fill{fill:none;stroke-width:9;stroke-linecap:round}
 .g-track{stroke:rgba(246,237,218,.16)}
-.g-fill{stroke:var(--ok);stroke-dasharray:0 100;transition:stroke-dasharray 1s var(--ease),stroke .6s,filter .6s;filter:drop-shadow(0 0 6px var(--glow))}
+.g-fill{stroke:var(--ok);stroke-dasharray:0 100;transition:stroke-dasharray 1s var(--ease),stroke .6s}
 .hero[data-state="impaired"] .g-fill{stroke:var(--impaired)}
 .hero[data-state="over"] .g-fill{stroke:var(--over)}
 .g-limit{stroke:var(--foam);stroke-width:2.5;stroke-linecap:round;opacity:.85}
@@ -662,7 +662,6 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
 .vitals .stats div{text-align:center}
 .estimate-note{margin:10px 0 0;text-align:center;font-size:.78rem;color:var(--muted)}
 .hero.empty .vitals{display:none}
-.hero.three .stage-space{height:clamp(210px,28svh,290px)}
 .hero.three .vitals{padding-bottom:22px}
 .hero:not(.three) .vitals{padding-bottom:168px}
 .quick{max-width:560px;margin:0 auto;padding:18px var(--gutter) 0}
@@ -771,6 +770,24 @@ dialog.sheet[open]::backdrop{animation:fadeIn .3s ease both}
 .h-open:active,.now-card:active,.cat:active,.chip:active,.st-log:active{transform:scale(.97)}
 .toast{transition:transform .35s var(--ease),opacity .25s}
 
+/* Compact hero (v6.1): gauge and stats side by side */
+.vitals{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:4px 14px;align-items:center;margin-top:8px}
+.vitals .gauge{width:100%;max-width:none;margin:0;padding:10px 12px 4px;border-radius:var(--r-card);background:rgba(14,21,34,.55);border:1px solid rgba(246,237,218,.1)}
+.vitals .g-read{bottom:6px}
+.g-read b{font-size:1.75rem}
+.g-label{font-size:.68rem}
+.g-sub{display:none}
+.v-panel{margin:0;padding:10px 12px;background:rgba(14,21,34,.55)}
+.vitals .stats{display:grid;grid-template-columns:1fr;gap:6px}
+.vitals .stats div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;text-align:left}
+.vitals .stats dt{font-size:.72rem;line-height:1.15}
+.vitals .stats dd{font-size:.92rem;white-space:nowrap;text-align:right}
+.estimate-note{grid-column:1/-1;margin:4px 0 0}
+.pill-note{font-size:.8rem}
+.hero.three .stage-space,.hero.three.has-another .stage-space{height:clamp(170px,22svh,215px)}
+.hero.three .vitals{padding-bottom:6px}
+.another{padding-bottom:10px}
+
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
@@ -851,8 +868,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <div><dt id="limitLabel">Under 0.05%</dt><dd id="underAt">--</dd></div>
       <div><dt>Session</dt><dd id="sessLen">--</dd></div>
     </dl>
-    <p class="estimate-note">An estimate only. It cannot show you are sober or fit to drive.</p>
     </div>
+    <p class="estimate-note">An estimate only. It cannot show you are sober or fit to drive.</p>
   </div>
 
   <div class="stage-space" id="stageSpace" aria-hidden="true"></div>
@@ -1465,6 +1482,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const an = $('#another'), anH = an.hidden ? 0 : an.offsetHeight;
     scene.setLayout({ top: sp.offsetTop + 8, base: hero.clientHeight - 30 - anH });
   }
+  // Keep the drinks standing in their strip whenever the hero changes height (status shows, buttons appear, rotation).
+  if (scene && window.ResizeObserver) new ResizeObserver(() => layoutScene()).observe($('#hero'));
   function renderHorizon(sim, now) {
     const o = opts(), rounds = o.rounds;
     let prevSim = null;
@@ -1480,6 +1499,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       if (!sceneStarted) { sceneStarted = true; scene.setNight(view); } else scene.update(view);
     }
   }
+  const setText = (el, v) => { if (el.textContent !== v) el.textContent = v; };
   // BAC gauge: a half ring from 0 to SCALE_MAX, with a tick at the legal limit.
   function renderGauge(b, sim, now) {
     const f = Math.max(0, Math.min(1, b / SCALE_MAX));
@@ -1498,15 +1518,15 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     }
     $('#sessLen').textContent = sess;
   }
-  function renderHero(sim) {
+  function renderHero(sim, light) {
     const now = Date.now();
-    renderHorizon(sim, now);
+    if (!light) renderHorizon(sim, now);
     $('#hero').classList.toggle('empty', !sim.G);
     const bNow = bacAt(sim, now);
     let frac = 0;
     if (!sim.G) {
-      els.kicker.textContent = 'Tonight';
-      els.time.textContent = 'Clear';
+      setText(els.kicker, 'Tonight');
+      setText(els.time, 'Clear');
       els.day.textContent = 'Nothing on the tab yet. Your first pour starts the clock.';
     } else if (now < sim.start) {
       els.kicker.textContent = 'Clear by';
@@ -1514,7 +1534,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       els.day.textContent = dayLabel(sim.clear) + '. Your start time is still ahead.';
     } else if (now >= sim.clear) {
       els.kicker.textContent = "You're";
-      els.time.textContent = 'Clear';
+      setText(els.time, 'Clear');
       els.day.textContent = 'Clear since ' + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Still worth a glass of water.';
     } else {
       const { h, m, s } = dur(sim.clear - now);
@@ -1524,8 +1544,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       frac = sim.peak > 0 ? Math.min(1, bNow / sim.peak) : 0;
       if (bNow === 0 && now < sim.clear) frac = 0.04;
     }
-    els.nowBac.textContent = fmtBac(bNow);
-    els.peakBac.textContent = fmtBac(sim.peak);
+    setText(els.nowBac, fmtBac(bNow));
+    setText(els.peakBac, fmtBac(sim.peak));
     renderGauge(bNow, sim, now);
     const y = 198 - frac * 182;               // 198 = empty, 16 = brim
     els.liquid.style.transform = 'translateY(' + y.toFixed(1) + 'px)';
@@ -2840,9 +2860,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       const settled = N.settle(state, Date.now());
       if (settled !== state) { state = settled; save(); renderAll(); }
     }
-    if (isLive()) lastSim = simulate();
-    renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim);
-    if (isLive() || ticks % 30 === 0) renderChart(lastSim);
+    // Per second: only the countdown and gauge. The heavier parts follow the minute-scale pace of the estimate.
+    if (isLive() && ticks % 15 === 0) lastSim = simulate();
+    renderHero(lastSim, ticks % 10 !== 0);
+    if (ticks % 5 === 0) renderStatus(lastSim);
+    if (ticks % 10 === 0) renderRisk(lastSim);
+    if ((isLive() && ticks % 30 === 0) || ticks % 60 === 0) renderChart(lastSim);
     if (ticks % 15 === 0) renderPlanner();
     if (ticks % 10 === 0) renderQuick();
     if (island) island.update(islandSnap(lastSim));
