@@ -13,7 +13,7 @@ const M = require('../model.js');
 
 const ROOT = path.join(__dirname, '..');
 const local = (h, m = 0, d = 23) => new Date(2026, 10, d, h, m).getTime();
-const stashRows = (page) => page.$$eval('#stashRows li', (rows) => rows.map((r) => r.querySelector('.sr-name').textContent + ':' + r.querySelector('.sr-left').textContent.replace(' left', '')));
+const stashRows = (page) => page.$$eval('#stashRows li', (rows) => rows.map((r) => r.querySelector('.sr-name').textContent + ':' + (/(\d+)/.exec(r.querySelector('.sr-left').textContent) || [0, '1'])[1]));
 const stashEditRows = (page) => page.$$eval('#stashEdit li', (rows) => rows.map((r) => r.querySelector('.se-name').textContent + ':' + r.querySelector('.se-n').textContent));
 const hein = (qty) => ({ name: 'Heineken', abv: 5, ml: 330, qty, share: 1 });
 const PROFILE = { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true };
