@@ -383,8 +383,11 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;background:var(--text);color:var(--ground);padding:12px 18px;border-radius:999px;font-weight:600;transition:all .3s;z-index:60;pointer-events:none;white-space:nowrap}
-.toast.show{transform:translate(-50%,0);opacity:1}
-.toast.has-undo{bottom:calc(128px + env(safe-area-inset-bottom));pointer-events:auto;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px}
+/* Hidden means hidden: a faded toast must never catch a tap meant for what is under it */
+.toast{visibility:hidden;transition:all .3s,visibility 0s linear .3s}
+.toast.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition:all .3s}
+.toast.has-undo{bottom:calc(128px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px}
+.toast.has-undo.show{pointer-events:auto}
 .toast .undo{border:0;border-radius:999px;background:var(--amber);color:var(--ink);font-weight:700;padding:8px 14px;min-height:36px}
 .another{max-width:560px;margin:0 auto;padding:6px 0 14px;display:grid;gap:8px}
 .another-btns{display:flex;gap:10px}
@@ -556,6 +559,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
   display:grid;grid-template-columns:1fr auto;gap:4px 14px;
   transform:translateY(140%) rotate(-7deg);transition:transform .7s cubic-bezier(.2,1.25,.4,1);
 }
+.coaster:not(.show){visibility:hidden;transition:transform .7s cubic-bezier(.2,1.25,.4,1),visibility 0s linear .7s}
 .coaster.show{transform:translateY(0) rotate(-1.4deg)}
 .coaster h3{margin:4px 0 4px;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1}
 .coaster p{margin:0;font-size:.95rem;color:rgba(42,26,15,.75)}
@@ -2192,11 +2196,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#toastUndo').hidden = !undo;
     t.classList.toggle('has-undo', !!undo);
     t.classList.add('show'); clearTimeout(toastT);
-    toastT = setTimeout(() => { t.classList.remove('show'); undoFn = null; }, undo ? 5000 : 2200);
+    toastT = setTimeout(() => { t.classList.remove('show'); undoFn = null; setTimeout(() => { if (!t.classList.contains('show')) t.classList.remove('has-undo'); }, 350); }, undo ? 5000 : 2200);
   }
   $('#toastUndo').addEventListener('click', () => {
     const f = undoFn; undoFn = null;
-    $('#toast').classList.remove('show');
+    $('#toast').classList.remove('show', 'has-undo');
     if (f) f();
   });
   /** Run a one tap change with an Undo that puts everything back exactly as it was. */
