@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.1.0';
+self.DRY_VERSION = '6.1.1';
 self.DRY_CHANGES = [
+  'Under the hood: the page is now split into separate style and script files. Nothing changes in how it looks or works.',
   'Stash polish: a drink running low (two or fewer) is flagged, with Restock on Tonight and Buy more in History to refill it in two taps. Plan now shows what you have on hand.',
   'A calmer Tonight screen: one status pill, one card for your level, peak, time under the limit, session and blackout risk, and the night hills sit lower behind the drinks. The long note under the status is one line you can open, and it stays open when you are over the limit.',
   'Fixed: after you tap Finished drinking, the app no longer asks how many you opened since. Your stash stays, and a new drink starts a new night.',

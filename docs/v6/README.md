@@ -7,7 +7,8 @@ edited from History, and the catch-up question only asks about the current eveni
 
 ## How the app is built (unchanged)
 
-A no-build static PWA. One controller script in `index.html` keeps a single `state` object in `localStorage`
+A no-build static PWA. `index.html` is the markup only; the styles are in `app.css` and the controller script in `app.js`.
+The controller keeps a single `state` object in `localStorage`
 (`dryseason.v1`, plus `dryseason.app` for update and walkthrough flags) and repaints with `render*` functions.
 `model.js` (Widmark absorption, Michaelis-Menten elimination, risk, drive planner), `night.js` (rounds, stash,
 start times, catch-up), `drinks.js`, `scene3d.js` (three.js hero), `mug.js` and `island.js` (the in-app Live Island,
