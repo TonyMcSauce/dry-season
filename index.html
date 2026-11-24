@@ -598,6 +598,36 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
 .q-s{font-size:.76rem;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .q-btn[aria-pressed="true"]{border-color:var(--amber)}
 
+/* Drink sheet (v6) */
+dialog.sheet{border-radius:28px 28px 0 0;box-shadow:0 -18px 50px -20px rgba(0,0,0,.6)}
+dialog.sheet::backdrop{background:rgba(6,10,18,.62);backdrop-filter:none;-webkit-backdrop-filter:none}
+.sheet-head{border-bottom:0;padding:10px var(--gutter) 6px}
+.sheet-head h3{font-size:1.35rem}
+.cats{display:flex;gap:8px;padding:6px var(--gutter) 2px;overflow-x:auto;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:600;font-size:.95rem;transition:background .2s,color .2s}
+.cat[aria-pressed="true"]{background:var(--text);color:var(--sheet);border-color:var(--text)}
+.pick-group{padding:12px var(--gutter) calc(22px + env(safe-area-inset-bottom))}
+.pick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pick-row{position:relative;display:block;border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--shadow-soft);min-width:0}
+.pick-row.custom{grid-column:1/-1}
+.pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:112px;padding:14px 52px 14px 14px;text-align:left;border-radius:inherit;background:transparent;border:0}
+.pick-name{font-weight:700;font-size:1rem;line-height:1.22;overflow-wrap:anywhere}
+.pick-meta{color:var(--muted);font-size:.84rem}
+.abv-pill{margin-top:auto;padding:3px 10px;font-size:.82rem}
+.pick-row.custom .pick{min-height:76px;padding-right:14px}
+.pick-row .star{position:absolute;top:2px;right:2px;width:44px;height:44px}
+.pick-add{position:absolute;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;border:0;background:var(--amber);color:var(--ink);display:grid;place-items:center;box-shadow:0 6px 14px -6px rgba(242,169,59,.7);transition:transform .15s}
+.pick-add:active{transform:scale(.9)}
+.pick-add svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.stepper{justify-content:center;gap:22px;padding:6px 0}
+.stepper button{width:56px;height:56px;font-size:1.6rem}
+.stepper output{font-size:2.6rem;min-width:2.2ch}
+.cfg{padding-bottom:0}
+.cfg-foot{position:sticky;bottom:0;display:grid;gap:12px;margin:0 calc(-1 * var(--gutter));padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--sheet);border-top:1px solid var(--line)}
+.cfg-foot .preview{border-top:0;padding-top:0}
+#sheet{padding-bottom:0}
+
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
@@ -905,8 +935,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <div class="chips" id="shareChips"></div>
     </div>
     <button class="fav-size" id="cfgFav" type="button" aria-pressed="false" hidden><span class="star" aria-hidden="true"></span><span id="cfgFavText">Save this size as a favourite</span></button>
-    <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
-    <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
+    <div class="cfg-foot">
+      <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
+      <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
+    </div>
   </div>
 </dialog>
 
@@ -1475,36 +1507,54 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   // A favourite is a drink in a size, so the same beer can be a favourite as a 330 ml and a 440 ml.
   const isFav = (id, ml) => (state.favs || []).some((f) => f.id === id && f.ml === ml);
   const favKey = (it) => it.id + '|' + it.ml;
+  let pickCat = null;
+  const CAT_NAMES = { 'Favourites': 'Favourites', 'Brewed in Botswana': 'Botswana', 'From across the border': 'Regional', 'Anything else': 'Other' };
+  const PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   function buildList(popId, popGroup) {
     const box = $('#pickList'), y = sheet.scrollTop; box.innerHTML = '';
     const favItems = (state.favs || []).map(D.favOf).filter(Boolean);
     const groups = (favItems.length ? [{ group: 'Favourites', items: favItems, favs: true }] : []).concat(DRINKS);
+    if (!pickCat || !groups.some((g) => g.group === pickCat)) pickCat = groups[0].group;
+    const cats = document.createElement('div'); cats.className = 'cats'; cats.setAttribute('role', 'group'); cats.setAttribute('aria-label', 'Drink categories');
     groups.forEach((g) => {
-      const wrap = document.createElement('div'); wrap.className = 'pick-group' + (g.favs ? ' favs' : '');
-      const h = document.createElement('h4'); h.textContent = g.group; wrap.appendChild(h);
-      g.items.forEach((it) => {
-        const row = document.createElement('div'); row.className = 'pick-row';
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'pick';
-        b.innerHTML = '<span><span class="pick-name"></span><br><span class="pick-meta"></span></span><span class="abv-pill"></span>';
-        b.querySelector('.pick-name').textContent = it.name;
-        b.querySelector('.pick-meta').textContent = it.custom ? 'Wine, spirits, ciders, anything' : 'Usually ' + it.ml + ' ml' + (it.serve ? ' ' + it.serve : '');
-        b.querySelector('.abv-pill').textContent = it.custom ? 'Set it' : it.abv + '%';
-        b.addEventListener('click', () => choose(it));
-        row.appendChild(b);
-        if (!it.custom) {
-          const st = document.createElement('button'); st.type = 'button'; st.className = 'star';
-          st.innerHTML = STAR;
-          const on = isFav(it.id, it.ml);
-          st.dataset.id = favKey(it); st.dataset.group = g.group;
-          st.setAttribute('aria-pressed', String(on));
-          st.setAttribute('aria-label', (on ? 'Remove ' : 'Add ') + it.name + ' ' + it.ml + ' ml' + (on ? ' from favourites' : ' to favourites'));
-          st.addEventListener('click', () => toggleFav(it, g.group));
-          row.appendChild(st);
-        }
-        wrap.appendChild(row);
-      });
-      box.appendChild(wrap);
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'cat';
+      c.textContent = CAT_NAMES[g.group] || g.group;
+      c.setAttribute('aria-pressed', String(g.group === pickCat));
+      c.addEventListener('click', () => { pickCat = g.group; buildList(); sheet.scrollTop = 0; });
+      cats.appendChild(c);
     });
+    box.appendChild(cats);
+    const g = groups.find((x) => x.group === pickCat);
+    const wrap = document.createElement('div'); wrap.className = 'pick-group' + (g.favs ? ' favs' : '');
+    const grid = document.createElement('div'); grid.className = 'pick-grid';
+    g.items.forEach((it) => {
+      const row = document.createElement('div'); row.className = 'pick-row' + (it.custom ? ' custom' : '');
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pick';
+      b.innerHTML = '<span class="pick-name"></span><span class="pick-meta"></span><span class="abv-pill"></span>';
+      b.querySelector('.pick-name').textContent = it.custom ? 'Something else' : it.name;
+      b.querySelector('.pick-meta').textContent = it.custom ? 'Wine, spirits, ciders, anything' : it.ml + ' ml' + (it.serve ? ' ' + it.serve : '');
+      b.querySelector('.abv-pill').textContent = it.custom ? 'Set your own' : it.abv + '%';
+      b.addEventListener('click', () => choose(it));
+      row.appendChild(b);
+      if (!it.custom) {
+        const st = document.createElement('button'); st.type = 'button'; st.className = 'star';
+        st.innerHTML = STAR;
+        const on = isFav(it.id, it.ml);
+        st.dataset.id = favKey(it); st.dataset.group = g.group;
+        st.setAttribute('aria-pressed', String(on));
+        st.setAttribute('aria-label', (on ? 'Remove ' : 'Add ') + it.name + ' ' + it.ml + ' ml' + (on ? ' from favourites' : ' to favourites'));
+        st.addEventListener('click', () => toggleFav(it, g.group));
+        row.appendChild(st);
+        const add = document.createElement('button'); add.type = 'button'; add.className = 'pick-add';
+        add.innerHTML = PLUS;
+        add.setAttribute('aria-label', (pickFor === 'late' ? 'Add one ' : 'Log one ') + it.name + ', ' + it.ml + ' ml');
+        add.addEventListener('click', () => commitDrink({ id: it.id, name: it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1 }));
+        row.appendChild(add);
+      }
+      grid.appendChild(row);
+    });
+    wrap.appendChild(grid);
+    box.appendChild(wrap);
     sheet.scrollTop = y;
     if (popId) {
       const el = box.querySelector('.star[data-id="' + popId + '"][data-group="' + popGroup + '"]');
@@ -1575,21 +1625,22 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   $('#cfgName').addEventListener('input', (e) => { pick.name = e.target.value; });
   $('#qtyMinus').addEventListener('click', () => { pick.qty = Math.max(1, pick.qty - 1); renderCfg(); });
   $('#qtyPlus').addEventListener('click', () => { pick.qty = Math.min(48, pick.qty + 1); renderCfg(); });
-  $('#cfgAdd').addEventListener('click', () => {
-    if (!(pick.ml > 0) || !(pick.abv >= 0) || pick.abv > 80) { toast('Check the strength and size'); return; }
-    const name = (pick.name || '').trim() || 'Custom drink';
+  function commitDrink(p) {
+    if (!(p.ml > 0) || !(p.abv >= 0) || p.abv > 80) { toast('Check the strength and size'); return; }
+    const name = (p.name || '').trim() || 'Custom drink';
     if (pickFor === 'late') {
       pickFor = 'tab';
       sheet.close();
-      changeDrink({ name, abv: pick.abv, ml: pick.ml, qty: 0, share: pick.share }, pick.qty);
+      changeDrink({ name, abv: p.abv, ml: p.ml, qty: 0, share: p.share }, p.qty);
       return;
     }
-    const r = N.addLiveDrink(state, { name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share }, Date.now());
+    const r = N.addLiveDrink(state, { name, abv: p.abv, ml: p.ml, qty: p.qty, share: p.share }, Date.now());
     state = r.state;
     save(); sheet.close(); renderAll();
-    if (!announce(r.outcome)) toast(pick.qty + ' × ' + name + ' added');
-    if (island) island.celebrate('pour', { label: '+' + pick.qty + ' ' + shortName(name) });
-  });
+    if (!announce(r.outcome)) toast(p.qty + ' × ' + name + ' added');
+    if (island) island.celebrate('pour', { label: '+' + p.qty + ' ' + shortName(name) });
+  }
+  $('#cfgAdd').addEventListener('click', () => commitDrink(pick));
   sheet.addEventListener('close', () => { if (!late.open) pickFor = 'tab'; });
   $('#openPicker').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
   $('#sheetClose').addEventListener('click', () => sheet.close());
