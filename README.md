@@ -4,6 +4,7 @@ A small, good looking web app that estimates when your body will be clear of alc
 
 ## New in 5.4: help and settings
 
+* **Honest status while alcohol kicks in.** Right after you log drinks, your blood level is still low but climbing. The status now follows where you're heading, so it reads *Kicking in: over the limit by 22:09* rather than *Clear*.
 * **A ? button** at the top opens a short guide: how it works, logging your night, logging without opening the app (with iPhone setup), reading the screen, and what the app can't know.
 * **Settings** behind the gear: *Appearance* first, then *Your body*, the live island and app updates. The main page keeps a summary row that opens it.
 * **Show me around.** A five step walkthrough of the main screen. New visitors see it once; anyone can replay it from Help or Settings.

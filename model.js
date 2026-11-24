@@ -130,6 +130,25 @@
     return 'clear';
   }
 
+  /**
+   * Where you stand, counting alcohol already drunk but still reaching your blood.
+   * Right after a drink the blood level is near zero while the peak is still to
+   * come, so the status follows the higher of now and the peak ahead.
+   * overAt: when you will cross the limit, if you are under it now but heading over.
+   */
+  function outlook(sim, now, limit) {
+    const b = bacAt(sim, now);
+    const ahead = sim.G > 0 && sim.peakAt > now ? Math.max(b, sim.peak) : b;
+    let overAt = null;
+    if (b <= limit && ahead > limit) {
+      const from = Math.max(0, Math.floor((now - sim.start) / MIN) - 1);
+      for (let i = from; i < sim.points.length; i++) {
+        if (sim.points[i] > limit) { overAt = sim.start + (i + 1) * MIN; break; }
+      }
+    }
+    return { b, ahead, rising: ahead > b + CLEAR, status: status(ahead, limit), overAt };
+  }
+
   /** Blackout risk from peak, rise rate, pace and food. */
   function blackoutRisk({ peak, rise, perHour, fed }) {
     let score = 0;
@@ -198,7 +217,7 @@
 
   const api = {
     ETHANOL, STD_G, CLEAR, KM, THRESHOLDS, gramsOf, roundsOf, stopAt, simulate, bacAt, underLimitAt,
-    riseRate, stdLastHour, status, blackoutRisk, pacingGap, drivePlan
+    riseRate, stdLastHour, status, outlook, blackoutRisk, pacingGap, drivePlan
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryModel = api;

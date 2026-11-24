@@ -360,6 +360,60 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['the "All right now?" question follows the count as you change it', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
+    await page.click('#qtyPlus'); await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.match(await text(page, '#askTitle'), /All 3 right now/);
+    for (let i = 0; i < 3; i++) await page.click('#qtyPlus');
+    assert.match(await text(page, '#askTitle'), /All 6 right now/);
+    assert.match(await text(page, '#askA'), /Log all 6/);
+    assert.match(await text(page, '#askB'), /Open 1, save 5 for later/);
+    await page.click('#askB'); await page.waitForTimeout(300);
+    assert.match(await text(page, '#stashCount'), /1 of 6 Corona/);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
+    await page.locator('#startChips .chip', { hasText: 'Just now' }).click().catch(() => {});
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['dropping the count back to 1 puts the question away', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await page.click('#openPicker');
+    await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
+    await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.equal(await page.locator('#cfgAsk').isVisible(), true);
+    await page.click('#qtyMinus');
+    assert.equal(await page.locator('#cfgAsk').isVisible(), false);
+    assert.equal(await page.locator('#cfgAdd').isVisible(), true);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['right after logging six, the pill warns you are heading over the limit, never clear', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 59),
+      rounds: [{ id: 'a', start: local(21, 59), end: null, lastAt: local(21, 59), drinks: [hein(6)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    assert.match(await text(page, '#pillText'), /Kicking in: over the limit by \d\d:\d\d/);
+    assert.match(await text(page, '#pillNote'), /still reaching your blood/);
+    assert.equal(await page.evaluate(() => document.getElementById('hero').dataset.state), 'over');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['one drink just logged reads impaired, not clear', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(22),
+      rounds: [{ id: 'a', start: local(22), end: null, lastAt: local(22), drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    assert.doesNotMatch(await text(page, '#pillText'), /Clear/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {

@@ -1708,6 +1708,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#qty').textContent = pick.qty;
     const valid = pick.abv >= 0 && pick.ml > 0;
     $('#cfgGrams').textContent = valid ? gramsOf(pick).toFixed(1) + ' g' : 'Check the numbers';
+    refreshAsk();
   }
   $('#cfgFav').addEventListener('click', () => {
     if (!pick.id) return;
@@ -1735,7 +1736,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   });
 
   // When did you start? Only asked when the drink opens a new round.
-  let startKey = 'now', askAnswers = {};
+  let startKey = 'now', askAnswers = {}, askKind = null;
   const AGO = [[15, '15 min ago'], [30, '30 min ago'], [60, '1 hr ago'], [120, '2 hrs ago']];
   function startOpts(now) {
     const ch = N.startChoices(N.settle(state, now).session, now);
@@ -1751,8 +1752,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const now = Date.now();
     startKey = startOpts(now).def;
     $('#startCustom').value = fmtTime(round5(now - 30 * 60000));
-    askAnswers = {};
-    $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false;
+    hideAsk();
     renderStart();
   }
   function renderStart() {
@@ -1763,7 +1763,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     startOpts(Date.now()).out.forEach(([k, label]) => {
       const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
       c.setAttribute('aria-pressed', String(startKey === k));
-      c.addEventListener('click', () => { startKey = k; askAnswers = {}; $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false; renderStart(); });
+      c.addEventListener('click', () => { startKey = k; hideAsk(); renderStart(); });
       box.appendChild(c);
     });
     $('#startCustomField').hidden = startKey !== 'custom';
@@ -1779,14 +1779,25 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const hit = startOpts(now).out.find((o) => o[0] === startKey);
     return hit && hit[2] != null ? hit[2] : now;
   }
-  function ask(o) {
+  /** "All 6 right now?" for n drinks. */
+  const manyAsk = (n) => ({ kind: 'many', title: 'All ' + n + ' right now?', text: 'Or is this the first of ' + n + ' for the night? Logging all ' + n + ' at once counts them as drunk already.',
+    a: ['Log all ' + n, 'Already had them, or having them at once', { many: 'all' }],
+    b: ['Open 1, save ' + (n - 1) + ' for later', 'Tap Open next as you go', { many: 'stash' }] });
+  function hideAsk() { askKind = null; askAnswers = {}; $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false; }
+  /** The question follows the count: new numbers as it changes, gone when it is back to 1. */
+  function refreshAsk() {
+    if (askKind !== 'many' || $('#cfgAsk').hidden) return;
+    if (pick.qty > 1) ask(manyAsk(pick.qty), true); else hideAsk();
+  }
+  function ask(o, quiet) {
+    askKind = o.kind || null;
     $('#askTitle').textContent = o.title; $('#askText').textContent = o.text;
     $('#askAT').textContent = o.a[0]; $('#askAS').textContent = o.a[1];
     $('#askBT').textContent = o.b[0]; $('#askBS').textContent = o.b[1];
     $('#askA').onclick = () => { Object.assign(askAnswers, o.a[2]); commitTab(); };
     $('#askB').onclick = () => { Object.assign(askAnswers, o.b[2]); commitTab(); };
     $('#cfgAdd').hidden = true; $('#cfgAsk').hidden = false;
-    $('#cfgAsk').scrollIntoView({ block: 'nearest', behavior: reduceMotionPref() ? 'auto' : 'smooth' });
+    if (!quiet) $('#cfgAsk').scrollIntoView({ block: 'nearest', behavior: reduceMotionPref() ? 'auto' : 'smooth' });
   }
   /** Add the picked drink to tonight, asking first when the answer changes the numbers. */
   function commitTab(nameIn) {
@@ -1797,10 +1808,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     const live = N.liveRound(state.session);
     const startAt = live ? null : startAtValue(now);
     if (!live && pick.qty > 1 && startKey === 'now' && !askAnswers.many) {
-      const n = pick.qty;
-      return ask({ title: 'All ' + n + ' right now?', text: 'Or is this the first of ' + n + ' for the night? Logging all ' + n + ' at once counts them as drunk already.',
-        a: ['Log all ' + n, 'Already had them, or having them at once', { many: 'all' }],
-        b: ['Open 1, save ' + (n - 1) + ' for later', 'Tap Open next as you go', { many: 'stash' }] });
+      return ask(manyAsk(pick.qty));
     }
     if (!live && !askAnswers.clash) {
       const c = N.startClash(state.session, startAt, now);
@@ -1817,7 +1825,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     if (!announce(r.outcome)) toast(stash ? '1 ' + name + ' opened, ' + (drink.qty - 1) + ' saved for later' : drink.qty + ' × ' + name + ' added');
     if (island) island.celebrate('pour', { label: '+' + (stash ? 1 : drink.qty) + ' ' + shortName(name) });
   }
-  $('#startCustom').addEventListener('input', () => { askAnswers = {}; $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false; });
+  $('#startCustom').addEventListener('input', hideAsk);
 
   // Tonight's stash
   function renderStash() {
@@ -2110,12 +2118,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       hero.dataset.state = 'none'; $('#statusBlock').hidden = true; $('#underAt').textContent = '--';
       return;
     }
-    const b = bacAt(sim, now);
-    const st = M.status(b, limit);
+    // Alcohol you have drunk keeps reaching your blood for a while, so the status
+    // follows where you are heading, not only the number right now.
+    const o = M.outlook(sim, now, limit), b = o.b, st = o.status;
     hero.dataset.state = st;
     $('#statusBlock').hidden = false;
     $('#pillNote').hidden = st === 'clear';
-    $('#pillText').textContent = st === 'over' ? 'Over the legal limit' : st === 'impaired' ? 'Under the limit, still impaired' : 'Clear, by this estimate';
+    $('#pillText').textContent = st === 'over'
+      ? (o.overAt ? 'Kicking in: over the limit by ' + fmtTime(o.overAt) : 'Over the legal limit')
+      : st === 'impaired' ? (o.rising && b < limit && b < 0.01 ? 'Kicking in: you\'re impaired' : 'Under the limit, still impaired')
+      : 'Clear, by this estimate';
+    $('#pillNote').textContent = o.rising
+      ? 'What you\'ve drunk is still reaching your blood, so your level will keep climbing to about ' + fmtBac(o.ahead) + '. Get a lift, take a cab, or wait until you\'re clear.'
+      : 'Any alcohol slows your reactions. Get a lift, take a cab, or wait until you\'re clear.';
     const u = M.underLimitAt(sim, limit);
     $('#underAt').textContent = u === null ? 'Never over' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u));
   }
@@ -2215,10 +2230,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   $('#textFriend').addEventListener('click', async () => {
     const sim = lastSim || simulate(), now = Date.now();
-    const b = bacAt(sim, now), st = M.status(b, state.profile.limit);
+    const o = M.outlook(sim, now, state.profile.limit), b = o.b, st = o.status;
     const text = (!sim.G || st === 'clear')
       ? "Checking in: my Dry Season estimate says I'm clear."
-      : 'Checking in from Dry Season. My estimate is ' + fmtBac(b) + (st === 'over' ? ', over the legal limit' : ', under the limit but still impaired')
+      : 'Checking in from Dry Season. My estimate is ' + fmtBac(b) + (o.rising ? ' and still climbing to about ' + fmtBac(o.ahead) : '')
+        + (st === 'over' ? (o.overAt ? ', heading over the legal limit' : ', over the legal limit') : ', under the limit but still impaired')
         + ", so I'm not driving. I should be fully clear around " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '.';
     try {
       if (navigator.share) { await navigator.share({ text }); return; }
@@ -2270,7 +2286,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   function islandSnap(sim) {
     const now = Date.now(), limit = state.profile.limit, has = sim.G > 0;
     const b = has ? bacAt(sim, now) : 0;
-    const st = has ? M.status(b, limit) : 'clear';
+    const st = has ? M.outlook(sim, now, limit).status : 'clear';
     const u = has ? M.underLimitAt(sim, limit) : null;
     const L = N.lastDrink(state.session);
     const clearAt = sim.clear || now;
