@@ -13,6 +13,8 @@ const M = require('../model.js');
 
 const ROOT = path.join(__dirname, '..');
 const local = (h, m = 0, d = 23) => new Date(2026, 10, d, h, m).getTime();
+const stashRows = (page) => page.$$eval('#stashRows li', (rows) => rows.map((r) => r.querySelector('.sr-name').textContent + ':' + r.querySelector('.sr-left').textContent.replace(' left', '')));
+const stashEditRows = (page) => page.$$eval('#stashEdit li', (rows) => rows.map((r) => r.querySelector('.se-name').textContent + ':' + r.querySelector('.se-n').textContent));
 const hein = (qty) => ({ name: 'Heineken', abv: 5, ml: 330, qty, share: 1 });
 const PROFILE = { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true };
 
@@ -251,20 +253,20 @@ const checks = [
     assert.match(await text(page, '#askTitle'), /All 3 right now/);
     await page.click('#askB');
     await page.waitForTimeout(300);
-    assert.equal((await text(page, '#stashCount')).trim(), '1 of 3 Heineken opened');
+    assert.deepEqual(await stashRows(page), ['Heineken:2']);
     await page.click('#openPicker');
     await page.locator('#pickList .pick', { hasText: 'Heineken' }).first().click();
     await page.click('#qtyPlus'); await page.click('#qtyPlus');
     await page.click('#cfgAdd');
-    assert.match(await text(page, '#askBS'), /Adds to your stash of 2/);
+    assert.match(await text(page, '#askBS'), /Adds to the 2 Heineken in your stash/);
     await page.click('#askB');
     await page.waitForTimeout(300);
-    assert.equal((await text(page, '#stashCount')).trim(), '2 of 6 Heineken opened', 'the stash grew by the 2 saved for later, and 4 are left');
+    assert.deepEqual(await stashRows(page), ['Heineken:4'], 'the stash grew by the 2 saved for later');
     assert.deepEqual(errors, []);
     await page.close();
   }]
   ,
-  ['start options, then a six pack as a stash you open one by one', async (browser, url) => {
+  ['start options, then a six pack as a stash you open one by one, and finishing keeps the rest', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null,
       rounds: [{ id: 'a', start: local(20), end: local(21), drinks: [hein(1)], late: false }] } });
     const { page, errors } = await open(browser, url, saved);
@@ -279,12 +281,13 @@ const checks = [
     assert.match(await text(page, '#askTitle'), /All 6 right now/);
     await page.click('#askB');
     await page.waitForTimeout(300);
-    assert.equal((await text(page, '#stashCount')).trim(), '1 of 6 Heineken opened');
-    await page.click('#stashOpen');
-    assert.equal((await text(page, '#stashCount')).trim(), '2 of 6 Heineken opened');
+    assert.deepEqual(await stashRows(page), ['Heineken:5']);
+    await page.click('#stashRows .sr-open');
+    assert.deepEqual(await stashRows(page), ['Heineken:4']);
     assert.match(await text(page, '#rounds li:last-child'), /22:00 to now/);
     await page.getByRole('button', { name: 'Finished drinking' }).click();
-    assert.equal(await page.locator('#stash').isVisible(), false, 'finishing puts the stash away');
+    assert.equal(await page.locator('#stash').isVisible(), true, 'finishing the night keeps what is left in the fridge');
+    assert.deepEqual(await stashRows(page), ['Heineken:4']);
     assert.deepEqual(errors, []);
     await page.close();
   }]
@@ -317,7 +320,7 @@ const checks = [
     await page.click('#cuPlus');
     await page.click('#cuLog');
     await page.waitForTimeout(300);
-    assert.equal((await text(page, '#stashCount')).trim(), '3 of 6 Heineken opened');
+    assert.deepEqual(await stashRows(page), ['Heineken:3']);
     assert.match(await text(page, '#rounds li'), /3 × Heineken/);
     await page.reload(); await page.waitForTimeout(800);
     assert.equal(await page.locator('#catchup').isVisible(), false, 'quiet right after');
@@ -403,7 +406,7 @@ const checks = [
     assert.match(await text(page, '#askA'), /Log all 6/);
     assert.match(await text(page, '#askB'), /Open 1, save 5 for later/);
     await page.click('#askB'); await page.waitForTimeout(300);
-    assert.match(await text(page, '#stashCount'), /1 of 6 Corona/);
+    assert.deepEqual(await stashRows(page), ['Corona Extra:5']);
     await page.click('#openPicker');
     await page.locator('#pickList .cat', { hasText: 'Regional' }).click();
     await page.locator('#pickList .pick', { hasText: 'Corona' }).first().click();
@@ -478,17 +481,81 @@ const checks = [
     await page.close();
   }]
   ,
+  ['several drinks in the stash: the newest opens first, and History edits the same numbers', async (browser, url) => {
+    const cor = { name: 'Corona Extra', abv: 4.5, ml: 355, share: 1 }, sil = { name: 'Heineken Silver', abv: 4, ml: 330, share: 1 };
+    const saved = Object.assign({}, EMPTY, { stash: [{ id: 'c', drink: cor, left: 2 }, { id: 's', drink: sil, left: 4 }],
+      session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: Date.now(),
+        rounds: [{ id: 'a', start: Date.now() - 3600000, end: null, lastAt: Date.now() - 60000, drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    assert.deepEqual(await stashRows(page), ['Heineken Silver:4', 'Corona Extra:2'], 'most recently added first');
+    assert.match(await text(page, '#stashTotal'), /6 on hand/);
+    const btns = page.locator('#anotherBtns button');
+    assert.match(await btns.nth(0).textContent(), /^Open Silver · 4$/);
+    assert.match(await btns.nth(1).textContent(), /^Open Corona · 2$/);
+    await btns.nth(0).click(); await page.waitForTimeout(250);
+    assert.deepEqual(await stashRows(page), ['Heineken Silver:3', 'Corona Extra:2']);
+    assert.match(await text(page, '#rounds li'), /Heineken Silver/);
+    // History shows and edits the very same numbers
+    await page.click('[data-go=history]');
+    assert.deepEqual(await stashEditRows(page), ['Heineken Silver:3', 'Corona Extra:2']);
+    await page.locator('#stashEdit li', { hasText: 'Corona' }).locator('.se-more').click();
+    await page.locator('#stashEdit li', { hasText: 'Corona' }).locator('.se-more').click();
+    assert.match(await text(page, '#stashEditTotal'), /7 on hand/);
+    await page.click('[data-go=tonight]');
+    assert.deepEqual(await stashRows(page), ['Heineken Silver:3', 'Corona Extra:4'], 'Tonight follows what History changed');
+    assert.match(await text(page, '#stashTotal'), /7 on hand/);
+    await page.click('[data-go=history]');
+    await page.locator('#stashEdit li', { hasText: 'Silver' }).locator('.se-less').click();
+    await page.locator('#stashEdit li', { hasText: 'Silver' }).locator('.se-less').click();
+    await page.locator('#stashEdit li', { hasText: 'Silver' }).locator('.se-less').click();
+    assert.deepEqual(await stashEditRows(page), ['Corona Extra:4'], 'down to zero takes a drink off');
+    await page.reload(); await page.waitForTimeout(700);
+    await page.click('[data-go=history]');
+    assert.deepEqual(await stashEditRows(page), ['Corona Extra:4'], 'it is saved');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['buying beer: add to the stash from History, with no night going', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    await page.click('[data-go=history]');
+    assert.equal(await page.locator('#stashEditEmpty').isVisible(), true);
+    await page.click('#stashAdd');
+    assert.equal((await text(page, '#sheetTitle')).trim(), 'Add to your stash');
+    await page.locator('#pickList .cat', { hasText: 'Regional' }).click();
+    const corona = page.locator('#pickList .pick-row', { hasText: 'Corona' }).first();
+    await corona.locator('.pick-add').click();
+    await corona.locator('.pick-add').click();
+    assert.match(await text(page, '#pickList .pick-row:has(.pick-stock:not([hidden])) .pick-stock'), /2 in stash/, 'the card shows how many you already have');
+    await page.click('#sheetClose');
+    assert.deepEqual(await stashEditRows(page), ['Corona Extra:2']);
+    // the options screen adds several at once, and the question about start times never appears
+    await page.click('#stashAdd');
+    await page.locator('#pickList .cat', { hasText: 'Regional' }).click();
+    await page.locator('#pickList .pick', { hasText: 'Silver' }).first().click();
+    assert.equal(await page.locator('#startWrap').isVisible(), false, 'no start time for something you only bought');
+    assert.equal(await page.locator('#shareBlock').isVisible(), false);
+    for (let i = 1; i < 4; i++) await page.click('#qtyPlus');
+    await page.click('#cfgAdd');
+    assert.deepEqual(await stashEditRows(page), ['Heineken Silver:4', 'Corona Extra:2']);
+    await page.click('[data-go=tonight]');
+    assert.deepEqual(await stashRows(page), ['Heineken Silver:4', 'Corona Extra:2'], 'the same on Tonight');
+    assert.equal(await page.locator('#nightNote:visible, #rounds li').count(), 0, 'nothing was logged as drunk');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
   ['with a stash, the first button opens the next one', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
       stash: { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1 }, total: 6, opened: 1 },
       rounds: [{ id: 'a', start: local(21, 30), end: null, lastAt: local(21, 50), drinks: [hein(1)], late: false }] } });
     const { page, errors } = await open(browser, url, saved);
     const first = page.locator('#anotherBtns button').first();
-    assert.match(await first.textContent(), /Open next · 5 left/);
+    assert.match(await first.textContent(), /Open Heineken · 5 left/);
     await first.click(); await page.waitForTimeout(200);
-    assert.match(await first.textContent(), /Open next · 4 left/);
+    assert.match(await first.textContent(), /Open Heineken · 4 left/);
     await page.click('#toastUndo'); await page.waitForTimeout(200);
-    assert.match(await first.textContent(), /Open next · 5 left/, 'Undo puts it back in the stash');
+    assert.match(await first.textContent(), /Open Heineken · 5 left/, 'Undo puts it back in the stash');
     assert.deepEqual(errors, []);
     await page.close();
   }]

@@ -3,8 +3,10 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.0.6';
+self.DRY_VERSION = '6.0.7';
 self.DRY_CHANGES = [
+  'A stash for more than one drink: 2 Corona and 4 Silver can sit side by side. The newest opens first, and you can open any of them from the stash card on Tonight.',
+  'Bought more beer? Add it from History at any time. Tonight and History show the same numbers, and what you have left now stays after the night ends.',
   'Logging more than one at a time now always asks if you had them all at once or are opening one and saving the rest, not only at the start of the night. Saving more of the same drink adds to your stash.',
   'A little life in the night scene: the stars twinkle and the sun slowly breathes. It costs almost no battery and turns off with Reduce Motion.',
   'A short opening sequence: the sky fades in, your status and clear time rise into place, the bottle and glass are set down, and the buttons arrive last. It skips itself when Reduce Motion is on.',

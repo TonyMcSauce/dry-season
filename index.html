@@ -211,12 +211,6 @@ h2{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;
 .rc-row b{color:var(--text)}
 .rc-row button{min-height:44px;min-width:64px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600}
 .stash{margin:0 0 12px;padding:14px 16px;border-radius:20px;background:var(--field);border:1px solid rgba(242,169,59,.45);display:grid;gap:12px}
-.stash-count{margin:0;font-weight:700;font-size:1.05rem}
-.stash-dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.stash-dots i{width:14px;height:22px;border-radius:4px 4px 6px 6px;border:1.5px solid var(--amber)}
-.stash-dots i.open{background:var(--amber)}
-.stash-btns{display:grid;grid-template-columns:3fr 2fr;gap:10px}
-.stash-btns .btn{white-space:nowrap;padding-left:12px;padding-right:12px}
 .rc-actions{display:flex;gap:8px;flex:none}
 .rc-actions.wide{flex-basis:100%}
 .rc-actions.wide .btn-mini{flex:1;white-space:nowrap;padding:0 8px}
@@ -845,6 +839,31 @@ html.intro .quick{animation:riseIn .6s 1.05s var(--ease) both}
 @keyframes twinkle{0%,100%{opacity:.1;transform:scale(.7)}50%{opacity:.9;transform:scale(1.2)}}
 @media (prefers-reduced-motion: reduce){.sun-glow,.twinkle{display:none!important}}
 
+/* The stash: one row per drink (v6.6) */
+.stash{display:block}
+.stash .label{margin:0 0 8px;font-weight:700}
+.stash .label span{font-weight:500;color:var(--muted)}
+.stash-rows,.stash-edit{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.stash-row{display:flex;align-items:center;gap:12px}
+.sr-main{flex:1;min-width:0;display:grid;gap:2px}
+.sr-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-left{font-size:.82rem;color:var(--muted)}
+.sr-dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.sr-dots i{width:9px;height:16px;border-radius:3px 3px 5px 5px;background:var(--amber)}
+.sr-open{width:auto;flex:none;min-height:46px;padding:0 18px;font-size:.95rem;white-space:nowrap}
+.stash-total{font-family:var(--body);font-size:.9rem;font-weight:500;color:var(--muted)}
+.stash-edit li{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-radius:var(--r-card);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-soft)}
+.se-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.se-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.se-meta{font-size:.82rem;color:var(--muted)}
+.se-step{display:flex;align-items:center;gap:6px;flex:none}
+.se-step button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:1.3rem;line-height:1;display:grid;place-items:center}
+.se-step .se-more{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.se-n{min-width:2ch;text-align:center;font-family:var(--display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+#stashEditEmpty{margin:0 0 12px;padding:16px;border-radius:var(--r-card);border:1px dashed var(--line);text-align:center}
+#stashManage{padding-bottom:8px}
+.pick-stock{position:absolute;left:14px;bottom:14px;font-size:.72rem;font-weight:700;color:var(--ink-amber)}
+
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
@@ -1028,15 +1047,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
   <div class="add-row" data-panel="tonight">
     <div class="stash" id="stash" role="group" aria-labelledby="stashH" hidden>
-      <div>
-        <p class="label" id="stashH">Tonight's stash</p>
-        <p class="stash-count" id="stashCount"></p>
-        <div class="stash-dots" id="stashDots" aria-hidden="true"></div>
-      </div>
-      <div class="stash-btns">
-        <button class="btn" id="stashOpen" type="button">Open next</button>
-        <button class="btn quiet" id="stashClear" type="button">Put away</button>
-      </div>
+      <p class="label" id="stashH">Your stash <span id="stashTotal"></span></p>
+      <ul class="stash-rows" id="stashRows"></ul>
     </div>
     <button class="btn" id="openPicker" type="button">Add a drink</button>
   </div>
@@ -1081,6 +1093,13 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </aside>
 
   <header class="screen-head" data-panel="history"><p class="screen-kicker">Look back</p><h1>History</h1></header>
+  <section class="block" data-panel="history" aria-labelledby="stashMH" id="stashManage">
+    <h2 id="stashMH">Your stash <span class="stash-total" id="stashEditTotal"></span></h2>
+    <p class="hint" style="margin:0 0 12px">Beer you have on hand. Bought more? Add it here, then open it from Tonight. Both show the same numbers.</p>
+    <ul class="stash-edit" id="stashEdit"></ul>
+    <p class="hint" id="stashEditEmpty">Nothing in your stash yet.</p>
+    <button class="btn quiet" id="stashAdd" type="button">Add beer to your stash</button>
+  </section>
   <section class="block" data-panel="history" aria-labelledby="histH" id="histSection">
     <button class="now-card" id="histNow" type="button" hidden>
       <span class="now-dot" aria-hidden="true"></span>
@@ -1205,7 +1224,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <ul>
         <li><strong>Add a drink</strong> when you open one. If nothing is going yet, choose when you started: just now, a little while ago, or right after your last round.</li>
         <li><strong>Rounds</strong> are stretches of drinking. Drinks in a round are spread evenly from its start to its end, so it doesn't matter exactly when each one went down.</li>
-        <li><strong>Got a few on hand?</strong> Add them all with Just now and choose <em>Open 1, save the rest for later</em>. Your stash waits on the main screen. Tap <em>Open next</em> each time you crack one.</li>
+        <li><strong>Got a few on hand?</strong> Add them all with Just now and choose <em>Open 1, save the rest for later</em>. Your stash waits on the main screen, one row for each drink, and it stays after the night ends. Bought more beer? Add it any time under <em>History</em>. Tap <em>Open next</em> each time you crack one.</li>
         <li><strong>Forgot to log?</strong> No problem. When you come back after a while, the app asks how many you've opened since and spreads them across the gap.</li>
         <li><strong>Had drinks before opening the app?</strong> Use <em>Log earlier drinks</em> to set a round with the times you drank.</li>
         <li><strong>Got a time wrong?</strong> Tap <em>Adjust times</em> on any round to move its start or finish by 15 minutes.</li>
@@ -1214,7 +1233,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     </section>
     <section aria-labelledby="hFast">
       <h4 id="hFast">Log without opening the app</h4>
-      <p>On Android, long press the Dry Season icon and tap <strong>One more</strong>. It logs the next drink from your stash, or another of your last drink, in a couple of seconds.</p>
+      <p>On Android, long press the Dry Season icon and tap <strong>One more</strong>. It opens the most recent drink in your stash, or adds another of your last drink, in a couple of seconds.</p>
       <details>
         <summary>Setting it up on iPhone</summary>
         <p>iPhones don't show shortcuts on web app icons, but the Shortcuts app can do the same job.</p>
@@ -1288,7 +1307,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         <button type="button" id="qtyPlus" aria-label="One more">+</button>
       </div>
     </div>
-    <div>
+    <div id="shareBlock">
       <p class="label">How much of each was yours</p>
       <div class="chips" id="shareChips"></div>
     </div>
@@ -1469,16 +1488,21 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     return { v: 5, rounds: [], fed: false, driveAt: null, water: null };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true, theme: 'auto' }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true, theme: 'auto' }, session: newSession(), history: [], stash: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
   }
   function load() {
     const d = defaults();
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
       if (s && s.profile && s.session && (Array.isArray(s.session.drinks) || Array.isArray(s.session.rounds))) {
+        // Older saves kept one stash inside the night; it moves to the list on the state.
+        const session = N.migrate(Object.assign({ fed: false, driveAt: null, water: null }, s.session));
+        const oldStash = session.stash;
+        if (oldStash !== undefined) delete session.stash;
         return {
           profile: Object.assign(d.profile, s.profile),
-          session: N.migrate(Object.assign({ fed: false, driveAt: null, water: null }, s.session)),
+          session,
+          stash: N.migrateStash(s.stash, oldStash),
           history: Array.isArray(s.history) ? s.history : [],
           favs: D.normalizeFavs(Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS)
         };
@@ -2096,6 +2120,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   const favKey = (it) => it.id + '|' + it.ml;
   let pickCat = null;
   const CAT_NAMES = { 'Favourites': 'Favourites', 'Brewed in Botswana': 'Botswana', 'From across the border': 'Regional', 'Anything else': 'Other' };
+  const stockOf = (it) => { const k = N.keyOf({ qty: 1, share: 1, name: it.name, abv: it.abv, ml: it.ml }); const r = N.stashOf(state).find((x) => N.keyOf(Object.assign({ qty: 1, share: 1 }, x.drink)) === k); return r ? r.left : 0; };
   const PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   function buildList(popId, popGroup) {
     const box = $('#pickList'), y = sheet.scrollTop; box.innerHTML = '';
@@ -2117,10 +2142,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     g.items.forEach((it) => {
       const row = document.createElement('div'); row.className = 'pick-row' + (it.custom ? ' custom' : '');
       const b = document.createElement('button'); b.type = 'button'; b.className = 'pick';
-      b.innerHTML = '<span class="pick-name"></span><span class="pick-meta"></span><span class="abv-pill"></span>';
+      b.innerHTML = '<span class="pick-name"></span><span class="pick-meta"></span><span class="abv-pill"></span><span class="pick-stock" hidden></span>';
       b.querySelector('.pick-name').textContent = it.custom ? 'Something else' : it.name;
       b.querySelector('.pick-meta').textContent = it.custom ? 'Wine, spirits, ciders, anything' : it.ml + ' ml' + (it.serve ? ' ' + it.serve : '');
       b.querySelector('.abv-pill').textContent = it.custom ? 'Set your own' : it.abv + '%';
+      if (pickFor === 'stash' && !it.custom && stockOf(it) > 0) { const sk = b.querySelector('.pick-stock'); sk.hidden = false; sk.textContent = stockOf(it) + ' in stash'; }
       b.addEventListener('click', () => choose(it));
       row.appendChild(b);
       if (!it.custom) {
@@ -2134,7 +2160,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         row.appendChild(st);
         const add = document.createElement('button'); add.type = 'button'; add.className = 'pick-add';
         add.innerHTML = PLUS;
-        add.setAttribute('aria-label', (pickFor === 'late' ? 'Add one ' : 'Log one ') + it.name + ', ' + it.ml + ' ml');
+        add.setAttribute('aria-label', (pickFor === 'late' ? 'Add one ' : pickFor === 'stash' ? 'Add one to your stash: ' : 'Log one ') + it.name + ', ' + it.ml + ' ml');
         add.addEventListener('click', () => quickPick(it));
         row.appendChild(add);
       }
@@ -2184,13 +2210,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   function showList() {
     enterList();
     $('#pickList').hidden = false; $('#pickCfg').hidden = true; $('#sheetBack').hidden = true;
-    $('#sheetTitle').textContent = 'Pick a drink';
+    $('#sheetTitle').textContent = pickFor === 'stash' ? 'Add to your stash' : 'Pick a drink';
   }
   function choose(it) {
     pick = { id: it.custom ? null : it.id, name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
     $('#pickList').hidden = true; $('#pickCfg').hidden = false; $('#sheetBack').hidden = false;
     $('#sheetTitle').textContent = it.custom ? 'Your own drink' : it.name;
-    $('#cfgAdd').textContent = pickFor === 'late' ? 'Add to this round' : 'Add to the tab';
+    $('#cfgAdd').textContent = pickFor === 'late' ? 'Add to this round' : pickFor === 'stash' ? 'Add to your stash' : 'Add to the tab';
+    $('#shareBlock').hidden = pickFor === 'stash';
     $('#nameField').hidden = !it.custom;
     $('#cfgName').value = pick.name;
     $('#cfgNote').hidden = !it.note; $('#cfgNote').textContent = it.note || '';
@@ -2237,6 +2264,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   $('#cfgName').addEventListener('input', (e) => { pick.name = e.target.value; });
   $('#qtyMinus').addEventListener('click', () => { pick.qty = Math.max(1, pick.qty - 1); renderCfg(); });
   $('#qtyPlus').addEventListener('click', () => { pick.qty = Math.min(48, pick.qty + 1); renderCfg(); });
+  /** Put drinks on hand, from the picker's stash mode (buying beer). */
+  function addToStash(p) {
+    if (!(p.ml > 0) || !(p.abv >= 0) || p.abv > 80) { toast('Check the strength and size'); return; }
+    const name = (p.name || '').trim() || 'Custom drink';
+    state = N.stashAdd(state, { name, abv: p.abv, ml: p.ml, share: 1 }, p.qty);
+    save(); sheet.close(); renderAll();
+    toast(p.qty + ' × ' + name + ' added to your stash');
+  }
   /** Add one drink to the round being built in the late sheet. */
   function addToLate(p) {
     if (!(p.ml > 0) || !(p.abv >= 0) || p.abv > 80) { toast('Check the strength and size'); return; }
@@ -2249,6 +2284,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     if (!(pick.ml > 0) || !(pick.abv >= 0) || pick.abv > 80) { toast('Check the strength and size'); return; }
     const name = (pick.name || '').trim() || 'Custom drink';
     if (pickFor === 'late') { addToLate(pick); return; }
+    if (pickFor === 'stash') { addToStash(pick); return; }
     askAnswers = {};
     commitTab(name);
   });
@@ -2298,15 +2334,14 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     return hit && hit[2] != null ? hit[2] : now;
   }
   /** "All 6 right now?" for n drinks. */
-  const sameDrink = (a, b) => N.keyOf(Object.assign({ qty: 1 }, a)) === N.keyOf(Object.assign({ qty: 1 }, b));
+  const stashRowFor = (d) => { const k = N.keyOf(Object.assign({ qty: 1, share: 1 }, d)); return N.stashOf(state).find((r) => N.keyOf(Object.assign({ qty: 1, share: 1 }, r.drink)) === k) || null; };
   const manyAsk = (n) => {
     const live = !!N.liveRound(N.settle(state, Date.now()).session);
-    const st = state.session.stash, left = N.stashLeft(state.session);
-    const same = !!st && left > 0 && sameDrink(st.drink, pick), replaces = !!st && left > 0 && !same;
+    const row = stashRowFor({ name: pick.name, abv: pick.abv, ml: pick.ml, share: pick.share });
     return { kind: 'many', title: 'All ' + n + ' right now?',
       text: (live ? 'Or are you having one now and keeping the other ' + (n - 1) + ' for later? ' : 'Or is this the first of ' + n + ' for the night? ') + 'Logging all ' + n + ' at once counts them as drunk already.',
       a: ['Log all ' + n, 'Already had them, or having them at once', { many: 'all' }],
-      b: ['Open 1, save ' + (n - 1) + ' for later', replaces ? 'Replaces your stash of ' + left + ' ' + st.drink.name : same ? 'Adds to your stash of ' + left : 'Tap Open next as you go', { many: 'stash' }] };
+      b: ['Open 1, save ' + (n - 1) + ' for later', row ? 'Adds to the ' + row.left + ' ' + shortName(row.drink.name) + ' in your stash' : 'Tap Open next as you go', { many: 'stash' }] };
   };
   function hideAsk() { askKind = null; askAnswers = {}; $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false; }
   /** The question follows the count: new numbers as it changes, gone when it is back to 1. */
@@ -2342,14 +2377,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         a: ['Add to that round', 'It picks up again and keeps going', { clash: 'same' }],
         b: ['Start right after it (' + fmtTime(c.end) + ')', 'A new round from ' + fmtTime(c.end), { clash: 'after' }] });
     }
-    const stash = askAnswers.many === 'stash', prev = state.session.stash;
+    const stash = askAnswers.many === 'stash';
     const r = N.addLiveDrink(state, Object.assign({}, drink, { qty: stash ? 1 : drink.qty }), now, { startAt, choice: askAnswers.clash });
     state = r.state;
-    if (stash) {
-      // The same drink adds to the stash you already have; a different one replaces it (the question said so).
-      const more = prev && N.stashLeft({ stash: prev }) > 0 && sameDrink(prev.drink, drink);
-      state = more ? N.setStash(state, drink, prev.total + drink.qty, prev.opened + 1) : N.setStash(state, drink, drink.qty, 1);
-    }
+    if (stash) state = N.stashAdd(state, drink, drink.qty - 1);   // the same drink adds to its row
     askAnswers = {};
     save(); sheet.close(); renderAll();
     if (!announce(r.outcome)) toast(stash ? '1 ' + name + ' opened, ' + (drink.qty - 1) + ' saved for later' : drink.qty + ' × ' + name + ' added');
@@ -2360,6 +2391,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   /** The + on a drink card: one tap while a round is going; otherwise the options open, since a new round needs a start time. */
   function quickPick(it) {
     const d = { id: it.id, name: it.name, abv: it.abv, ml: it.ml, share: 1 };
+    if (pickFor === 'stash') {
+      state = N.stashAdd(state, d, 1); save(); renderAll(); buildList();
+      toast(it.name + ' · ' + stockOf(it) + ' in your stash');
+      return;
+    }
     if (pickFor === 'late') { addToLate(Object.assign({ qty: 1 }, d)); return; }
     if (N.liveRound(N.settle(state, Date.now()).session)) { sheet.close(); quickAdd(d); return; }
     choose(it);
@@ -2374,13 +2410,15 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     if (island) island.celebrate('pour', { label: '+1 ' + shortName(d.name) });
   }
   function renderAnother() {
-    const box = $('#another'), btns = $('#anotherBtns'), st = state.session.stash;
+    const box = $('#another'), btns = $('#anotherBtns'), rows = N.stashOf(state).slice().reverse();
     const recent = N.recentDrinks(state.session, 2);
     const items = [];
-    if (st) {
-      items.push({ label: 'Open next · ' + (st.total - st.opened) + ' left', aria: 'Open the next ' + st.drink.name + ' from your stash', go: () => withUndo(() => { const r = N.openStash(state, Date.now()); state = r.state; return r.outcome; }, 'Opened another ' + st.drink.name) });
-      const other = recent.find((d) => N.keyOf(Object.assign({ qty: 1 }, d)) !== N.keyOf(Object.assign({ qty: 1 }, st.drink)));
-      if (other) items.push({ label: '+ ' + shortName(other.name), aria: 'Add another ' + other.name, go: () => quickAdd(other) });
+    if (rows.length) {
+      rows.slice(0, 2).forEach((row) => items.push({ label: 'Open ' + shortName(row.drink.name) + ' · ' + row.left + (rows.length > 1 ? '' : ' left'), aria: 'Open the next ' + row.drink.name + ' from your stash, ' + row.left + ' left', go: () => openNext(row.id) }));
+      if (rows.length < 2) {
+        const other = recent.find((d) => N.keyOf(Object.assign({ qty: 1 }, d)) !== N.keyOf(Object.assign({ qty: 1 }, rows[0].drink)));
+        if (other) items.push({ label: '+ ' + shortName(other.name), aria: 'Add another ' + other.name, go: () => quickAdd(other) });
+      }
     } else {
       recent.forEach((d) => items.push({ label: '+ ' + (recent.length > 1 ? shortName(d.name) : 'Another ' + shortName(d.name)), aria: 'Add another ' + d.name + ', ' + d.ml + ' ml', go: () => quickAdd(d) }));
     }
@@ -2408,30 +2446,62 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   // Tonight's stash
   function renderStash() {
-    const st = state.session.stash, box = $('#stash');
-    box.hidden = !st;
-    if (!st) return;
-    $('#stashCount').textContent = st.opened + ' of ' + st.total + ' ' + st.drink.name + ' opened';
-    const dots = $('#stashDots'); dots.innerHTML = '';
-    for (let i = 0; i < st.total; i++) { const d = document.createElement('i'); if (i < st.opened) d.className = 'open'; dots.appendChild(d); }
-    $('#stashOpen').textContent = 'Open next (' + (st.total - st.opened) + ' left)';
+    const rows = N.stashOf(state).slice().reverse(), box = $('#stash');   // most recent first
+    box.hidden = rows.length === 0;
+    $('#stashTotal').textContent = rows.length ? '· ' + N.stashCount(state) + ' on hand' : '';
+    const ul = $('#stashRows'); ul.innerHTML = '';
+    rows.forEach((row, i) => {
+      const li = document.createElement('li'); li.className = 'stash-row'; li.dataset.id = row.id;
+      li.innerHTML = '<div class="sr-main"><span class="sr-name"></span><span class="sr-left"></span><div class="sr-dots" aria-hidden="true"></div></div><button type="button" class="btn sr-open">Open next</button>';
+      li.querySelector('.sr-name').textContent = row.drink.name;
+      li.querySelector('.sr-left').textContent = row.left + ' left';
+      const dots = li.querySelector('.sr-dots');
+      for (let k = 0; k < Math.min(row.left, 12); k++) dots.appendChild(document.createElement('i'));
+      const b = li.querySelector('.sr-open');
+      if (i > 0) b.classList.add('quiet');
+      b.setAttribute('aria-label', 'Open the next ' + row.drink.name + ', ' + row.left + ' left');
+      b.addEventListener('click', () => openNext(row.id));
+      ul.appendChild(li);
+    });
   }
-  function openNext() {
-    const st = state.session.stash;
-    if (!st) return false;
-    const r = N.openStash(state, Date.now());
-    state = r.state; save(); renderAll();
-    if (!announce(r.outcome)) toast(r.outcome.stashDone ? 'Last ' + st.drink.name + ' opened. That was the stash.' : 'Opened another ' + st.drink.name);
-    if (island) island.celebrate('pour', { label: '+1 ' + shortName(st.drink.name) });
+  /** Open one from the stash (the most recent row unless one is named). */
+  function openNext(id) {
+    const row = id ? N.stashOf(state).find((r) => r.id === id) : N.latestStash(state);
+    if (!row) return false;
+    const name = row.drink.name, last = row.left === 1;
+    withUndo(() => { const r = N.openStash(state, Date.now(), row.id); state = r.state; return r.outcome; },
+      last ? 'Last ' + name + ' opened. That one is done.' : 'Opened another ' + name + ', ' + (row.left - 1) + ' left');
+    if (island) island.celebrate('pour', { label: '+1 ' + shortName(name) });
     return true;
   }
-  $('#stashOpen').addEventListener('click', openNext);
-  $('#stashClear').addEventListener('click', () => { state = N.clearStash(state); save(); renderAll(); toast('Stash put away'); });
+  // The same stash, editable from History: change a count, take a drink off, or add what you just bought.
+  function renderStashEdit() {
+    const rows = N.stashOf(state).slice().reverse(), ul = $('#stashEdit');
+    ul.innerHTML = '';
+    $('#stashEditEmpty').hidden = rows.length > 0;
+    $('#stashEditTotal').textContent = rows.length ? '· ' + N.stashCount(state) + ' on hand' : '';
+    rows.forEach((row) => {
+      const li = document.createElement('li'); li.dataset.id = row.id;
+      li.innerHTML = '<span class="se-main"><span class="se-name"></span><span class="se-meta"></span></span><span class="se-step"><button type="button" class="se-less">&#8722;</button><output class="se-n"></output><button type="button" class="se-more">+</button></span>';
+      li.querySelector('.se-name').textContent = row.drink.name;
+      li.querySelector('.se-meta').textContent = row.drink.ml + ' ml, ' + row.drink.abv + '%';
+      li.querySelector('.se-n').textContent = row.left;
+      li.querySelector('.se-less').setAttribute('aria-label', 'One fewer ' + row.drink.name);
+      li.querySelector('.se-more').setAttribute('aria-label', 'One more ' + row.drink.name);
+      li.querySelector('.se-less').addEventListener('click', () => {
+        if (row.left > 1) { state = N.stashSet(state, row.id, row.left - 1); save(); renderAll(); return; }
+        withUndo(() => { state = N.stashRemove(state, row.id); return null; }, row.drink.name + ' taken off your stash');
+      });
+      li.querySelector('.se-more').addEventListener('click', () => { state = N.stashSet(state, row.id, row.left + 1); save(); renderAll(); });
+      ul.appendChild(li);
+    });
+  }
+  $('#stashAdd').addEventListener('click', () => { pickFor = 'stash'; buildList(); showList(); sheet.showModal(); });
 
   // Catch up: one question when you come back after a while
   const cu = $('#catchup');
   let cuN = 1;
-  function cuMax() { const left = N.stashLeft(state.session); return left > 0 ? left : 24; }
+  function cuMax() { const src = N.catchUpSource(state); return src ? src.max : 24; }
   function renderCu() {
     $('#cuN').textContent = cuN;
     $('#cuLog').textContent = 'Log ' + cuN;
@@ -2441,20 +2511,19 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     if (document.querySelector('dialog[open]')) return;
     const settled = N.settle(state, now);
     if (settled !== state) { state = settled; save(); renderAll(); }
-    if (!N.catchUpDue(state.session, now)) return;
-    const d = N.catchUpDrink(state.session);
+    if (!N.catchUpDue(state, now)) return;
+    const src = N.catchUpSource(state), d = src && src.drink;
     if (!d) return;
     const last = Math.max(state.session.loggedAt || 0, (N.liveRound(state.session) || {}).lastAt || 0);
-    const st = state.session.stash;
     $('#cuText').textContent = (last ? 'You last logged at ' + fmtTime(last) + '. ' : '') + 'How many ' + d.name + ' have you opened since?'
-      + (st ? ' (' + (st.total - st.opened) + ' left in your stash)' : '');
+      + (src.id ? ' (' + src.max + ' left in your stash)' : '');
     cuN = 1; renderCu();
     cu.showModal();
   }
   $('#cuMinus').addEventListener('click', () => { cuN = Math.max(1, cuN - 1); renderCu(); });
   $('#cuPlus').addEventListener('click', () => { cuN = Math.min(cuMax(), cuN + 1); renderCu(); });
   $('#cuLog').addEventListener('click', () => {
-    const d = N.catchUpDrink(state.session);
+    const d = N.catchUpDrink(state);
     const r = N.catchUp(state, cuN, Date.now());
     state = r.state; save(); cu.close(); renderAll();
     if (!r.outcome || !announce(r.outcome)) toast(cuN + ' × ' + (d ? d.name : 'drink') + ' added, spread since your last log');
@@ -2967,7 +3036,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner(); renderQuick();
     if (island) island.update(islandSnap(lastSim));
   }
-  function renderAll() { renderNight(); renderStash(); renderAnother(); renderTab(); renderBody(); renderSetSum(); renderHistory(); renderFavs(); buildScale(); renderLive(); }
+  function renderAll() { renderNight(); renderStash(); renderStashEdit(); renderAnother(); renderTab(); renderBody(); renderSetSum(); renderHistory(); renderFavs(); buildScale(); renderLive(); }
   buildList();
   renderAll();
   let ticks = 0;

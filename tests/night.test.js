@@ -207,69 +207,120 @@ test('a break in the night: one beer, then five more right after, as two back to
   assert.deepEqual([rs[1].start, rs[1].end, rs[1].drinks[0].qty], [local(10), local(12), 5]);
 });
 
-test('a six pack: open one, save five, open them one by one, and finishing puts the rest away', () => {
+const cor = (qty) => ({ name: 'Corona Extra', abv: 4.5, ml: 355, qty, share: 1 });
+
+test('a six pack: open one, save five, open them one by one, and finishing keeps the rest', () => {
   let s = N.addLiveDrink(st(night()), hein(1), local(9, 30)).state;
-  s = N.setStash(s, hein(1), 6, 1);
-  assert.equal(N.stashLeft(s.session), 5);
-  assert.equal(s.session.stash.drink.qty, undefined);
+  s = N.stashAdd(s, hein(1), 5);
+  assert.equal(N.stashCount(s), 5);
+  assert.equal(N.stashOf(s)[0].drink.qty, undefined);
   s = N.openStash(s, local(10, 15)).state;
-  assert.equal(N.stashLeft(s.session), 4);
+  assert.equal(N.stashCount(s), 4);
   assert.equal(s.session.rounds.length, 1);
   assert.equal(s.session.rounds[0].drinks[0].qty, 2);
   s = N.finishLive(s, local(11));
-  assert.equal(s.session.stash, null);
+  assert.equal(N.stashCount(s), 4, 'the rest is still in the fridge');
 });
 
-test('the stash goes away once the last one is opened', () => {
-  let s = N.setStash(N.addLiveDrink(st(night()), hein(1), local(20)).state, hein(1), 2, 1);
+test('the row goes away once its last drink is opened', () => {
+  const s = N.stashAdd(N.addLiveDrink(st(night()), hein(1), local(20)).state, hein(1), 1);
   const r = N.openStash(s, local(20, 30));
   assert.equal(r.outcome.stashDone, true);
-  assert.equal(r.state.session.stash, null);
-  assert.equal(N.setStash(s, hein(1), 1, 1).session.stash, null, 'nothing left means no stash');
+  assert.deepEqual(N.stashOf(r.state), []);
+  assert.equal(N.stashAdd(s, hein(1), 0), s, 'adding none changes nothing');
+});
+
+test('the stash holds several drinks, and the most recent one opens first', () => {
+  let s = N.addLiveDrink(st(night()), hein(1), local(20)).state;
+  s = N.stashAdd(s, cor(1), 2);
+  s = N.stashAdd(s, hein(1), 4);
+  assert.deepEqual(N.stashOf(s).map((r) => [r.drink.name, r.left]), [['Corona Extra', 2], ['Heineken', 4]]);
+  assert.equal(N.latestStash(s).drink.name, 'Heineken');
+  const r = N.openStash(s, local(20, 30));
+  assert.equal(r.state.session.rounds[0].drinks.map((d) => d.name).join(),'Heineken', 'a Heineken joined the round');
+  assert.deepEqual(N.stashOf(r.state).map((x) => [x.drink.name, x.left]), [['Corona Extra', 2], ['Heineken', 3]]);
+  const other = N.openStash(r.state, local(20, 40), N.stashOf(r.state)[0].id);
+  assert.deepEqual(N.stashOf(other.state).map((x) => [x.drink.name, x.left]), [['Corona Extra', 1], ['Heineken', 3]]);
+});
+
+test('buying more of a drink adds to its row and makes it the latest', () => {
+  let s = N.stashAdd(N.stashAdd(st(night()), hein(1), 3), cor(1), 2);
+  s = N.stashAdd(s, hein(1), 6);
+  assert.deepEqual(N.stashOf(s).map((r) => [r.drink.name, r.left]), [['Corona Extra', 2], ['Heineken', 9]]);
+  assert.equal(N.stashCount(s), 11);
+});
+
+test('editing the stash: set a count, remove a row, clear it all', () => {
+  let s = N.stashAdd(N.stashAdd(st(night()), hein(1), 3), cor(1), 2);
+  const [a, b] = N.stashOf(s);
+  s = N.stashSet(s, a.id, 7);
+  assert.equal(N.stashCount(s), 9);
+  s = N.stashSet(s, b.id, 0);
+  assert.deepEqual(N.stashOf(s).map((r) => r.drink.name), ['Heineken'], 'zero takes the row off');
+  s = N.stashRemove(N.stashAdd(s, cor(1), 1), N.stashOf(s)[0].id);
+  assert.deepEqual(N.stashOf(s).map((r) => r.drink.name), ['Corona Extra']);
+  assert.equal(N.stashCount(N.clearStash(s)), 0);
 });
 
 test('the stash carries over a break, even into a fresh night', () => {
   let s = N.addLiveDrink(st(night()), hein(1), local(9)).state;
-  s = N.setStash(s, hein(1), 6, 1);
+  s = N.stashAdd(s, hein(1), 5);
   const r = N.openStash(s, local(18));
   assert.equal(r.outcome.action, 'fresh');
-  assert.equal(N.stashLeft(r.state.session), 4);
+  assert.equal(N.stashCount(r.state), 4);
+});
+
+test('old saves with one stash inside the night become a row in the list', () => {
+  const rows = N.migrateStash(undefined, { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1, qty: 9 }, total: 6, opened: 2 });
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].left, 4);
+  assert.equal(rows[0].drink.qty, undefined);
+  assert.deepEqual(N.migrateStash(undefined, { drink: hein(1), total: 2, opened: 2 }), [], 'nothing left, nothing kept');
+  assert.deepEqual(N.migrateStash([{ drink: hein(1), left: 0 }, { drink: cor(1), left: 3.9 }], null).map((r) => r.left), [3]);
+  assert.deepEqual(N.migrateStash(undefined, null), []);
 });
 
 test('catch up: asks after half an hour, and spreads what you opened across the gap', () => {
   const s = N.addLiveDrink(st(night()), hein(1), local(9, 30)).state;
-  assert.equal(N.catchUpDue(s.session, local(9, 50)), false);
-  assert.equal(N.catchUpDue(s.session, local(10, 30)), true);
+  assert.equal(N.catchUpDue(s, local(9, 50)), false);
+  assert.equal(N.catchUpDue(s, local(10, 30)), true);
   const r = N.catchUp(s, 2, local(10, 30));
   const rs = r.state.session.rounds;
   assert.equal(rs.length, 1);
   assert.equal(rs[0].start, local(9, 30));
   assert.equal(rs[0].drinks[0].qty, 3);
-  assert.equal(N.catchUpDue(r.state.session, local(10, 45)), false);
+  assert.equal(N.catchUpDue(r.state, local(10, 45)), false);
 });
 
 test('catch up with none stays quiet for another half hour', () => {
   const s = N.addLiveDrink(st(night()), hein(1), local(9, 30)).state;
   const q = N.catchUp(s, 0, local(10, 30)).state;
   assert.equal(q.session.rounds[0].drinks[0].qty, 1);
-  assert.equal(N.catchUpDue(q.session, local(10, 45)), false);
-  assert.equal(N.catchUpDue(q.session, local(11, 0)), true);
+  assert.equal(N.catchUpDue(q, local(10, 45)), false);
+  assert.equal(N.catchUpDue(q, local(11, 0)), true);
 });
 
 test('catch up counts against the stash, and starts right after a round that already ended', () => {
   let s = N.addLiveDrink(st(night()), hein(1), local(9, 30)).state;
-  s = N.setStash(N.finishLive(s, local(10)), hein(1), 6, 1);
-  assert.equal(N.catchUpDue(s.session, local(11, 30)), true);
+  s = N.stashAdd(N.finishLive(s, local(10)), hein(1), 5);
+  assert.equal(N.catchUpDue(s, local(11, 30)), true);
   const r = N.catchUp(s, 3, local(11, 30));
   const rs = r.state.session.rounds;
   assert.equal(rs[1].start, local(10));
   assert.equal(rs[1].drinks[0].qty, 3);
-  assert.equal(N.stashLeft(r.state.session), 2);
+  assert.equal(N.stashCount(r.state), 2);
+});
+
+test('stock sitting in the fridge from another day does not trigger a catch up question', () => {
+  let s = N.addLiveDrink(st(night()), hein(1), local(9, 30)).state;
+  s = N.stashAdd(N.finishLive(s, local(10)), hein(1), 5);
+  assert.equal(N.catchUpDue(s, local(11, 30)), true, 'same night: it asks');
+  assert.equal(N.catchUpDue(s, local(23, 30, 24)), false, 'a day later: it is stock, not tonight');
 });
 
 test('no catch up when nothing is going and nothing is saved', () => {
   const s = N.finishLive(N.addLiveDrink(st(night()), hein(1), local(9, 30)).state, local(10));
-  assert.equal(N.catchUpDue(s.session, local(12)), false);
+  assert.equal(N.catchUpDue(s, local(12)), false);
 });
 
 test('nudging a round keeps it in order and never past now', () => {
@@ -284,7 +335,7 @@ test('nudging a round keeps it in order and never past now', () => {
 
 test('catch up stays quiet for older saves that never recorded a log time', () => {
   const s = night({ start: local(20), end: null, drinks: [hein(2)] });
-  assert.equal(N.catchUpDue(s, local(23)), false);
+  assert.equal(N.catchUpDue(st(s), local(23)), false);
 });
 
 // One tap repeats

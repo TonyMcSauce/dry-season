@@ -148,7 +148,7 @@
     if (p.action === 'fresh') {
       outcome.archived = state.session.rounds.length > 0;
       const history = outcome.archived ? pushHistory(state.history, summarize(state.session, state.profile, now)) : state.history;
-      const session = Object.assign(emptyNight([round]), state.session.stash ? { stash: state.session.stash } : {});
+      const session = emptyNight([round]);
       return { state: Object.assign({}, state, { session, history }), outcome };
     }
     if (p.overlap && !choice) throw new Error('overlap choice needed');
@@ -257,55 +257,91 @@
     return drinks.length ? editRound(state, roundId, { drinks }) : removeRound(state, roundId);
   }
 
-  // Tonight's stash: drinks you have on hand but have not opened yet.
+  // The stash: drinks you have on hand but have not opened yet. It is stock, not part of one night, so it
+  // is a list of { id, drink, left } on the state itself (most recently added last) and it survives
+  // finishing a night. Opening one logs it and counts it down; buying more adds to it.
 
-  const stashLeft = (session) => (session.stash ? session.stash.total - session.stash.opened : 0);
+  const stashOf = (state) => (Array.isArray(state.stash) ? state.stash : []);
+  const stashCount = (state) => stashOf(state).reduce((a, r) => a + r.left, 0);
+  const latestStash = (state) => { const l = stashOf(state); return l.length ? l[l.length - 1] : null; };
+  const stashKey = (d) => keyOf(Object.assign({ qty: 1, share: 1 }, d));
+  const withStash = (state, stash) => Object.assign({}, state, { stash });
+  const bareDrink = (d) => { const c = Object.assign({ share: 1 }, d); delete c.qty; return c; };
 
-  /** Plan a stash of total drinks, opened of them already had. */
-  function setStash(state, drink, total, opened) {
-    const d = Object.assign({ share: 1 }, drink); delete d.qty;
-    const stash = total > (opened || 0) ? { drink: d, total, opened: opened || 0 } : null;
-    return withSession(state, { stash });
+  /** Old saves kept one stash inside the night as { drink, total, opened }; this turns either shape into the list. */
+  function migrateStash(raw, oldSessionStash) {
+    const rows = (Array.isArray(raw) ? raw : [])
+      .filter((r) => r && r.drink && r.left > 0)
+      .map((r) => ({ id: r.id || newId(), drink: bareDrink(r.drink), left: Math.floor(r.left) }));
+    if (rows.length) return rows;
+    const o = oldSessionStash;
+    if (o && o.drink && o.total > (o.opened || 0)) return [{ id: newId(), drink: bareDrink(o.drink), left: o.total - (o.opened || 0) }];
+    return [];
   }
 
-  function clearStash(state) { return withSession(state, { stash: null }); }
-
-  /** Count n more opened from the stash; it goes away once all are open. */
-  function useStash(state, n) {
-    const st = state.session.stash;
-    if (!st) return { state, done: false };
-    const opened = Math.min(st.total, st.opened + n);
-    if (opened >= st.total) return { state: withSession(state, { stash: null }), done: true };
-    return { state: withSession(state, { stash: Object.assign({}, st, { opened }) }), done: false };
+  /** n more of a drink on hand. The same drink adds to its row; a new one starts a row. Either way it becomes the latest. */
+  function stashAdd(state, drink, n) {
+    n = Math.floor(n);
+    if (!(n > 0)) return state;
+    const d = bareDrink(drink), rows = stashOf(state).slice();
+    const i = rows.findIndex((r) => stashKey(r.drink) === stashKey(d));
+    if (i >= 0) { const row = Object.assign({}, rows[i], { left: rows[i].left + n }); rows.splice(i, 1); rows.push(row); }
+    else rows.push({ id: newId(), drink: d, left: n });
+    return withStash(state, rows);
   }
 
-  /** Open the next drink from the stash, now. */
-  function openStash(state, now) {
-    const st = state.session.stash;
-    if (!st) return { state, outcome: null };
-    const r = addLiveDrink(state, Object.assign({ qty: 1 }, st.drink), now, { startAt: now, choice: 'after' });
-    const u = useStash(r.state, 1);
-    return { state: u.state, outcome: Object.assign({}, r.outcome, { stashDone: u.done }) };
+  /** Set how many are left of one row. Zero takes it off the list. */
+  function stashSet(state, id, left) {
+    left = Math.max(0, Math.floor(left));
+    const rows = stashOf(state).map((r) => (r.id === id ? Object.assign({}, r, { left }) : r)).filter((r) => r.left > 0);
+    return withStash(state, rows);
+  }
+
+  const stashRemove = (state, id) => withStash(state, stashOf(state).filter((r) => r.id !== id));
+  const clearStash = (state) => withStash(state, []);
+
+  /** Count n opened from a row (the latest by default); the row goes away at zero. */
+  function useStash(state, n, id) {
+    const row = id ? stashOf(state).find((r) => r.id === id) : latestStash(state);
+    if (!row) return { state, done: false };
+    const left = row.left - n;
+    if (left <= 0) return { state: stashRemove(state, row.id), done: true };
+    return { state: stashSet(state, row.id, left), done: false };
+  }
+
+  /** Open the next drink from a row (the most recent by default), now. */
+  function openStash(state, now, id) {
+    const row = id ? stashOf(state).find((r) => r.id === id) : latestStash(state);
+    if (!row) return { state, outcome: null };
+    const r = addLiveDrink(state, Object.assign({ qty: 1 }, row.drink), now, { startAt: now, choice: 'after' });
+    const u = useStash(r.state, 1, row.id);
+    return { state: u.state, outcome: Object.assign({}, r.outcome, { stashDone: u.done, stashDrink: row.drink }) };
   }
 
   // Catch up: one question when you come back after a while.
 
-  function catchUpDue(session, now) {
-    const live = liveRound(session);
-    if (!live && stashLeft(session) <= 0) return false;
+  const CATCHUP_MAX = 12 * 60 * MIN;   // after this long it is a new night, not a gap in this one
+
+  function catchUpDue(state, now) {
+    const session = state.session, live = liveRound(session);
+    if (!live && stashCount(state) <= 0) return false;
     // Only when we know when you last logged; older saves stay quiet.
     const last = Math.max(session.loggedAt || 0, session.askedAt || 0, live ? (live.lastAt || 0) : 0);
-    return last > 0 && now - last >= CATCHUP_GAP;
+    if (!(last > 0) || now - last < CATCHUP_GAP) return false;
+    // Stock that has sat in the fridge since another day is not a question about tonight.
+    return live ? true : now - last <= CATCHUP_MAX;
   }
 
-  /** The drink catch up counts: the stash drink, else the last one logged. */
-  function catchUpDrink(session) {
-    if (session.stash) return session.stash.drink;
-    const d = lastDrink(session);
+  /** What catch up counts: the latest stash row, else the last drink logged (with no limit on how many). */
+  function catchUpSource(state) {
+    const row = latestStash(state);
+    if (row) return { drink: row.drink, id: row.id, max: row.left };
+    const d = lastDrink(state.session);
     if (!d) return null;
     const c = Object.assign({}, d); delete c.qty;
-    return c;
+    return { drink: c, id: null, max: 24 };
   }
+  const catchUpDrink = (state) => { const src = catchUpSource(state); return src ? src.drink : null; };
 
   /**
    * n drinks opened since the last log. They join the live round, or start a round
@@ -313,12 +349,12 @@
    * that we asked.
    */
   function catchUp(state, n, now) {
-    const drink = catchUpDrink(state.session);
-    if (!(n > 0) || !drink) return { state: withSession(state, { askedAt: now }), outcome: null };
+    const src = catchUpSource(state);
+    if (!(n > 0) || !src) return { state: withSession(state, { askedAt: now }), outcome: null };
     const last = lastFinished(state.session);
     const startAt = last ? last.end : (state.session.loggedAt || now);
-    const r = addLiveDrink(state, Object.assign({}, drink, { qty: n }), now, { startAt, choice: 'after' });
-    const u = useStash(r.state, n);
+    const r = addLiveDrink(state, Object.assign({}, src.drink, { qty: n }), now, { startAt, choice: 'after' });
+    const u = src.id ? useStash(r.state, n, src.id) : { state: r.state, done: false };
     return { state: withSession(u.state, { askedAt: now }), outcome: Object.assign({}, r.outcome, { stashDone: u.done }) };
   }
 
@@ -358,9 +394,9 @@
     return withSession(state, { rounds });
   }
 
-  /** The live round stops now. Finishing also puts away the stash. */
+  /** The live round stops now. The stash stays: it is still in the fridge. */
   function finishLive(state, now) {
-    return withSession(state, { stash: null, rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
+    return withSession(state, { rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
   }
 
   /** Change a round's times or drinks in place. */
@@ -375,8 +411,8 @@
 
   const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
     addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf, saveToHistory: pushHistory,
-    startChoices, startClash, lastFinished, stashLeft, setStash, clearStash, openStash,
-    catchUpDue, catchUpDrink, catchUp, nudgeRound, recentDrinks, lessOf };
+    startChoices, startClash, lastFinished, stashOf, stashCount, latestStash, migrateStash, stashAdd, stashSet,
+    stashRemove, clearStash, useStash, openStash, catchUpDue, catchUpSource, catchUpDrink, catchUp, nudgeRound, recentDrinks, lessOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;
 })(typeof self !== 'undefined' ? self : this);
