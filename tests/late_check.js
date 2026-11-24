@@ -221,7 +221,7 @@ const checks = [
     assert.equal(await bg(), 'rgb(246, 240, 228)', 'follows a light phone by default');
     assert.equal(await heroText(), 'rgb(246, 237, 218)', 'the 3D hero stays at dusk in light mode');
     await page.click('[data-go=you]');
-    await page.click('#themeSeg [data-theme-choice="dark"]');
+    await page.click('#themeSeg [data-theme-choice="dark"]'); await page.waitForTimeout(650);
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
     assert.equal(await bg(), 'rgb(14, 21, 34)');
     await page.reload(); await page.waitForTimeout(400);
@@ -229,9 +229,9 @@ const checks = [
     assert.equal(await page.locator('#themeSeg [data-theme-choice="dark"]').getAttribute('aria-pressed'), 'true');
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.click('[data-go=you]');
-    await page.click('#themeSeg [data-theme-choice="light"]');
+    await page.click('#themeSeg [data-theme-choice="light"]'); await page.waitForTimeout(650);
     assert.equal(await bg(), 'rgb(246, 240, 228)', 'Light wins over a dark phone');
-    await page.click('#themeSeg [data-theme-choice="auto"]');
+    await page.click('#themeSeg [data-theme-choice="auto"]'); await page.waitForTimeout(650);
     assert.equal(await page.evaluate(() => document.documentElement.hasAttribute('data-theme')), false);
     assert.equal(await bg(), 'rgb(14, 21, 34)', 'Automatic follows the phone again');
     assert.deepEqual(errors, []);
