@@ -113,7 +113,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 }
 .hero-top{position:relative;display:flex;justify-content:space-between;align-items:center;max-width:560px;margin:0 auto}
 .brand{font-family:var(--display);font-size:1.05rem;letter-spacing:.01em;color:var(--text)}
-.ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:7px 14px;font-size:.9rem;font-weight:600}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:999px;min-height:44px;padding:7px 16px;font-size:.9rem;font-weight:600}
 .hero-body{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;gap:8px;max-width:560px;margin:18px auto 0}
 .readout{padding-bottom:12px;min-width:0}
 .kicker{margin:0;font-weight:600;color:var(--muted);font-size:1rem}
@@ -409,8 +409,8 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .another-hint::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:8px;vertical-align:1px}
 .hero:not(.three).has-another .stats{padding-bottom:14px}
 .hero:not(.three) .another{padding-bottom:160px}
-.li-step{display:flex;gap:6px}
-.li-step button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(42,26,15,.2);background:transparent;color:var(--ink);font-size:1.1rem;line-height:1;display:grid;place-items:center}
+.li-step{display:flex;gap:4px}
+.li-step button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(42,26,15,.2);background:transparent;color:var(--ink);font-size:1.1rem;line-height:1;display:grid;place-items:center}
 .li-step button.more{background:var(--ink);color:#F6EDDA;border-color:var(--ink)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
@@ -496,7 +496,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 /* ---------- V3: offline, updates, favourites ---------- */
 .brand-wrap{display:flex;align-items:center;gap:10px;min-width:0}
 .top-btns{display:flex;align-items:center;gap:8px;flex:none}
-.ghost.round{width:38px;height:38px;padding:0;display:grid;place-items:center;font-size:1.05rem;font-weight:700}
+.ghost.round{width:44px;height:44px;min-height:44px;padding:0;display:grid;place-items:center;font-size:1.05rem;font-weight:700}
 .ghost.round svg{width:19px;height:19px}
 .set-link{display:flex;width:100%;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);text-align:left;min-height:64px}
 .set-link > span{flex:1;display:flex;flex-direction:column;gap:2px}
