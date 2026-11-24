@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '5.2.0';
+self.DRY_VERSION = '6.0.0';
 self.DRY_CHANGES = [
-  'New Appearance setting under Your body: Automatic follows your phone, or choose Light or Dark for the whole app.',
-  'The 3D night scene at the top now always stays at dusk, in Light mode too.'
+  'A new look: midnight navy and cream, with a floating bar to move between Tonight, Plan, History and You.',
+  'Tonight now leads with a blood alcohol gauge, your risk level, session time and quick actions.',
+  'Status messages now appear at the top of the screen.'
 ];
