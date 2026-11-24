@@ -486,7 +486,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 @keyframes blink{50%{opacity:.25}}
 
 .coaster{
-  position:fixed;left:var(--gutter);right:var(--gutter);bottom:calc(16px + env(safe-area-inset-bottom));z-index:70;
+  position:fixed;left:var(--gutter);right:var(--gutter);bottom:calc(var(--nav-h) + 26px + env(safe-area-inset-bottom));z-index:70;
   max-width:528px;margin:0 auto;padding:20px 18px 18px;border-radius:30px;
   background:
     radial-gradient(circle at 18% 22%,rgba(42,26,15,.05) 0 1px,transparent 1.5px) 0 0/9px 9px,
