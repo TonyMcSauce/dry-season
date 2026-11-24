@@ -9,5 +9,6 @@ self.DRY_CHANGES = [
   'Tonight now leads with a blood alcohol gauge, your risk level, session time and quick actions.',
   'A faster drink picker: category chips, compact cards and a one-tap add.',
   'History now shows totals, a peak chart and your nights grouped by month. Your stash of favourites lives under You.',
+  'Smoother screens and sheets, a gentle fade when you switch Light and Dark, and a more readable Light theme.',
   'Status messages now appear at the top of the screen.'
 ];

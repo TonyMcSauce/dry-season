@@ -35,6 +35,7 @@
   --surface:#152033; --surface-hi:#1C2A42; --shadow-soft:0 10px 30px -14px rgba(0,0,0,.6);
   --r-card:20px; --r-pill:999px; --ease:cubic-bezier(.22,1,.36,1);
   --nav-h:68px;
+  --ink-amber:var(--amber); --ink-ok:var(--ok); --ink-over:var(--over);
   --display:'Alfa Slab One', Rockwell, Georgia, serif;
   --body:'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
   --gutter:16px;
@@ -48,6 +49,7 @@
     --field:rgba(31,42,60,.05); --receipt:#FFFBF3; --stars:0;
     --nav-bg:rgba(255,251,242,.96); --nav-pill:rgba(31,42,60,.08); --nav-shadow:0 12px 30px -12px rgba(31,42,60,.35),0 2px 6px rgba(31,42,60,.12);
     --surface:#FFFBF2; --surface-hi:#FFFFFF; --shadow-soft:0 10px 26px -16px rgba(31,42,60,.35);
+    --ink-amber:#9A540F; --ink-ok:#52651F; --ink-over:#B83A26;
     color-scheme:light;
   }
   :root:not([data-theme="dark"]) .hero{ --text:#2A1A0F; --muted:rgba(42,26,15,.7); }
@@ -61,6 +63,7 @@
   --field:rgba(31,42,60,.05); --receipt:#FFFBF3; --stars:0;
   --nav-bg:rgba(255,251,242,.96); --nav-pill:rgba(31,42,60,.08); --nav-shadow:0 12px 30px -12px rgba(31,42,60,.35),0 2px 6px rgba(31,42,60,.12);
   --surface:#FFFBF2; --surface-hi:#FFFFFF; --shadow-soft:0 10px 26px -16px rgba(31,42,60,.35);
+  --ink-amber:#9A540F; --ink-ok:#52651F; --ink-over:#B83A26;
   color-scheme:light;
 }
 :root[data-theme="light"] .hero{ --text:#2A1A0F; --muted:rgba(42,26,15,.7); }
@@ -82,7 +85,7 @@ body{
   padding-bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom));
 }
 body::after{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:50; opacity:.07; mix-blend-mode:overlay;
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:50; opacity:.04;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 button,input{font:inherit;color:inherit}
@@ -193,7 +196,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;
 .rounds{list-style:none;margin:0 0 4px;padding:0;display:grid;gap:10px}
 .round-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--field);border:1px solid var(--line)}
 .round-card .rc-body{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:0;background:transparent;color:inherit;padding:0;min-height:44px}
-.rc-when{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.rc-when{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-amber)}
 .rc-what{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-meta{font-size:.8rem;color:var(--muted)}
 .round-card .btn-mini{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600;flex:none}
@@ -355,7 +358,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .pick-meta{color:var(--muted);font-size:.86rem}
 .abv-pill{font-weight:700;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.9rem}
 .cfg{padding:18px var(--gutter) 22px;display:grid;gap:18px}
-.cfg-note{margin:-8px 0 0;color:var(--amber);font-size:.9rem}
+.cfg-note{margin:-8px 0 0;color:var(--ink-amber);font-size:.9rem}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:9px 14px;font-weight:600;font-size:.95rem;min-height:42px}
 .chip[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:var(--ink)}
@@ -400,9 +403,9 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .risk[data-level="raised"] .meter i:nth-child(-n+2){background:var(--impaired)}
 .risk[data-level="high"] .meter i{background:var(--over)}
 .risk-level{font-family:var(--display);font-size:3.1rem;line-height:1;margin:12px 0 6px;transition:color .5s}
-.risk[data-level="low"] .risk-level{color:var(--ok)}
-.risk[data-level="raised"] .risk-level{color:var(--impaired)}
-.risk[data-level="high"] .risk-level{color:var(--over)}
+.risk[data-level="low"] .risk-level{color:var(--ink-ok)}
+.risk[data-level="raised"] .risk-level{color:var(--ink-amber)}
+.risk[data-level="high"] .risk-level{color:var(--ink-over)}
 .scale{position:relative;padding-top:40px}
 .scale-bar{position:relative;height:16px;border-radius:999px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
 .pin-label{position:absolute;top:0;transform:translateX(-50%);background:var(--text);color:var(--ground);font-weight:700;font-size:.82rem;padding:4px 9px;border-radius:8px;white-space:nowrap;transition:left .9s cubic-bezier(.2,.8,.2,1)}
@@ -477,7 +480,7 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 .upd-state{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;font-weight:600;white-space:nowrap;padding-top:2px;color:var(--muted)}
 .upd-state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
 .upd-state[data-state="current"]{color:var(--ok)}
-.upd-state[data-state="found"]{color:var(--amber)}
+.upd-state[data-state="found"]{color:var(--ink-amber)}
 .upd-state[data-state="error"]{color:var(--over)}
 .upd-state[data-state="checking"]::before{animation:blink 1s ease-in-out infinite}
 @keyframes blink{50%{opacity:.25}}
@@ -533,7 +536,7 @@ body[data-tab="history"] [data-panel]:not([data-panel="history"]),
 body[data-tab="you"] [data-panel]:not([data-panel="you"]){display:none}
 .screen-head{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 28px) var(--gutter) 4px}
 html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
-.screen-kicker{margin:0 0 6px;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+.screen-kicker{margin:0 0 6px;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-amber)}
 .screen-head h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(1.9rem,8vw,2.4rem);line-height:1.05}
 #bodyDetails summary{display:none}
 #histEmpty{padding:18px;border-radius:var(--r-card);background:var(--field);border:1px dashed var(--line);text-align:center}
@@ -670,6 +673,28 @@ dialog.sheet::backdrop{background:rgba(6,10,18,.62);backdrop-filter:none;-webkit
 #bodyDetails .settings-body{margin-top:14px;padding:18px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
 body:not([data-tab="tonight"]) .block{padding-top:26px}
 body[data-tab="plan"] #chartBox{padding:14px 10px 6px;border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft)}
+
+/* Motion (v6). Everything here is switched off by prefers-reduced-motion at the end of the sheet. */
+html.theming,html.theming *,html.theming *::before,html.theming *::after{transition:background-color .4s ease,color .4s ease,border-color .4s ease,fill .4s ease,stroke .4s ease,box-shadow .4s ease!important}
+@keyframes screenIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+body.tab-anim .wrap > [data-panel],body.tab-anim .quick,body.tab-anim .screen-head{animation:screenIn .42s var(--ease) both}
+body.tab-anim .hero{animation:fadeIn .5s ease both}
+body.tab-anim .wrap > [data-panel]:nth-child(2){animation-delay:.04s}
+body.tab-anim .wrap > [data-panel]:nth-child(3){animation-delay:.08s}
+body.tab-anim .wrap > [data-panel]:nth-child(4){animation-delay:.12s}
+body.tab-anim .wrap > [data-panel]:nth-child(n+5){animation-delay:.16s}
+dialog.sheet[open]::backdrop{animation:fadeIn .3s ease both}
+#pickList.enter .pick-row{animation:cardIn .38s var(--ease) both}
+#pickList.enter .pick-row:nth-child(2){animation-delay:.03s}
+#pickList.enter .pick-row:nth-child(3){animation-delay:.06s}
+#pickList.enter .pick-row:nth-child(4){animation-delay:.09s}
+#pickList.enter .pick-row:nth-child(5){animation-delay:.12s}
+#pickList.enter .pick-row:nth-child(n+6){animation-delay:.15s}
+.h-open,.now-card,.cat,.chip,.st-log,.q-btn,.tabbar button{transition:transform .15s var(--ease),background-color .2s,color .2s,border-color .2s}
+.h-open:active,.now-card:active,.cat:active,.chip:active,.st-log:active{transform:scale(.97)}
+.toast{transition:transform .35s var(--ease),opacity .25s}
 
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
@@ -1463,6 +1488,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     else document.documentElement.removeAttribute('data-theme');
   }
   document.querySelectorAll('#themeSeg [data-theme-choice]').forEach((b) => b.addEventListener('click', () => {
+    const root = document.documentElement;
+    if (!reduceMotionPref()) { root.classList.add('theming'); setTimeout(() => root.classList.remove('theming'), 500); }
     state.profile.theme = b.dataset.themeChoice; save(); applyTheme(); renderBody();
   }));
   applyTheme();
@@ -1504,8 +1531,9 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     $('#hstats').hidden = !h.length;
     if (h.length) {
       const peaks = h.map((n) => n.peak), over = peaks.filter((v) => v > limit).length;
-      $('#hsNights').textContent = String(h.length);
-      $('#hsDrinks').textContent = String(h.reduce((a, n) => a + n.count, 0));
+      const dn = h.reduce((a, n) => a + n.count, 0);
+      $('#hsNights').textContent = $('#hsNights').dataset.to = String(h.length);
+      $('#hsDrinks').textContent = $('#hsDrinks').dataset.to = String(dn);
       $('#hsAvg').textContent = fmtBac(peaks.reduce((a, v) => a + v, 0) / h.length);
       $('#hsMax').textContent = fmtBac(Math.max.apply(null, peaks));
       $('#hsOver').textContent = over === 0 ? 'None of these nights peaked over ' + fmtLimit(limit) + '.'
@@ -1638,7 +1666,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       const c = document.createElement('button'); c.type = 'button'; c.className = 'cat';
       c.textContent = CAT_NAMES[g.group] || g.group;
       c.setAttribute('aria-pressed', String(g.group === pickCat));
-      c.addEventListener('click', () => { pickCat = g.group; buildList(); sheet.scrollTop = 0; });
+      c.addEventListener('click', () => { pickCat = g.group; buildList(); sheet.scrollTop = 0; enterList(); });
       cats.appendChild(c);
     });
     box.appendChild(cats);
@@ -1711,7 +1739,9 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     buildList(favKey(it), group === 'Favourites' && !on ? null : group);
     toast(on ? it.name + ' ' + it.ml + ' ml pinned to Favourites' : it.name + ' ' + it.ml + ' ml unpinned');
   }
+  function enterList() { const l = $('#pickList'); l.classList.remove('enter'); void l.offsetWidth; l.classList.add('enter'); }
   function showList() {
+    enterList();
     $('#pickList').hidden = false; $('#pickCfg').hidden = true; $('#sheetBack').hidden = true;
     $('#sheetTitle').textContent = 'Pick a drink';
   }
@@ -2446,6 +2476,21 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     });
     try { sessionStorage.setItem('dry-tab', t); } catch (e) {}
     if (scroll !== false) window.scrollTo(0, 0);
+    if (scroll !== false && !reduceMotionPref()) {
+      document.body.classList.remove('tab-anim'); void document.body.offsetWidth; document.body.classList.add('tab-anim');
+      if (t === 'history') ['hsNights', 'hsDrinks'].forEach((id) => countUp($('#' + id)));
+    }
+  }
+  // A short count-up for whole-number stats
+  function countUp(el) {
+    const to = parseInt(el.dataset.to || el.textContent, 10);
+    if (!(to > 0) || el.parentNode.parentNode.parentNode.hidden) return;
+    const t0 = performance.now(), D = 600;
+    (function step(t) {
+      const k = Math.min(1, (t - t0) / D);
+      el.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) requestAnimationFrame(step); else el.textContent = String(to);
+    })(t0);
   }
   tabbar.addEventListener('click', (e) => {
     const b = e.target.closest('[data-go]');
