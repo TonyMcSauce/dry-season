@@ -465,6 +465,39 @@ dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-web
 
 /* ---------- V3: offline, updates, favourites ---------- */
 .brand-wrap{display:flex;align-items:center;gap:10px;min-width:0}
+.top-btns{display:flex;align-items:center;gap:8px;flex:none}
+.ghost.round{width:38px;height:38px;padding:0;display:grid;place-items:center;font-size:1.05rem;font-weight:700}
+.ghost.round svg{width:19px;height:19px}
+.set-link{display:flex;width:100%;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);text-align:left;min-height:64px}
+.set-link > span{flex:1;display:flex;flex-direction:column;gap:2px}
+.set-link strong{font-size:1.02rem}
+.set-link .set-sum{font-size:.88rem;color:var(--muted)}
+.set-link svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.set-pad{padding:6px var(--gutter) 26px}
+.set-sec{display:grid;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}
+.set-sec:last-child{border-bottom:0}
+.set-h{margin:0;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.help-body{padding:8px var(--gutter) 28px;display:grid;gap:4px}
+.help-body section{padding:16px 0;border-bottom:1px solid var(--line)}
+.help-body section:last-of-type{border-bottom:0}
+.help-body h4{margin:0 0 8px;font-family:var(--display);font-weight:400;font-size:1.25rem}
+.help-body p{margin:0 0 10px;line-height:1.5}
+.help-body ul{margin:0 0 6px;padding-left:20px;display:grid;gap:8px;line-height:1.45}
+.help-body li strong{color:var(--text)}
+.help-body .help-lead{font-size:1.02rem;color:var(--muted)}
+.help-body details{margin-top:6px;padding:12px 14px;border-radius:14px;background:var(--field);border:1px solid var(--line)}
+.help-body summary{font-weight:700;cursor:pointer}
+.help-body details[open] summary{margin-bottom:8px}
+.help-safe{display:flex;gap:10px;padding:14px;border-radius:16px;background:rgba(228,111,72,.12);border:1px solid rgba(228,111,72,.4)}
+.help-safe p{margin:0}
+.tour{position:fixed;inset:0;z-index:1000}
+.tour-ring{position:absolute;border-radius:18px;border:2px solid var(--amber);box-shadow:0 0 0 9999px rgba(10,8,6,.74);transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none}
+.tour-card{position:absolute;left:var(--gutter);right:var(--gutter);bottom:calc(16px + env(safe-area-inset-bottom));max-width:528px;margin:0 auto;background:var(--sheet);color:var(--text);border-radius:22px;padding:18px 18px 16px;box-shadow:0 18px 40px rgba(0,0,0,.4);display:grid;gap:8px}
+.tour-card.top{bottom:auto;top:calc(16px + env(safe-area-inset-top))}
+.tour-card h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.35rem}
+.tour-card p{margin:0;line-height:1.45}
+.tour-step{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.tour-btns{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:6px}
 .net{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;animation:netIn .4s ease-out}
 .net i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor}
 @keyframes netIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
@@ -557,7 +590,11 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   <div class="stars" aria-hidden="true"></div>
   <div class="hero-top">
     <div class="brand-wrap"><span class="brand">Dry Season</span><span class="net" id="net" hidden title="No connection. Everything still works."><i aria-hidden="true"></i>Offline</span></div>
-    <button class="ghost" id="shareBtn" type="button">Share</button>
+    <div class="top-btns">
+      <button class="ghost round" id="helpBtn" type="button" aria-label="How Dry Season works">?</button>
+      <button class="ghost round" id="settingsBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <button class="ghost" id="shareBtn" type="button">Share</button>
+    </div>
   </div>
 
   <div class="status" id="statusBlock" hidden>
@@ -661,7 +698,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <button class="btn quiet" id="textFriend" type="button">Text a friend my status</button>
   </section>
 
-  <section class="block" aria-labelledby="nightH">
+  <section class="block" aria-labelledby="nightH" id="nightSection">
     <h2 id="nightH">The night</h2>
     <ul class="rounds" id="rounds"></ul>
     <p class="hint rounds-empty" id="roundsEmpty">Nothing on tonight's tab yet. Had a few already? Log them with the times you drank.</p>
@@ -708,7 +745,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <p class="hint">Estimated blood alcohol from your first sip until your body is clear.</p>
   </section>
 
-  <section class="block" aria-labelledby="driveH">
+  <section class="block" aria-labelledby="driveH" id="driveSection">
     <h2 id="driveH">Driving soon?</h2>
     <p class="hint" style="margin:0 0 14px">Set when you next need to drive or start a shift. You'll see whether you're likely to be fully clear, with an hour to spare.</p>
     <label class="field">I need to drive at
@@ -721,54 +758,12 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <button class="linkbtn" id="driveClear" type="button" hidden>Remove drive time</button>
   </section>
 
-  <details class="block" id="bodyDetails">
-    <summary><h2>Your body</h2><span class="chev" aria-hidden="true">&#8964;</span></summary>
-    <div class="settings-body">
-      <label class="field">Weight in kg
-        <input type="number" id="kg" inputmode="decimal" min="35" max="250" step="1">
-      </label>
-      <div>
-        <p class="label">Body type used in the formula</p>
-        <div class="seg" role="group" aria-label="Body type">
-          <button type="button" data-sex="m">Male</button>
-          <button type="button" data-sex="f">Female</button>
-        </div>
-      </div>
-      <div>
-        <div class="range-row"><span class="label" style="margin:0">How fast your body clears alcohol</span><b id="betaVal"></b></div>
-        <input type="range" id="beta" min="0.010" max="0.020" step="0.001">
-        <p class="hint">Most people clear between 0.010% and 0.020% per hour. 0.015% is a typical average.</p>
-      </div>
-      <div>
-        <label class="field">Legal driving limit (% blood alcohol)
-          <input type="number" id="limit" inputmode="decimal" min="0" max="0.2" step="0.01">
-        </label>
-        <div class="chips" id="limitChips" style="margin-top:10px"></div>
-        <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
-      </div>
-      <div>
-        <p class="label">Appearance</p>
-        <div class="seg" id="themeSeg" role="group" aria-label="Appearance">
-          <button type="button" data-theme-choice="auto">Automatic</button>
-          <button type="button" data-theme-choice="light">Light</button>
-          <button type="button" data-theme-choice="dark">Dark</button>
-        </div>
-        <p class="hint">Automatic follows your phone. The night scene at the top always stays at dusk.</p>
-      </div>
-      <label class="switch" style="margin-top:0">
-        <input type="checkbox" id="islandOn">
-        <span class="track" aria-hidden="true"></span>
-        Live island at the top of the screen
-      </label>
-      <div class="appinfo">
-        <div class="appinfo-row">
-          <div><p class="appinfo-ver" id="appVersion">Version</p><p class="hint" id="lastChecked" style="margin:2px 0 0"></p></div>
-          <span class="upd-state" id="updState" data-state="current" aria-live="polite"></span>
-        </div>
-        <button class="btn quiet" id="checkNow" type="button">Check for updates</button>
-      </div>
-    </div>
-  </details>
+  <section class="block" aria-label="Settings">
+    <button class="set-link" id="openSettings" type="button">
+      <span><strong>Your body and settings</strong><span class="set-sum" id="setSum"></span></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </section>
 
   <aside class="safety">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.4-3.4 8.2-8 9-4.6-.8-8-4.6-8-9V6l8-3z"/><path d="M12 8v5"/><path d="M12 16.5v.01"/></svg>
@@ -787,6 +782,141 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   <footer>Dry Season. Built by Anthony. Drink water between rounds.</footer>
 </main>
+
+<dialog class="sheet settings" id="settings" aria-labelledby="settingsTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-head">
+    <span style="width:40px" aria-hidden="true"></span>
+    <h3 id="settingsTitle">Settings</h3>
+    <button class="icon-btn" id="settingsClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="set-pad">
+    <section class="set-sec" aria-labelledby="setAppH">
+      <h4 class="set-h" id="setAppH">Appearance</h4>
+        <div>
+          <p class="label">Theme</p>
+          <div class="seg" id="themeSeg" role="group" aria-label="Appearance">
+            <button type="button" data-theme-choice="auto">Automatic</button>
+            <button type="button" data-theme-choice="light">Light</button>
+            <button type="button" data-theme-choice="dark">Dark</button>
+          </div>
+          <p class="hint">Automatic follows your phone. The night scene at the top always stays at dusk.</p>
+        </div>
+    </section>
+    <section class="set-sec" aria-labelledby="setBodyH">
+      <h4 class="set-h" id="setBodyH">Your body</h4>
+        <label class="field">Weight in kg
+          <input type="number" id="kg" inputmode="decimal" min="35" max="250" step="1">
+        </label>
+        <div>
+          <p class="label">Body type used in the formula</p>
+          <div class="seg" role="group" aria-label="Body type">
+            <button type="button" data-sex="m">Male</button>
+            <button type="button" data-sex="f">Female</button>
+          </div>
+        </div>
+        <div>
+          <div class="range-row"><span class="label" style="margin:0">How fast your body clears alcohol</span><b id="betaVal"></b></div>
+          <input type="range" id="beta" min="0.010" max="0.020" step="0.001">
+          <p class="hint">Most people clear between 0.010% and 0.020% per hour. 0.015% is a typical average.</p>
+        </div>
+        <div>
+          <label class="field">Legal driving limit (% blood alcohol)
+            <input type="number" id="limit" inputmode="decimal" min="0" max="0.2" step="0.01">
+          </label>
+          <div class="chips" id="limitChips" style="margin-top:10px"></div>
+          <p class="hint">Botswana's limit is 0.05%. Being under any limit doesn't make it safe to drive.</p>
+        </div>
+    </section>
+    <section class="set-sec" aria-labelledby="setScreenH">
+      <h4 class="set-h" id="setScreenH">On screen</h4>
+        <label class="switch" style="margin-top:0">
+          <input type="checkbox" id="islandOn">
+          <span class="track" aria-hidden="true"></span>
+          Live island at the top of the screen
+        </label>
+    </section>
+    <section class="set-sec" aria-labelledby="setAboutH">
+      <h4 class="set-h" id="setAboutH">About</h4>
+      <button class="btn quiet" id="setHelp" type="button">How Dry Season works</button>
+      <button class="btn quiet" id="setTour" type="button">Show me around</button>
+        <div class="appinfo">
+          <div class="appinfo-row">
+            <div><p class="appinfo-ver" id="appVersion">Version</p><p class="hint" id="lastChecked" style="margin:2px 0 0"></p></div>
+            <span class="upd-state" id="updState" data-state="current" aria-live="polite"></span>
+          </div>
+          <button class="btn quiet" id="checkNow" type="button">Check for updates</button>
+        </div>
+    </section>
+  </div>
+</dialog>
+
+<dialog class="sheet help" id="help" aria-labelledby="helpTitle">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-head">
+    <span style="width:40px" aria-hidden="true"></span>
+    <h3 id="helpTitle">How Dry Season works</h3>
+    <button class="icon-btn" id="helpClose" type="button" aria-label="Close">&#215;</button>
+  </div>
+  <div class="help-body">
+    <section>
+      <p class="help-lead">You tell Dry Season what you drink and when. It estimates how much alcohol is in your blood over time and counts down to when your body should be clear.</p>
+      <button class="btn" id="helpTour" type="button">Show me around</button>
+    </section>
+    <section aria-labelledby="hLog">
+      <h4 id="hLog">Logging your night</h4>
+      <ul>
+        <li><strong>Add a drink</strong> when you open one. If nothing is going yet, choose when you started: just now, a little while ago, or right after your last round.</li>
+        <li><strong>Rounds</strong> are stretches of drinking. Drinks in a round are spread evenly from its start to its end, so it doesn't matter exactly when each one went down.</li>
+        <li><strong>Got a few on hand?</strong> Add them all with Just now and choose <em>Open 1, save the rest for later</em>. Your stash waits on the main screen. Tap <em>Open next</em> each time you crack one.</li>
+        <li><strong>Forgot to log?</strong> No problem. When you come back after a while, the app asks how many you've opened since and spreads them across the gap.</li>
+        <li><strong>Had drinks before opening the app?</strong> Use <em>Log earlier drinks</em> to set a round with the times you drank.</li>
+        <li><strong>Got a time wrong?</strong> Tap <em>Adjust times</em> on any round to move its start or finish by 15 minutes.</li>
+        <li>Tap <strong>Finished drinking</strong> when you're done for the night.</li>
+      </ul>
+    </section>
+    <section aria-labelledby="hFast">
+      <h4 id="hFast">Log without opening the app</h4>
+      <p>On Android, long press the Dry Season icon and tap <strong>One more</strong>. It logs the next drink from your stash, or another of your last drink, in a couple of seconds.</p>
+      <details>
+        <summary>Setting it up on iPhone</summary>
+        <p>iPhones don't show shortcuts on web app icons, but the Shortcuts app can do the same job.</p>
+        <ul>
+          <li>Open <strong>Shortcuts</strong>, tap <strong>+</strong>, add the <strong>Open URLs</strong> action and paste this app's address with <strong>?action=one</strong> at the end.</li>
+          <li>Name it <strong>One more</strong>. You can then run it from a home screen icon, by asking Siri, with <strong>Back Tap</strong> (Settings, Accessibility, Touch, Back Tap), or from the <strong>Action Button</strong> on newer iPhones.</li>
+        </ul>
+      </details>
+    </section>
+    <section aria-labelledby="hRead">
+      <h4 id="hRead">Reading the screen</h4>
+      <ul>
+        <li><strong>Clear by</strong> is when your blood alcohol should reach zero. The countdown runs live.</li>
+        <li><strong>The status pill</strong> tells you whether you're likely under or over your legal limit right now.</li>
+        <li><strong>The night scene</strong> shows your evening as hills: higher hills mean more alcohol. The glass empties as you sober up.</li>
+        <li><strong>The risk scale</strong> shows where you are today, from impaired to danger, with a pacing nudge when you're drinking fast.</li>
+        <li><strong>Driving soon?</strong> Set when you need to drive and you'll see whether you're likely to be clear, with an hour to spare.</li>
+      </ul>
+    </section>
+    <section aria-labelledby="hCant">
+      <h4 id="hCant">What it can't know</h4>
+      <p>Dry Season uses a well known formula with your weight, body type and how fast you clear alcohol. Real bodies vary with food, sleep, health and medication, so every number is an estimate.</p>
+      <div class="help-safe"><p><strong>Never use this to decide whether you can drive.</strong> If you're unsure, don't. Get a lift, take a cab, or stay over.</p></div>
+    </section>
+  </div>
+</dialog>
+
+<div class="tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle" hidden>
+  <div class="tour-ring" id="tourRing"></div>
+  <div class="tour-card" id="tourCard">
+    <p class="tour-step" id="tourStep"></p>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="tour-btns">
+      <button class="btn quiet" id="tourSkip" type="button">Skip</button>
+      <button class="btn" id="tourNext" type="button">Next</button>
+    </div>
+  </div>
+</div>
 
 <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
   <div class="grab" aria-hidden="true"></div>
@@ -1314,6 +1444,62 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     return false;
   }
 
+  // Settings, Help and the first run walkthrough
+  const settingsDlg = $('#settings'), helpDlg = $('#help');
+  function renderSetSum() {
+    const t = { auto: 'Automatic', light: 'Light', dark: 'Dark' }[state.profile.theme || 'auto'];
+    $('#setSum').textContent = state.profile.kg + ' kg · ' + (state.profile.sex === 'f' ? 'Female' : 'Male') + ' · ' + t + ' theme';
+  }
+  function openSettings() { if (helpDlg.open) helpDlg.close(); renderBody(); settingsDlg.showModal(); settingsDlg.scrollTop = 0; }
+  function openHelp() { if (settingsDlg.open) settingsDlg.close(); helpDlg.showModal(); helpDlg.scrollTop = 0; }
+  $('#settingsBtn').addEventListener('click', openSettings);
+  $('#openSettings').addEventListener('click', openSettings);
+  $('#settingsClose').addEventListener('click', () => settingsDlg.close());
+  $('#helpBtn').addEventListener('click', openHelp);
+  $('#setHelp').addEventListener('click', openHelp);
+  $('#helpClose').addEventListener('click', () => helpDlg.close());
+  [settingsDlg, helpDlg].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
+  settingsDlg.addEventListener('close', () => { renderSetSum(); });
+
+  const TOUR = [
+    ['.readout', 'Your clear time', 'This is when your body should be free of alcohol. It counts down live as your night goes on.'],
+    ['#openPicker', 'Log a drink', 'Tap here when you open one and say when you started. Got a few on hand? Save them as a stash and tap Open next as you go.'],
+    ['#nightSection', 'Your night', 'Each round of drinks shows up here. Tap Adjust times to fix when you started or finished, or Log earlier drinks for ones you had before.'],
+    ['#driveSection', 'Driving soon?', 'Set when you need to drive and get a straight answer on whether you\'re likely to be clear in time.'],
+    ['.top-btns', 'Help and settings', 'Tap ? any time for the full guide, and the gear for your body details and Light or Dark mode.']
+  ];
+  let tourAt = -1;
+  const tourEl = $('#tour');
+  function placeTour() {
+    const step = TOUR[tourAt], el = document.querySelector(step[0]);
+    $('#tourStep').textContent = (tourAt + 1) + ' of ' + TOUR.length;
+    $('#tourTitle').textContent = step[1];
+    $('#tourText').textContent = step[2];
+    $('#tourNext').textContent = tourAt === TOUR.length - 1 ? 'Got it' : 'Next';
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'auto' });
+    requestAnimationFrame(() => {
+      const r = el.getBoundingClientRect(), pad = 8, ring = $('#tourRing');
+      const top = Math.max(4, r.top - pad), h = Math.min(window.innerHeight - 8, r.height + pad * 2);
+      Object.assign(ring.style, { left: (r.left - pad) + 'px', top: top + 'px', width: (r.width + pad * 2) + 'px', height: h + 'px' });
+      $('#tourCard').classList.toggle('top', r.top + r.height / 2 > window.innerHeight * 0.55);
+    });
+  }
+  function startTour() {
+    if (helpDlg.open) helpDlg.close();
+    if (settingsDlg.open) settingsDlg.close();
+    setMeta({ toured: true });
+    tourAt = 0; tourEl.hidden = false; placeTour();
+    $('#tourNext').focus();
+  }
+  function endTour() { tourEl.hidden = true; tourAt = -1; window.scrollTo({ top: 0 }); }
+  $('#tourNext').addEventListener('click', () => { if (tourAt >= TOUR.length - 1) endTour(); else { tourAt++; placeTour(); } });
+  $('#tourSkip').addEventListener('click', endTour);
+  $('#helpTour').addEventListener('click', startTour);
+  $('#setTour').addEventListener('click', startTour);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tourAt >= 0) endTour(); });
+  window.addEventListener('resize', () => { if (tourAt >= 0) placeTour(); });
+
   // Appearance: Automatic follows the phone; Light or Dark is fixed for the whole app
   function applyTheme() {
     const t = state.profile.theme;
@@ -1327,6 +1513,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   // Body settings
   function renderBody() {
+    if (typeof renderSetSum === 'function') renderSetSum();
     document.querySelectorAll('#themeSeg [data-theme-choice]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === (state.profile.theme || 'auto'))));
     $('#kg').value = state.profile.kg;
     document.querySelectorAll('[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.profile.sex)));
@@ -2136,7 +2323,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner();
     if (island) island.update(islandSnap(lastSim));
   }
-  function renderAll() { renderNight(); renderStash(); renderTab(); renderBody(); renderHistory(); buildScale(); renderLive(); }
+  function renderAll() { renderNight(); renderStash(); renderTab(); renderBody(); renderSetSum(); renderHistory(); buildScale(); renderLive(); }
   buildList();
   renderAll();
   let ticks = 0;
@@ -2236,6 +2423,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   async function showCoaster() {
     if (!reg || !reg.waiting || coasterDismissed || pouring) return;
     const c = $('#coaster');
+    if ($('#settings').open) $('#settings').close();
     waitingVersion = await askVersion(reg.waiting);
     const v = waitingVersion ? (waitingVersion.endsWith('.0') ? waitingVersion.slice(0, -2) : waitingVersion) : 'New';
     $('#stamp').textContent = v;
@@ -2334,6 +2522,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       if (L) addFromIsland(Object.assign({}, L, { toast: true }));
       else { buildList(); showList(); sheet.showModal(); }
     }, wait);
+  } else if (!hadData && !appMeta().toured) {
+    setTimeout(() => { if (!document.querySelector('dialog[open]')) startTour(); }, wait + 600);
   } else {
     setTimeout(maybeCatchUp, wait + 400);
   }

@@ -3,11 +3,10 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '5.3.0';
+self.DRY_VERSION = '5.4.0';
 self.DRY_CHANGES = [
-  'Say when you started: Just now, 15 minutes to 2 hours ago, a custom time, or right after your last round. No more guessing two hours back.',
-  'Tonight\'s stash: add 6 and choose "Open 1, save 5". Tap Open next as you go, and it waits through breaks until you finish.',
-  'Catch up: come back after a while and the app asks how many you have opened since, then spreads them across the gap.',
-  'One more: long press the app icon to log another of your last drink, or the next from your stash, without browsing.',
-  'Adjust times on any round with quick 15 minute nudges.'
+  'New ? button at the top: a short, friendly guide to how Dry Season works, logging your night, and reading the screen.',
+  'New Settings, behind the gear at the top: Appearance (Automatic, Light or Dark) comes first, then your body details.',
+  'Show me around: a quick walkthrough of the main screen. New visitors see it once, and anyone can replay it from Help.',
+  'iPhone users: Help shows how to set up One more with Shortcuts, Back Tap or the Action Button.'
 ];
