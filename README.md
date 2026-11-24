@@ -4,6 +4,7 @@ A small, good looking web app that estimates when your body will be clear of alc
 
 ## New in 5.5: one tap for another
 
+* **5.5.1:** fixed buttons near the bottom of the screen ignoring taps after an Undo message faded.
 * **Buttons under the bottle.** Once a drink is on the tab, *+ Another Corona* sits right below the glass. With two different drinks in play you get one button for each, most recent first. With a stash, the first button reads *Open next · 4 left*.
 * **Undo.** Every one tap add shows *Undo* for 5 seconds.
 * **Minus and plus** on each drink in the round you are on, on Tonight's tab. Finished rounds keep only remove.

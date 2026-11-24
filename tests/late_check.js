@@ -486,6 +486,21 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['once the Undo message fades, it never catches a tap meant for what is under it', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
+      rounds: [{ id: 'a', start: local(21, 30), end: null, lastAt: local(21, 50), drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.locator('#anotherBtns button').first().click();
+    const box = await page.locator('#toast').boundingBox();
+    await page.waitForTimeout(5800);
+    const hit = await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return !!(e && e.closest('#toast')); }, [box.x + box.width / 2, box.y + box.height / 2]);
+    assert.equal(hit, false, 'the faded toast is out of the way');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('toast')).visibility), 'hidden');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('coaster')).visibility), 'hidden', 'a hidden update card is out of the way too');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {

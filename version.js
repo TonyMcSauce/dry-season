@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '5.5.0';
+self.DRY_VERSION = '5.5.1';
 self.DRY_CHANGES = [
+  'Fixed: after an Undo message faded, buttons near the bottom of the screen sometimes ignored taps until you scrolled. Every button now works wherever it sits.',
   'One tap for another: buttons right under the bottle add another of your last drink. Had two different ones? You get a button for each, most recent first.',
   'Saving some for later? The first button opens the next one from your stash.',
   'Undo: every one tap add shows Undo for 5 seconds, in case of a pocket tap.',
