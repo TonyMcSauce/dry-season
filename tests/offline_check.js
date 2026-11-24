@@ -52,6 +52,8 @@ const freePort = () => new Promise((r) => { const s = http.createServer().listen
   let srv = await serve(site, port);
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, serviceWorkers: 'allow' });
+  const startVersion = /DRY_VERSION = '([^']+)'/.exec(fs.readFileSync(path.join(ROOT, 'version.js'), 'utf8'))[1];
+  await ctx.addInitScript((v) => { try { if (!localStorage.getItem('dryseason.app')) localStorage.setItem('dryseason.app', JSON.stringify({ seenVersion: v, toured: true, helped: true })); } catch (e) {} }, startVersion);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -65,8 +67,8 @@ const freePort = () => new Promise((r) => { const s = http.createServer().listen
     const version = await page.evaluate(() => self.DRY_VERSION);
     ok('service worker installed and the shell is cached (version ' + version + ')');
 
-    await page.click('#qaAdd'); await page.click('.pick-add >> nth=0'); await page.waitForTimeout(600);
-    const before = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).length);
+    await page.click('#qaAdd'); await page.click('#pickList .pick >> nth=0'); await page.click('#cfgAdd'); await page.waitForTimeout(700);
+    const before = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).reduce((a, d) => a + d.qty, 0));
     assert.equal(before, 1);
 
     // Offline: no server at all, and the browser says it is offline.
@@ -75,7 +77,7 @@ const freePort = () => new Promise((r) => { const s = http.createServer().listen
     await page.reload(); await page.waitForTimeout(1500);
     assert.equal(await page.title(), 'Dry Season');
     assert.equal(await page.locator('#net').isVisible(), true, 'Offline badge shows');
-    const drinks = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).length);
+    const drinks = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).reduce((a, d) => a + d.qty, 0));
     assert.equal(drinks, 1, 'the saved drink survives');
     assert.equal(await page.evaluate(() => document.fonts.check('16px "Schibsted Grotesk"') && document.fonts.check('16px "Alfa Slab One"')), true, 'fonts load offline');
     ok('app opens offline with its fonts, the Offline badge and the saved drink');
@@ -84,8 +86,8 @@ const freePort = () => new Promise((r) => { const s = http.createServer().listen
       assert.equal(await page.evaluate(() => document.body.dataset.tab), t);
     }
     ok('all four tabs work offline');
-    await page.click('#qaAdd'); await page.click('.pick-add >> nth=1'); await page.waitForTimeout(500);
-    const after = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).length);
+    await page.click('#qaAdd'); await page.click('.pick-add >> nth=0'); await page.waitForTimeout(500);
+    const after = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).reduce((a, d) => a + d.qty, 0));
     assert.equal(after, 2);
     ok('logging a drink works offline');
 
@@ -102,7 +104,7 @@ const freePort = () => new Promise((r) => { const s = http.createServer().listen
     ok('update card appears when a new version is published (' + next + ')');
     await page.click('#updNow');
     await page.waitForFunction((v) => document.getElementById('appVersion').textContent.includes(v), next, { timeout: 30000 });
-    const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).length);
+    const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds.flatMap((r) => r.drinks).reduce((a, d) => a + d.qty, 0));
     assert.equal(kept, 2, 'drinks kept across the update');
     ok('Update now reloads into ' + next + ' and keeps the saved drinks');
     assert.deepEqual(errors, [], 'no page errors');
