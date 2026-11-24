@@ -1,7 +1,9 @@
 # Dry Season 6.0: redesign notes
 
-Branch `v6`, built on the real `main` (5.5.1). The BAC model, night logic, drinks, service worker and manifest are
-byte for byte the same as `main`. The redesign lives in `index.html`, with a version bump in `version.js`.
+Branch `v6`, built on the real `main` (5.5.1). The BAC model, drinks, service worker and manifest are the same as
+`main`. `night.js` changed in 6.0.6 and 6.0.7: the stash became a list of drinks that lasts past the night and is
+edited from History, and the catch-up question only asks about the current evening. The redesign lives in
+`index.html`, with version bumps in `version.js`.
 
 ## How the app is built (unchanged)
 
@@ -41,7 +43,7 @@ not a native Live Activity) are plain scripts with Node tests. `sw.js` caches th
 
 ## Test results
 
-- Unit tests (Node): 90 pass.
+- Unit tests (Node): all pass (`tests/night.test.js` covers the stash list and the catch-up rules).
 - `tests/late_check.js` (browser, 29 scenarios): all pass.
 - `tests/offline_check.js` (new, Node): service worker install, offline open with fonts, offline logging, update card,
   Update now keeps data: all pass.

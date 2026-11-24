@@ -300,21 +300,43 @@ test('catch up with none stays quiet for another half hour', () => {
   assert.equal(N.catchUpDue(q, local(11, 0)), true);
 });
 
-test('catch up counts against the stash, and starts right after a round that already ended', () => {
-  let s = N.addLiveDrink(st(night()), hein(1), local(9, 30)).state;
-  s = N.stashAdd(N.finishLive(s, local(10)), hein(1), 5);
-  assert.equal(N.catchUpDue(s, local(11, 30)), true);
-  const r = N.catchUp(s, 3, local(11, 30));
+test('catch up counts against the stash, and starts right after a round that settled on its own', () => {
+  let s = N.stashAdd(N.addLiveDrink(st(night()), hein(1), local(9, 30)).state, hein(1), 5);
+  s = N.settle(s, local(14));                           // nothing logged for hours: the round ended by itself
+  assert.equal(N.liveRound(s.session), null);
+  assert.equal(N.catchUpDue(s, local(14)), true);
+  const r = N.catchUp(s, 3, local(14));
   const rs = r.state.session.rounds;
-  assert.equal(rs[1].start, local(10));
+  assert.equal(rs[1].start, rs[0].end);
   assert.equal(rs[1].drinks[0].qty, 3);
   assert.equal(N.stashCount(r.state), 2);
 });
 
+test('catch up never counts more than the stash row holds', () => {
+  const s = N.stashAdd(N.addLiveDrink(st(night()), hein(1), local(9, 30)).state, hein(1), 2);
+  const r = N.catchUp(s, 5, local(11));
+  assert.equal(r.state.session.rounds.reduce((a, x) => a + x.drinks.reduce((b, d) => b + d.qty, 0), 0), 3, '1 logged earlier + the 2 that were in the stash');
+  assert.equal(N.stashCount(r.state), 0);
+});
+
+test('after Finished drinking the stash stays but nothing asks about it, until you log again', () => {
+  let s = N.addLiveDrink(st(night()), hein(1), local(21)).state;
+  s = Object.assign({}, s, { session: Object.assign({}, s.session, { loggedAt: local(21) }) });
+  s = N.stashAdd(s, hein(1), 5);
+  s = N.finishLive(s, local(22));
+  assert.equal(N.stashCount(s), 5, 'still in the fridge');
+  assert.equal(N.catchUpDue(s, local(23)), false, 'the night was ended on purpose');
+  assert.equal(N.catchUpDue(N.stashAdd(s, hein(1), 6), local(23, 30)), false, 'buying more later changes nothing');
+  const again = Object.assign({}, N.openStash(s, local(23, 45)).state);
+  again.session = Object.assign({}, again.session, { loggedAt: local(23, 45) });
+  assert.equal(N.catchUpDue(again, local(23, 50)), false);
+  assert.equal(N.catchUpDue(again, local(24, 30, 23)), true, 'logging again starts a new night that can ask');
+});
+
 test('stock sitting in the fridge from another day does not trigger a catch up question', () => {
-  let s = N.addLiveDrink(st(night()), hein(1), local(9, 30)).state;
-  s = N.stashAdd(N.finishLive(s, local(10)), hein(1), 5);
-  assert.equal(N.catchUpDue(s, local(11, 30)), true, 'same night: it asks');
+  let s = N.stashAdd(N.addLiveDrink(st(night()), hein(1), local(9, 30)).state, hein(1), 5);
+  s = N.settle(s, local(14));
+  assert.equal(N.catchUpDue(s, local(14)), true, 'same evening: it asks');
   assert.equal(N.catchUpDue(s, local(23, 30, 24)), false, 'a day later: it is stock, not tonight');
 });
 

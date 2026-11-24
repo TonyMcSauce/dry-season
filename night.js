@@ -325,6 +325,8 @@
   function catchUpDue(state, now) {
     const session = state.session, live = liveRound(session);
     if (!live && stashCount(state) <= 0) return false;
+    // Tapping Finished drinking ends the night on purpose; stock bought or left after that is not a question about tonight.
+    if (!live && (session.closedAt || 0) >= Math.max(session.loggedAt || 0, session.askedAt || 0)) return false;
     // Only when we know when you last logged; older saves stay quiet.
     const last = Math.max(session.loggedAt || 0, session.askedAt || 0, live ? (live.lastAt || 0) : 0);
     if (!(last > 0) || now - last < CATCHUP_GAP) return false;
@@ -351,6 +353,7 @@
   function catchUp(state, n, now) {
     const src = catchUpSource(state);
     if (!(n > 0) || !src) return { state: withSession(state, { askedAt: now }), outcome: null };
+    n = src.id ? Math.min(n, src.max) : n;   // never more than the stash row holds
     const last = lastFinished(state.session);
     const startAt = last ? last.end : (state.session.loggedAt || now);
     const r = addLiveDrink(state, Object.assign({}, src.drink, { qty: n }), now, { startAt, choice: 'after' });
@@ -396,7 +399,7 @@
 
   /** The live round stops now. The stash stays: it is still in the fridge. */
   function finishLive(state, now) {
-    return withSession(state, { rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
+    return withSession(state, { closedAt: now, rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
   }
 
   /** Change a round's times or drinks in place. */

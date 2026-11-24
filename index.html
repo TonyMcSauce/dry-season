@@ -659,6 +659,10 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
 .hero.empty .vitals{display:none}
 .hero.three .vitals{padding-bottom:22px}
 .hero:not(.three) .vitals{padding-bottom:168px}
+.hero:not(.three).has-another .vitals{padding-bottom:14px}
+/* Without 3D the hero follows the page theme, so the panels take the page colour instead of a fixed dark */
+.hero:not(.three) .v-panel,.hero:not(.three) .vitals .gauge{background:rgba(14,21,34,.55);background:color-mix(in srgb,var(--ground) 62%,transparent);border-color:var(--line)}
+.hero:not(.three) .g-track{stroke:var(--line)}
 .quick{max-width:560px;margin:0 auto;padding:18px var(--gutter) 0}
 .q-main{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;font-size:1.08rem;box-shadow:0 12px 26px -12px rgba(242,169,59,.6)}
 .q-main svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
@@ -763,7 +767,6 @@ dialog.sheet[open]::backdrop{animation:fadeIn .3s ease both}
 #pickList.enter .pick-row:nth-child(n+6){animation-delay:.15s}
 .h-open,.now-card,.cat,.chip,.st-log,.q-btn,.tabbar button{transition:transform .15s var(--ease),background-color .2s,color .2s,border-color .2s}
 .h-open:active,.now-card:active,.cat:active,.chip:active,.st-log:active{transform:scale(.97)}
-.toast{transition:transform .35s var(--ease),opacity .25s}
 
 /* Compact hero (v6.1): gauge and stats side by side */
 .vitals{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:4px 14px;align-items:center;margin-top:8px}
