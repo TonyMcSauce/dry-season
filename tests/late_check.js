@@ -220,7 +220,7 @@ const checks = [
     const heroText = () => page.evaluate(() => getComputedStyle(document.getElementById('clearTime')).color);
     assert.equal(await bg(), 'rgb(246, 240, 228)', 'follows a light phone by default');
     assert.equal(await heroText(), 'rgb(246, 237, 218)', 'the 3D hero stays at dusk in light mode');
-    await page.click('#bodyDetails summary');
+    await page.click('[data-go=you]');
     await page.click('#themeSeg [data-theme-choice="dark"]');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
     assert.equal(await bg(), 'rgb(14, 21, 34)');
@@ -228,7 +228,7 @@ const checks = [
     assert.equal(await bg(), 'rgb(14, 21, 34)', 'the choice is remembered');
     assert.equal(await page.locator('#themeSeg [data-theme-choice="dark"]').getAttribute('aria-pressed'), 'true');
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.click('#bodyDetails summary');
+    await page.click('[data-go=you]');
     await page.click('#themeSeg [data-theme-choice="light"]');
     assert.equal(await bg(), 'rgb(246, 240, 228)', 'Light wins over a dark phone');
     await page.click('#themeSeg [data-theme-choice="auto"]');

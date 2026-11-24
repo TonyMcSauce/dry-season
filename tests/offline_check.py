@@ -116,7 +116,7 @@ def run(site, version, server):
         server = serve(site)
         ctx.set_offline(False)
         page.wait_for_function("navigator.onLine")
-        page.evaluate("document.querySelector('#bodyDetails').open = true")
+        page.click('[data-go=you]')
         page.click('#checkNow')
         page.wait_for_selector('#coaster.show', timeout=15000)
         page.wait_for_timeout(800)
