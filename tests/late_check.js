@@ -414,6 +414,78 @@ const checks = [
     assert.deepEqual(errors, []);
     await page.close();
   }]
+  ,
+  ['one tap under the bottle adds another, and Undo takes it back', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
+      rounds: [{ id: 'a', start: local(21, 30), end: null, lastAt: local(21, 50), drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    const btns = page.locator('#anotherBtns button');
+    assert.equal(await btns.count(), 1);
+    assert.match(await btns.first().textContent(), /\+ Another Heineken/);
+    await btns.first().click(); await page.waitForTimeout(200);
+    assert.match(await text(page, '#rounds li'), /2 × Heineken/);
+    assert.equal(await page.locator('#toastUndo').isVisible(), true);
+    await page.click('#toastUndo'); await page.waitForTimeout(200);
+    assert.match(await text(page, '#rounds li'), /1 × Heineken/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['with two different drinks, both get a button, most recent first', async (browser, url) => {
+    const cor = { name: 'Corona Extra', abv: 4.5, ml: 355, qty: 1, share: 1, at: local(21, 40) };
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
+      rounds: [{ id: 'a', start: local(21), end: null, lastAt: local(21, 40), drinks: [Object.assign(hein(1), { at: local(21) }), cor], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    const btns = page.locator('#anotherBtns button');
+    assert.equal(await btns.count(), 2);
+    assert.match(await btns.nth(0).textContent(), /Corona/);
+    assert.match(await btns.nth(1).textContent(), /Heineken/);
+    await btns.nth(1).click(); await page.waitForTimeout(200);
+    assert.match(await btns.nth(0).textContent(), /Heineken/, 'the one just had moves first');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['with a stash, the first button opens the next one', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
+      stash: { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1 }, total: 6, opened: 1 },
+      rounds: [{ id: 'a', start: local(21, 30), end: null, lastAt: local(21, 50), drinks: [hein(1)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    const first = page.locator('#anotherBtns button').first();
+    assert.match(await first.textContent(), /Open next · 5 left/);
+    await first.click(); await page.waitForTimeout(200);
+    assert.match(await first.textContent(), /Open next · 4 left/);
+    await page.click('#toastUndo'); await page.waitForTimeout(200);
+    assert.match(await first.textContent(), /Open next · 5 left/, 'Undo puts it back in the stash');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['minus and plus on the round in progress; finished rounds keep only remove', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
+      rounds: [{ id: 'old', start: local(18), end: local(19), drinks: [hein(1)], late: false },
+               { id: 'a', start: local(21, 30), end: null, lastAt: local(21, 50), drinks: [hein(2)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.getByRole('button', { name: 'One more Heineken' }).click(); await page.waitForTimeout(150);
+    assert.match(await text(page, '#tabList li:last-child .li-name'), /3 × Heineken/);
+    await page.getByRole('button', { name: 'One fewer Heineken' }).click(); await page.waitForTimeout(150);
+    assert.match(await text(page, '#tabList li:last-child .li-name'), /2 × Heineken/);
+    assert.equal(await page.getByRole('button', { name: 'One more Heineken' }).count(), 1, 'only the live round has plus');
+    assert.equal(await page.getByRole('button', { name: 'Remove Heineken' }).count(), 1);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['drinking fast shows a pacing hint under the buttons', async (browser, url) => {
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 55),
+      rounds: [{ id: 'a', start: local(21), end: null, lastAt: local(21, 55), drinks: [hein(5)], late: false }] } });
+    const { page, errors } = await open(browser, url, saved);
+    await page.waitForTimeout(1200);
+    assert.equal(await page.locator('#anotherHint').isVisible(), true);
+    assert.match(await text(page, '#anotherHint'), /Wait about|Fast pace|Water first/);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
 ];
 
 (async () => {
