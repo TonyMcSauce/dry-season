@@ -780,8 +780,9 @@ dialog.sheet[open]::backdrop{animation:fadeIn .3s ease both}
 .v-panel{margin:0;padding:10px 12px;background:rgba(14,21,34,.55)}
 .vitals .stats{display:grid;grid-template-columns:1fr;gap:6px}
 .vitals .stats div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;text-align:left}
-.vitals .stats dt{font-size:.72rem;line-height:1.15}
-.vitals .stats dd{font-size:.92rem;white-space:nowrap;text-align:right}
+.vitals .stats dt{font-size:.7rem;line-height:1.15;white-space:nowrap}
+.vitals .stats dd{font-size:.84rem;white-space:nowrap;text-align:right}
+.v-panel{padding:10px 12px 10px 10px}
 .estimate-note{grid-column:1/-1;margin:4px 0 0}
 .pill-note{font-size:.8rem}
 .hero.three .stage-space,.hero.three.has-another .stage-space{height:clamp(170px,22svh,215px)}
@@ -802,6 +803,18 @@ dialog.sheet[open]::backdrop{animation:fadeIn .3s ease both}
 @keyframes numIn{from{opacity:.2;transform:translateY(-9px)}to{opacity:1;transform:none}}
 .flip{animation:numIn .5s var(--ease) both}
 .g-read b,.stats dd,.clear-time{font-variant-numeric:tabular-nums}
+
+/* Everything that matters on the first screen (v6.3) */
+.status{margin-top:12px}
+.status-row{flex-wrap:nowrap;gap:8px}
+.pill{font-size:.9rem;padding:7px 13px 7px 11px;white-space:nowrap}
+.risk-chip{white-space:nowrap;padding:6px 11px}
+.pill-note{font-size:.76rem;line-height:1.35;margin-top:6px}
+.hero-body{margin-top:10px}
+.hero.three .stage-space,.hero.three.has-another .stage-space{height:clamp(150px,18svh,190px)}
+.quick{padding-top:12px}
+.q-main{min-height:52px}
+@media (min-height:880px){.hero.three .stage-space,.hero.three.has-another .stage-space{height:clamp(190px,22svh,230px)}}
 
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
@@ -829,7 +842,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
 
   <div class="status" id="statusBlock" hidden>
-    <div class="status-row"><p class="pill"><span class="dot" aria-hidden="true"></span><span id="pillText">Over the legal limit</span></p><p class="risk-chip" id="riskChip" data-level="low"><i aria-hidden="true"></i><span id="riskChipText">Blackout risk low</span></p></div>
+    <div class="status-row"><p class="pill"><span class="dot" aria-hidden="true"></span><span id="pillText">Over the legal limit</span></p><p class="risk-chip" id="riskChip" data-level="low"><i aria-hidden="true"></i><span id="riskChipText">Risk low</span></p></div>
     <p class="pill-note" id="pillNote">Any alcohol slows your reactions. Get a lift, take a cab, or wait until you're clear.</p>
   </div>
 
@@ -1585,7 +1598,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       const { h, m, s } = dur(sim.clear - now);
       els.kicker.textContent = 'Clear by';
       flip(els.time, fmtTime(sim.clear));
-      els.day.textContent = dayLabel(sim.clear) + '\n' + h + ' h ' + pad(m) + ' m ' + pad(s) + ' s to go';
+      els.day.textContent = dayLabel(sim.clear) + ' · ' + h + ' h ' + pad(m) + ' m ' + pad(s) + ' s to go';
       frac = sim.peak > 0 ? Math.min(1, bNow / sim.peak) : 0;
       if (bNow === 0 && now < sim.clear) frac = 0.04;
     }
@@ -2725,7 +2738,8 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     sec.dataset.level = risk.level;
     riskNow = risk.level;
     $('#riskChip').dataset.level = risk.level;
-    $('#riskChipText').textContent = 'Blackout risk ' + risk.level;
+    $('#riskChipText').textContent = 'Risk ' + risk.level;
+    $('#riskChip').setAttribute('aria-label', 'Blackout risk ' + risk.level);
     $('#riskLevel').textContent = { low: 'Low', raised: 'Raised', high: 'High' }[risk.level];
     renderScale(bNow, sim);
 

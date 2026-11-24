@@ -345,7 +345,7 @@
       x.save(); x.shadowColor = 'rgba(242,169,59,.8)'; x.shadowBlur = 18; x.strokeStyle = pal.ridge; x.lineWidth = 6; x.lineJoin = 'round';
       x.stroke(new Path2D(g.ridge)); x.restore();
       x.font = '700 22px "Schibsted Grotesk", sans-serif'; x.fillStyle = 'rgba(246,237,218,.8)';
-      g.bands.forEach((b) => x.fillText(b.label, Math.max(6, b.x + 6), Math.max(30, g.limitY - 14)));
+      if (g.bands.length > 1) g.bands.forEach((b) => x.fillText(b.label, Math.max(6, b.x + 6), Math.max(30, g.limitY - 14)));
       if (view.sim.clear > view.now) { x.save(); x.shadowColor = 'rgba(246,237,218,.9)'; x.shadowBlur = 16; x.fillStyle = '#F6EDDA'; x.beginPath(); x.arc(g.moonX, 288, 9, 0, 7); x.fill(); x.restore(); }
       x.fillStyle = '#E46F48'; x.strokeStyle = pal.ground; x.lineWidth = 4; x.beginPath(); x.arc(g.nowX, g.nowY, 11, 0, 7); x.fill(); x.stroke();
       bacTex.needsUpdate = true; dirty = true;
