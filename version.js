@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.0.3';
+self.DRY_VERSION = '6.0.4';
 self.DRY_CHANGES = [
+  'A short opening sequence: the sky fades in, your status and clear time rise into place, the bottle and glass are set down, and the buttons arrive last. It skips itself when Reduce Motion is on.',
   'Tonight now shows both buttons, Another and Log a drink, above the tab bar without scrolling. The risk chip is shorter and the countdown sits on one line.',
   'A livelier gauge: the ring springs to your level, a dot rides its end, and the over the limit zone is tinted. Your level and times glide and flip instead of jumping.',
   'The Round 1 label on the night scene no longer sits on top of the gauge.',

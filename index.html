@@ -7,6 +7,7 @@
 <meta name="description" content="Log tonight's drinks and see when your body should be clear of alcohol.">
 <meta name="theme-color" content="#17212F">
 <script>try{var t=((JSON.parse(localStorage.getItem('dryseason.v1'))||{}).profile||{}).theme;if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('intro')}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -816,6 +817,20 @@ dialog.sheet[open]::backdrop{animation:fadeIn .3s ease both}
 .q-main{min-height:52px}
 @media (min-height:880px){.hero.three .stage-space,.hero.three.has-another .stage-space{height:clamp(190px,22svh,230px)}}
 
+/* Opening sequence (v6.4): plays once as the app opens, never when reduced motion is on, never blocks a tap */
+@keyframes riseIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes veilOut{from{opacity:1}to{opacity:0}}
+html.intro .hero::before{content:"";position:absolute;inset:0;z-index:1;background:var(--ground);pointer-events:none;animation:veilOut 1s .1s ease both}
+html.intro .scene3d{animation:fadeIn .9s .25s both}
+html.intro .hero-top{animation:riseIn .6s .15s var(--ease) both}
+html.intro .status{animation:riseIn .6s .28s var(--ease) both}
+html.intro .hero-body{animation:riseIn .7s .38s var(--ease) both}
+html.intro .vitals .gauge{animation:riseIn .7s .55s var(--ease) both}
+html.intro .vitals .v-panel{animation:riseIn .7s .65s var(--ease) both}
+html.intro .vitals .estimate-note{animation:fadeIn .6s .8s both}
+html.intro .another{animation:riseIn .6s .95s var(--ease) both}
+html.intro .quick{animation:riseIn .6s 1.05s var(--ease) both}
+
 /* Room for the Live Island hanging below the status bar */
 html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
@@ -1500,9 +1515,10 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   // The 3D hero is always at dusk, whatever the theme, so it uses the dark palette.
   const sceneTokens = () => ({ skyTop: '#17212F', skyMid: '#2D2926', skyLow: '#7A3F1F', horizon: '#C8742E',
     ground: '#16120E', amber: cssToken('--amber'), ink: cssToken('--ink'), stars: '1' });
+  setTimeout(() => document.documentElement.classList.remove('intro'), 2800);
   let scene = null, sceneStarted = false;
   try {
-    scene = window.DryScene ? DryScene.create($('#scene3d'), $('#hero'), { tokens: sceneTokens, reduceMotion: () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches }) : null;
+    scene = window.DryScene ? DryScene.create($('#scene3d'), $('#hero'), { tokens: sceneTokens, intro: () => document.documentElement.classList.contains('intro'), reduceMotion: () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches }) : null;
   } catch (e) { scene = null; }
   if (scene) {
     $('#hero').classList.add('three');

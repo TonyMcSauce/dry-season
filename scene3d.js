@@ -393,6 +393,9 @@
     });
 
     // ---- loop: draw only while something moves, and only while the hero is on screen
+    // Opening sequence: the bottle and glass are set down gently, a beat apart (only when the page asks for it).
+    let introAt = (opts && opts.intro && opts.intro() && !reduce()) ? performance.now() : null;
+    const settle = (k) => 1 - Math.pow(1 - Math.max(0, Math.min(1, k)), 3);
     let visible = true, last = 0, bubClock = 0, groundFresh = false;
     if (root.IntersectionObserver) new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible) dirty = true; }).observe(host);
     function loop(now) {
@@ -408,10 +411,18 @@
         bubbles.visible = level > 0.05;
         bubClock += dt;
         if (bubbling && bubClock > 0.07) { stepBubbles(bubClock); bubClock = 0; dirty = true; }
+        let offB = 0, offG = 0;
+        if (introAt != null) {
+          const t = (now - introAt) / 1000;
+          if (t > 1.6) introAt = null;
+          else { offB = (1 - settle((t - 0.2) / 0.9)) * 0.7; offG = (1 - settle((t - 0.38) / 0.9)) * 0.7; dirty = true; }
+        }
         if (dirty) {
+          bottlePivot.position.y += offB; glassGroup.position.y += offG; groundLime.position.y += offG;
           camera.position.set(LOOK.x + tilt.x * 0.9, LOOK.y + 0.25 - tilt.y * 0.5, dist);
           camera.lookAt(LOOK);
           renderer.render(scene, camera);
+          bottlePivot.position.y -= offB; glassGroup.position.y -= offG; groundLime.position.y -= offG;
           dirty = false;
           // three.js r149 can keep a stale shader for a textured material compiled in the very first
           // frame, which renders the ground nearly black. A fresh material after that frame is right.
