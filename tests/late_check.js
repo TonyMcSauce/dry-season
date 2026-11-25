@@ -588,6 +588,28 @@ const checks = [
     await page.close();
   }]
   ,
+  ['a round with a long list of drinks wraps and never runs under the Adjust times button', async (browser, url) => {
+    const sil = { name: 'Heineken Silver', abv: 4, ml: 330, qty: 4, share: 1 };
+    const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null,
+      rounds: [{ id: 'a', start: local(18, 0, 22), end: local(22, 25, 22), drinks: [sil, hein(3)], late: true }] } });
+    const { page, errors } = await open(browser, url, saved);
+    for (const w of [430, 390, 360, 320]) {
+      await page.setViewportSize({ width: w, height: 844 });
+      await page.waitForTimeout(150);
+      const m = await page.evaluate(() => {
+        const what = document.querySelector('#rounds .rc-what').getBoundingClientRect();
+        const btn = document.querySelector('#rounds .btn-mini').getBoundingClientRect();
+        const card = document.querySelector('#rounds .round-card').getBoundingClientRect();
+        return { whatRight: what.right, btnLeft: btn.left, btnRight: btn.right, cardRight: card.right };
+      });
+      assert.ok(m.whatRight <= m.btnLeft + 0.5, 'the drinks end before the button at ' + w + 'px (' + m.whatRight + ' vs ' + m.btnLeft + ')');
+      assert.ok(m.btnRight <= m.cardRight, 'the button stays inside the card at ' + w + 'px');
+    }
+    assert.match(await text(page, '#rounds .rc-what'), /4 × Heineken Silver \+ 3 × Heineken/, 'the whole list is still there');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
   ['with a stash, the first button opens the next one', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
       stash: { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1 }, total: 6, opened: 1 },
