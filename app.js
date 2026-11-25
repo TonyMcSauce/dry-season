@@ -527,9 +527,19 @@
   function renderHistory() {
     const h = state.history || [], limit = state.profile.limit;
     // Tonight, kept apart from the past
-    const cur = N.summarize(state.session, state.profile, Date.now());
-    $('#histNow').hidden = !cur.G;
-    if (cur.G) $('#histNowSub').textContent = cur.count + (cur.count === 1 ? ' drink' : ' drinks') + ', peak ' + fmtBac(cur.peak);
+    // The card says what is true of the current night. A night that has cleared and is already saved is over: it
+    // belongs to Past nights, so the card goes away. One that has cleared but was never saved asks to be saved.
+    const nowMs = Date.now(), cur = N.summarize(state.session, state.profile, nowMs);
+    const live = !!N.liveRound(state.session), cleared = cur.G > 0 && cur.clear <= nowMs;
+    const saved = h.some((n) => n.start === cur.start && Math.abs(n.G - cur.G) < 0.05);
+    $('#histNow').hidden = !cur.G || (cleared && saved);
+    if (cur.G) {
+      const drinks = cur.count + (cur.count === 1 ? ' drink' : ' drinks');
+      $('#histNowTitle').textContent = live ? 'Tonight, in progress' : !cleared ? 'Tonight, still clearing' : 'Tonight is not saved yet';
+      $('#histNowSub').textContent = live ? drinks + ', peak ' + fmtBac(cur.peak)
+        : !cleared ? drinks + ', clear by ' + fmtTime(cur.clear)
+        : drinks + ', peak ' + fmtBac(cur.peak) + '. Tap to open it and save.';
+    }
     // Totals
     $('#hstats').hidden = !h.length;
     if (h.length) {

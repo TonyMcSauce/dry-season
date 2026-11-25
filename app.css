@@ -329,9 +329,10 @@ dialog.sheet[open]{animation:sheetUp .34s cubic-bezier(.2,.8,.2,1)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 /* Hidden means hidden: a faded toast must never catch a tap meant for what is under it */
-.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 64px);max-width:calc(100vw - 32px);white-space:normal;text-align:center;transform:translate(-50%,-16px);opacity:0;background:var(--text);color:var(--ground);padding:12px 18px;border-radius:22px;font-weight:600;z-index:60;pointer-events:none;visibility:hidden;transition:all .3s,visibility 0s linear .3s}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 64px);width:max-content;max-width:min(calc(100vw - 32px),420px);display:flex;align-items:center;justify-content:center;gap:10px;white-space:normal;text-align:left;font-size:.95rem;line-height:1.35;transform:translate(-50%,-16px);opacity:0;background:var(--text);color:var(--ground);padding:12px 18px;border-radius:18px;box-shadow:0 14px 34px -12px rgba(0,0,0,.55);font-weight:600;z-index:60;pointer-events:none;visibility:hidden;transition:all .3s,visibility 0s linear .3s}
 .toast.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition:all .3s}
-.toast.has-undo{display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px}
+.toast::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--amber)}
+.toast.has-undo{justify-content:space-between;gap:12px;padding:7px 7px 7px 16px}
 .toast.has-undo.show{pointer-events:auto}
 .toast .undo{border:0;border-radius:999px;background:var(--amber);color:var(--ink);font-weight:700;padding:8px 14px;min-height:36px}
 .another-btns{display:flex;gap:10px}
@@ -807,5 +808,5 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 .h-key::before{content:"";display:inline-block;width:14px;margin-right:6px;border-top:2px dashed currentColor;vertical-align:middle}
 
 /* Messages sit in the top layer when the browser can, so one is never dimmed behind a sheet's backdrop */
-.toast[popover]{right:auto;bottom:auto;margin:0;width:auto;height:auto;max-height:none;overflow:visible;border:0}
-.toast[popover]:not(:popover-open){display:block}
+.toast[popover]{right:auto;bottom:auto;margin:0;width:max-content;height:auto;max-height:none;overflow:visible;border:0}
+.toast[popover]:not(:popover-open){display:flex}

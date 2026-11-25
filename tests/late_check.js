@@ -646,6 +646,31 @@ const checks = [
     await page.close();
   }]
   ,
+  ['History tonight card tells the truth: in progress, still clearing, not saved yet, and gone once saved', async (browser, url) => {
+    const Night = require('../night.js');
+    const mkSession = (rounds) => ({ v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 55), rounds });
+    const card = async (saved) => {
+      const { page, errors } = await open(browser, url, saved);
+      await page.click('[data-go=history]');
+      const out = { shown: await page.locator('#histNow').isVisible(), title: (await text(page, '#histNowTitle')).trim(), sub: (await text(page, '#histNowSub')).trim() };
+      assert.deepEqual(errors, []); await page.close(); return out;
+    };
+    // still drinking
+    let r = await card(Object.assign({}, EMPTY, { session: mkSession([{ id: 'a', start: local(21), end: null, lastAt: local(21, 55), drinks: [hein(1)], late: false }]) }));
+    assert.equal(r.shown, true); assert.equal(r.title, 'Tonight, in progress'); assert.match(r.sub, /1 drink, peak/);
+    // stopped, but the alcohol has not cleared yet
+    r = await card(Object.assign({}, EMPTY, { session: mkSession([{ id: 'a', start: local(20), end: local(21, 30), drinks: [hein(4)], late: true }]) }));
+    assert.equal(r.shown, true); assert.equal(r.title, 'Tonight, still clearing'); assert.match(r.sub, /4 drinks, clear by \d\d:\d\d/);
+    // cleared long ago and never saved: it asks to be saved
+    const done = mkSession([{ id: 'a', start: local(18), end: local(19), drinks: [hein(1)], late: true }]);
+    r = await card(Object.assign({}, EMPTY, { session: done }));
+    assert.equal(r.shown, true); assert.equal(r.title, 'Tonight is not saved yet'); assert.match(r.sub, /Tap to open it and save/);
+    // cleared and saved: the night is over, so the card is gone (it is in Past nights)
+    const entry = Night.summarize(done, PROFILE, local(22));
+    r = await card(Object.assign({}, EMPTY, { session: done, history: [entry] }));
+    assert.equal(r.shown, false, 'a cleared, saved night is not in progress');
+  }]
+  ,
   ['with a stash, the first button opens the next one', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
       stash: { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1 }, total: 6, opened: 1 },
