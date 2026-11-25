@@ -23,6 +23,10 @@
   const MAX_AFTER_LAST_DRINK_MIN = 30 * 24 * 60;
 
   const THRESHOLDS = {
+    // Under this, where you are heading, the app says a low level of alcohol is on board rather than
+    // "impaired": the first measurable effects (judgement, doing two things at once) are usually put
+    // around 0.02%. It is still never "clear" until the level reads 0.000%.
+    low: 0.02,
     blackout: 0.15,               // research links blackouts to roughly 0.15% and above
     danger: 0.30,                 // risk of alcohol poisoning
     fastRise: 0.05,               // % per hour
@@ -185,6 +189,7 @@
    * That is the highest point from now on, not the night's peak: an earlier
    * round may have peaked higher, and a new one can still lift you back over.
    * overAt: when you will cross the limit, if you are under it now but heading over.
+   * low: not clear, but neither now nor ahead reaches THRESHOLDS.low (alcohol on board, a low level).
    */
   function outlook(sim, now, limit) {
     const b = bacAt(sim, now);
@@ -199,7 +204,8 @@
         if (sim.points[i] > limit) { overAt = sim.start + (i + 1) * MIN; break; }
       }
     }
-    return { b, ahead, rising: ahead > b + CLEAR, status: status(ahead, limit), overAt };
+    const st = status(ahead, limit);
+    return { b, ahead, rising: ahead > b + CLEAR, status: st, overAt, low: st === 'impaired' && ahead < THRESHOLDS.low };
   }
 
   /** Blackout risk from peak, rise rate, pace and food. */

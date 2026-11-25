@@ -1421,7 +1421,8 @@
     $('#pillNote').hidden = st === 'clear';
     $('#pillText').textContent = st === 'over'
       ? (o.overAt ? 'Kicking in: over the limit by ' + fmtTime(o.overAt) : 'Over the legal limit')
-      : st === 'impaired' ? (o.rising && b < limit && b < 0.01 ? 'Kicking in: you\'re impaired' : 'Under the limit, still impaired')
+      : st === 'impaired' ? (o.low ? 'Low level: alcohol on board'
+        : o.rising && b < limit && b < 0.01 ? 'Kicking in: you\'re impaired' : 'Under the limit, still impaired')
       : 'Clear, by this estimate';
     $('#pillNoteText').textContent = o.rising
       ? 'What you\'ve drunk is still reaching your blood, so your level will keep climbing to about ' + fmtBac(o.ahead) + '. Get a lift, take a cab, or wait until you\'re clear.'
@@ -1600,13 +1601,13 @@
   function islandSnap(sim) {
     const now = Date.now(), limit = state.profile.limit, has = sim.G > 0;
     const b = has ? bacAt(sim, now) : 0;
-    const st = has ? M.outlook(sim, now, limit).status : 'clear';
+    const ol = has ? M.outlook(sim, now, limit) : null, st = ol ? ol.status : 'clear';
     const u = has ? M.underLimitAt(sim, limit) : null;
     const L = N.lastDrink(state.session);
     const clearAt = sim.clear || now;          // Infinity when not known: it prints as --:--
     const { h, m } = dur(clearAt - now);
     return {
-      has, status: st, bac: b, peak: sim.peak, start: sim.start, clearAt, underAt: u,
+      has, status: st, low: !!(ol && ol.low), bac: b, peak: sim.peak, start: sim.start, clearAt, underAt: u,
       risk: riskNow, danger: dangerNow,
       last: L ? { key: keyOf(L), name: L.name, short: shortName(L.name), ml: L.ml, abv: L.abv, share: L.share } : null,
       favs: (state.favs || []).map(D.favOf).filter(Boolean).map((x) => ({ key: keyOf(x), name: x.name, short: x.short || x.name, ml: x.ml, abv: x.abv, share: 1 })),
