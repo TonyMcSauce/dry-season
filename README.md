@@ -2,6 +2,24 @@
 
 A small, good looking web app that estimates when your body will be clear of alcohol after a night out. Log your drinks (Botswana favourites are built in), set when you started and stopped, and watch the glass drain as the countdown runs.
 
+## New in 6.1: safer estimates
+
+* **6.1.10: a low level.** When you are heading for less than 0.02%, the status says *Low level: alcohol on board* instead of *impaired*. One beer no longer sounds alarming. It still never says *Clear* until you are at 0.000%.
+* **6.1.9: History catches up.** Nights saved before 6.1.7 and 6.1.8 are worked out again with the current estimate, once, the first time you open the app.
+* **6.1.8: food is counted honestly.** Eating still lowers and delays your peak, but no longer takes 10% off your drinks, so your clear time never comes sooner because you ate.
+* **6.1.7: long nights are followed to the end.** The estimate used to stop after 96 hours and could say *Clear* while you were still over the limit. It now follows every night until you are actually clear. If a night is ever more than it can follow, it says *Can't estimate* and never shows a clear time it does not have.
+* **6.1.6: fixes.** A second round no longer says you are under the limit when it is about to take you back over. One tap of − always removes exactly one drink, editing a round can't drag it over another one, and the pacing hint updates straight away.
+* **6.1.0 to 6.1.5:** stash polish (*Running low*, *Restock*, *Buy more*), the page split into separate style and script files, and small fixes for History, messages and quick taps.
+
+## New in 6.0: a new look
+
+* **Midnight navy and cream,** with Light and Dark designed separately. The 3D dusk scene stays dusk in both.
+* **A floating tab bar** to move between Tonight, Plan, History and You.
+* **Tonight leads with a gauge** for your level, your risk, session time and quick actions: Log a drink, Water break and Earlier.
+* **A faster drink picker** with category chips, compact cards and a one tap add.
+* **History** shows totals, a peak chart against your limit and your nights by month. **You** holds your Favourites.
+* **A stash for more than one drink,** which stays after the night ends and can be topped up from History.
+
 ## New in 5.5: one tap for another
 
 * **5.5.1:** fixed buttons near the bottom of the screen ignoring taps after an Undo message faded.
@@ -110,14 +128,19 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 | `app.js` | The interface logic: state, rendering, the picker, the stash, History and updates |
 | `version.js` | The app version and the What's new list. Bump it to publish an update |
 | `model.js` | The blood alcohol and risk maths, shared by the app and the tests |
+| `night.js` | The night as rounds: where a new round belongs, the stash, catch up, editing and History entries |
 | `drinks.js` | The built-in drinks, sizes and default favourites |
+| `horizon.js` | The night's blood alcohol drawn as hills behind the countdown |
+| `dial.js` | The 24 hour dial in *Log earlier drinks* |
+| `scene3d.js`, `vendor/three.min.js` | The 3D dusk scene with the bottle and glass (three.js, saved locally) |
 | `island.js`, `island.css` | The Live Island |
 | `mug.js` | The animated 3D mug inside the island |
 | `fonts/` | Alfa Slab One and Schibsted Grotesk (SIL Open Font License), so the app needs no outside servers |
 | `screenshots/` | Images shown on the install sheet |
 | `tests/*.test.js` | Tests for the maths and drinks. Run with `node --test tests/*.test.js` |
+| `tests/late_check.js` | Browser checks of the whole app: rounds, the stash, History, the status and more. Run with `NODE_PATH=$(npm root -g) node tests/late_check.js` |
 | `tests/offline_check.js` | The same offline and update check in Node. Run with `NODE_PATH=$(npm root -g) node tests/offline_check.js` |
-| `tests/visual_check.js` | Saves and compares screenshots of the main screens, so a refactor can prove it changed nothing you can see |
+| `tests/visual_check.js` | Saves and compares screenshots of the main screens, so a refactor can prove it changed nothing you can see. Save with `node tests/visual_check.js save DIR`, compare with `check DIR` |
 | `tests/offline_check.py` | End-to-end check of offline use and the update flow. Run with `python3 tests/offline_check.py` |
 | `tests/island_check.py` | Checks the island against Apple's sizes and that it never stretches. Run with `python3 tests/island_check.py` |
 | `manifest.webmanifest` | Lets iPhone and Android install it like an app |
@@ -157,9 +180,11 @@ pages:
 ## How the estimate works
 
 * Grams of alcohol per drink = millilitres x (ABV / 100) x 0.789, multiplied by how many you had and how much of each was yours.
-* Drinks are spread evenly between your start and stop times, then absorbed gradually: half absorbed roughly every 15 minutes on an empty stomach, or every 35 minutes after a meal (with about 10% less reaching the blood).
+* Drinks are spread evenly between your start and stop times, then absorbed gradually: half absorbed roughly every 15 minutes on an empty stomach, or every 35 minutes after a meal. Food lowers and delays the peak, but every drink counts in full: how much food really removes varies a lot from person to person, so the estimate never makes you clear sooner for having eaten.
+* A night is made of rounds, and they all run on one timeline, so alcohol still in you from an earlier round counts toward the next.
 * Blood alcohol uses the Widmark formula: grams / (body water factor x weight in kg x 10), with 0.68 for a male body and 0.55 for a female body.
 * Your body removes about 0.015% per hour at everyday levels (adjustable from 0.010% to 0.020% under **Your body**). Removal slows near zero, so small drinks still show up and "fully clear" errs on the late side.
+* The estimate follows your night minute by minute until you are actually clear, however long that takes. If a night is ever more than it can follow (30 days after the last drink), it says *Can't estimate* rather than guessing a time.
 * One standard drink is counted as 10 g of pure alcohol.
 
 ### Built in drinks
@@ -182,13 +207,14 @@ pages:
 | Savanna Dry | 6.0% | 330 ml |
 | Brutal Fruit | 4.5% (varies by flavour) | 275 ml |
 
-Strengths change from time to time, so every drink lets you edit the ABV before adding it. To change the defaults, edit the `DRINKS` list near the top of the script in `index.html`.
+Strengths change from time to time, so every drink lets you edit the ABV before adding it. To change the defaults, edit the `GROUPS` list in `drinks.js`.
 
 ### Thresholds
 
 | Level | What the app treats it as |
 | --- | --- |
-| Above 0.000% and up to the limit | Impaired |
+| Above 0.000%, heading for less than 0.02% | Low level: alcohol on board (never *Clear*) |
+| 0.02% up to the limit | Impaired |
 | Above the legal limit (Botswana 0.05%, editable) | Over the limit |
 | 0.08% to 0.15% | Very high |
 | 0.15% and above | Blackout risk zone |
