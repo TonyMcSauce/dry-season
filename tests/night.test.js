@@ -429,3 +429,28 @@ test('a round of extra drinks that overlaps on purpose can still be edited witho
   assert.deepEqual(N.fitEdit(s, 'x', { start: local(21), end: local(21, 30) }, local(23)), { start: local(21), end: local(21, 30) });
   assert.deepEqual(N.fitEdit(s, 'a', { start: local(20), end: local(22) }, local(23)), { start: local(20), end: local(22) });
 });
+
+// ---- Nights the model cannot see the end of stay unknown ----
+const absurd = (qty) => ({ name: 'Spirit', abv: 80, ml: 1000, qty, share: 1 });
+
+test('a night the model cannot clear is summarised as unknown, never as cleared', () => {
+  const s = night({ id: 'a', start: local(20), end: local(23), drinks: [absurd(48)] });
+  const sum = N.summarize(s, P, local(23, 30));
+  assert.equal(sum.complete, false);
+  assert.equal(Number.isFinite(sum.clear), false);
+  const back = JSON.parse(JSON.stringify(sum));
+  assert.equal(back.clear, null, 'saved as null, which History reads as unknown');
+  assert.equal(back.complete, false);
+});
+
+test('settle never ends a live round the model cannot see the end of', () => {
+  const s0 = st(night({ id: 'a', start: local(20), end: null, lastAt: local(20, 30), drinks: [absurd(48)] }));
+  const later = local(20) + 40 * 24 * 3600000;
+  assert.equal(N.settle(s0, later), s0);
+});
+
+test('a new round never treats an unknown clear time as cleared', () => {
+  const s = night({ id: 'a', start: local(20), end: local(23), drinks: [absurd(48)] });
+  const p = N.place(s, P, { start: local(20) + 10 * 24 * 3600000, end: local(21) + 10 * 24 * 3600000, drinks: [hein(1)] }, local(22) + 10 * 24 * 3600000);
+  assert.equal(p.action, 'continue');
+});

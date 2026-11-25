@@ -120,7 +120,8 @@
     const rounds = session.rounds.map((r) => Object.assign({}, r, { end: endOf(r, now), drinks: copyDrinks(r.drinks) }));
     const sim = simRounds(rounds, session, profile, now);
     return {
-      start: sim.start, clear: clearOf(sim, rounds, now), G: sim.G, peak: sim.peak,
+      // An incomplete night keeps clear as Infinity in memory and saves as null: unknown, never cleared.
+      start: sim.start, clear: clearOf(sim, rounds, now), complete: sim.complete !== false, G: sim.G, peak: sim.peak,
       count: rounds.reduce((a, r) => a + r.drinks.reduce((b, d) => b + d.qty, 0), 0),
       rounds, fed: !!session.fed
     };

@@ -19,7 +19,9 @@
   const $ = (s) => document.querySelector(s);
   const pad = (n) => String(n).padStart(2, '0');
   const fmtBac = (b) => b.toFixed(3) + '%';
-  const fmtTime = (ms) => { const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  // A clear time can be Infinity when the model could not reach one: it prints as --:--, never as a made up time.
+  const fmtTime = (ms) => { if (!Number.isFinite(ms)) return '--:--'; const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const known = (t) => Number.isFinite(t);
   const round5 = (ms) => Math.floor(ms / 300000) * 300000;
 
   function newSession() {
@@ -63,6 +65,7 @@
   const fmtLimit = (l) => l.toFixed(2) + '%';
 
   function dayLabel(ms) {
+    if (!known(ms)) return 'Not known';
     const d = new Date(ms), n = new Date();
     const strip = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
     const diff = Math.round((strip(d) - strip(n)) / 864e5);
@@ -76,7 +79,7 @@
     return ['Today', 'Tomorrow', 'Yesterday'].includes(l) ? l.toLowerCase() : 'on ' + l;
   }
   function dur(ms) {
-    const t = Math.max(0, Math.round(ms / 1000));
+    const t = known(ms) ? Math.max(0, Math.round(ms / 1000)) : 0;
     const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
     return { h, m, s };
   }
@@ -198,6 +201,12 @@
       els.kicker.textContent = 'Clear by';
       flip(els.time, fmtTime(sim.clear));
       els.day.textContent = dayLabel(sim.clear) + '. Your start time is still ahead.';
+    } else if (sim.complete === false) {
+      // The model could not follow this night to the end. Never a guessed time, never Clear.
+      els.kicker.textContent = "Can't estimate";
+      flip(els.time, '--:--');
+      els.day.textContent = 'This is more than the model can follow. Treat yourself as over the limit: don\'t drive.';
+      frac = 1;
     } else if (now >= sim.clear) {
       els.kicker.textContent = "You're";
       flip(els.time, 'Clear');
@@ -235,15 +244,16 @@
     if (!sim.G) { box.innerHTML = '<div class="chart-empty">Your curve appears once there is something on the tab.</div>'; return; }
     const W = 340, H = 200, pl = 6, pr = 10, pt = 26, pb = 26;
     const limit = state.profile.limit;
-    const t0 = sim.start, t1 = sim.clear, span = Math.max(t1 - t0, 60000);
+    const t0 = sim.start, t1 = M.dataEnd(sim), span = Math.max(t1 - t0, 60000), done = sim.complete !== false;
     const maxB = Math.max(sim.peak * 1.15, limit * 1.8, 0.02);
     const x = (t) => pl + (t - t0) / span * (W - pl - pr);
     const y = (b) => pt + (1 - Math.min(b, maxB) / maxB) * (H - pt - pb);
     const n = sim.points.length, step = Math.max(1, Math.floor(n / 180));
     let d = 'M' + x(t0).toFixed(1) + ' ' + y(0).toFixed(1);
     for (let i = 0; i < n; i += step) d += ' L' + x(t0 + (i + 1) * 60000).toFixed(1) + ' ' + y(sim.points[i]).toFixed(1);
-    d += ' L' + x(t1).toFixed(1) + ' ' + y(0).toFixed(1);
-    const area = d + ' Z';
+    // A night that clears comes back down to zero; an incomplete one just stops where its data ends.
+    const area = d + ' L' + x(t1).toFixed(1) + ' ' + y(0).toFixed(1) + ' Z';
+    if (done) d += ' L' + x(t1).toFixed(1) + ' ' + y(0).toFixed(1);
 
     let bands = '', from = 0;
     zones().forEach((z, i) => {
@@ -284,7 +294,7 @@
     const px = x(sim.peakAt), py = y(sim.peak);
     const anchor = px > W * 0.72 ? 'end' : px < W * 0.2 ? 'start' : 'middle';
     box.innerHTML =
-      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Blood alcohol peaks at ' + fmtBac(sim.peak) + ' around ' + fmtTime(sim.peakAt) + ' and reaches zero at ' + fmtTime(t1) + '">'
+      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Blood alcohol peaks at ' + fmtBac(sim.peak) + ' around ' + fmtTime(sim.peakAt) + (done ? ' and reaches zero at ' + fmtTime(t1) : ', and the estimate cannot see when it reaches zero') + '">'
       + '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A93B" stop-opacity=".5"/><stop offset="1" stop-color="#F2A93B" stop-opacity="0"/></linearGradient></defs>'
       + bands + ticks + limitLine
       + '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" style="stroke:var(--line)"/>'
@@ -530,14 +540,14 @@
     // The card says what is true of the current night. A night that has cleared and is already saved is over: it
     // belongs to Past nights, so the card goes away. One that has cleared but was never saved asks to be saved.
     const nowMs = Date.now(), cur = N.summarize(state.session, state.profile, nowMs);
-    const live = !!N.liveRound(state.session), cleared = cur.G > 0 && cur.clear <= nowMs;
+    const live = !!N.liveRound(state.session), cleared = cur.G > 0 && known(cur.clear) && cur.clear <= nowMs;
     const saved = h.some((n) => n.start === cur.start && Math.abs(n.G - cur.G) < 0.05);
     $('#histNow').hidden = !cur.G || (cleared && saved);
     if (cur.G) {
       const drinks = cur.count + (cur.count === 1 ? ' drink' : ' drinks');
       $('#histNowTitle').textContent = live ? 'Tonight, in progress' : !cleared ? 'Tonight, still clearing' : 'Tonight is not saved yet';
       $('#histNowSub').textContent = live ? drinks + ', peak ' + fmtBac(cur.peak)
-        : !cleared ? drinks + ', clear by ' + fmtTime(cur.clear)
+        : !cleared ? drinks + (known(cur.clear) ? ', clear by ' + fmtTime(cur.clear) : ', clear time not known')
         : drinks + ', peak ' + fmtBac(cur.peak) + '. Tap to open it and save.';
     }
     // Totals
@@ -564,13 +574,14 @@
         const mh = document.createElement('li'); mh.className = 'h-month'; mh.textContent = m; ul.appendChild(mh);
       }
       const li = document.createElement('li');
-      const { h: hh, m: mm } = dur(n.clear - n.start);
+      // n.clear is null for a night the model could not follow to the end (saved from Infinity).
+      const { h: hh, m: mm } = dur(n.clear - n.start), span = known(n.clear) ? fmtTime(n.start) + ' to ' + fmtTime(n.clear) + ', ' + hh + ' h ' + pad(mm) + ' m' : 'From ' + fmtTime(n.start) + ', clear time not known';
       const wrap = document.createElement('button'); wrap.type = 'button'; wrap.className = 'h-open';
       wrap.innerHTML = '<span class="h-tile"><b></b><i></i></span><span class="h-main"><span class="h-date"></span><span class="h-meta"></span></span><span class="h-peak"><b></b><i></i></span>';
       wrap.querySelector('.h-tile b').textContent = String(d.getDate());
       wrap.querySelector('.h-tile i').textContent = d.toLocaleDateString(undefined, { month: 'short' });
       wrap.querySelector('.h-date').textContent = d.toLocaleDateString(undefined, { weekday: 'long' });
-      wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g\n' + fmtTime(n.start) + ' to ' + fmtTime(n.clear) + ', ' + hh + ' h ' + pad(mm) + ' m';
+      wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g\n' + span;
       wrap.querySelector('.h-peak b').textContent = fmtBac(n.peak);
       wrap.querySelector('.h-peak i').textContent = 'peak';
       wrap.dataset.tone = n.peak > limit ? 'over' : 'under';
@@ -624,9 +635,10 @@
     past.showModal();
     if (!rounds.length) return;
     // Seen from the moment it cleared, so no "now" marker sits on the hills.
-    const o = N.simOpts({ rounds, fed: !!n.fed }, state.profile, n.clear);
+    const seen = known(n.clear) ? n.clear : Date.now();
+    const o = N.simOpts({ rounds, fed: !!n.fed }, state.profile, seen);
     const sim = M.simulate(o);
-    window.DryHorizon.render($('#pastHorizon'), { sim, rounds: o.rounds, now: n.clear, limit: state.profile.limit, prevSim: null });
+    window.DryHorizon.render($('#pastHorizon'), { sim, rounds: o.rounds, now: seen, limit: state.profile.limit, prevSim: null });
     $('#pastHorizon .hz-now').style.display = 'none';
   }
   $('#pastClose').addEventListener('click', () => past.close());
@@ -646,8 +658,8 @@
   $('#shareBtn').addEventListener('click', async () => {
     const sim = simulate();
     let text = 'Tracking my night with Dry Season.';
-    if (sim.G && Date.now() < sim.clear) text = "I'll be clear of alcohol by " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Tracked with Dry Season.';
-    else if (sim.G) text = 'Officially clear. Tracked with Dry Season.';
+    if (sim.G && known(sim.clear) && Date.now() < sim.clear) text = "I'll be clear of alcohol by " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Tracked with Dry Season.';
+    else if (sim.G && known(sim.clear)) text = 'Officially clear. Tracked with Dry Season.';
     try {
       if (navigator.share) { await navigator.share({ title: 'Dry Season', text, url: location.href }); return; }
       await copyText(text + ' ' + location.href);
@@ -1237,11 +1249,11 @@
     renderLateDrinks();
     const others = v.p.action === 'continue' ? state.session.rounds.filter((r) => !editing || r.id !== editing.id).map((r) => ({ start: r.start, end: N.endOf(r, now) })) : [];
     DryDial.render($('#dial'), { round: { start: draft.start, end: draft.end }, others, soberAt: v.soberAt, now, tone: hist ? 'history' : 'amber' });
-    const clear = v.soberAt <= now;
-    $('#dlKicker').textContent = hist ? 'That night, sober at' : clear ? 'Sober since' : 'Fully sober at';
+    const clear = v.soberAt <= now, unknown = !known(v.soberAt);
+    $('#dlKicker').textContent = unknown ? "Can't estimate" : hist ? 'That night, sober at' : clear ? 'Sober since' : 'Fully sober at';
     $('#dlTime').textContent = fmtTime(v.soberAt);
     const { h, m } = dur(v.soberAt - now);
-    $('#dlTag').textContent = hist ? dayLabel(draft.start) + ' · History' : clear ? 'Already clear' : dayLabel(v.soberAt) + ' · ' + h + ' h ' + pad(m) + ' m';
+    $('#dlTag').textContent = unknown ? 'More than the model can follow' : hist ? dayLabel(draft.start) + ' · History' : clear ? 'Already clear' : dayLabel(v.soberAt) + ' · ' + h + ' h ' + pad(m) + ' m';
     $('#lateAdd').textContent = editing ? 'Save round' : hist ? 'Save to History'
       : v.p.action === 'continue' && state.session.rounds.length ? 'Add round · continues tonight' : 'Add round to tonight';
   }
@@ -1413,7 +1425,7 @@
     note.setAttribute('aria-expanded', String(open)); note.disabled = locked;
     $('#pnMore').textContent = open ? 'Less' : 'More';
     const u = M.underLimitAt(sim, limit);
-    flip($('#underAt'), u === null ? 'Never over' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u)));
+    flip($('#underAt'), u === null ? 'Never over' : !known(u) ? 'Not known' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u)));
   }
 
   $('#pillNote').addEventListener('click', () => { noteOpen = !noteOpen; renderStatus(lastSim); });
@@ -1529,7 +1541,7 @@
       ? "Checking in: my Dry Season estimate says I'm clear."
       : 'Checking in from Dry Season. My estimate is ' + fmtBac(b) + (o.rising ? ' and still climbing to about ' + fmtBac(o.ahead) : '')
         + (st === 'over' ? (o.overAt ? ', heading over the legal limit' : ', over the legal limit') : ', under the limit but still impaired')
-        + ", so I'm not driving. I should be fully clear around " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '.';
+        + ", so I'm not driving." + (known(sim.clear) ? ' I should be fully clear around ' + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '.' : '');
     try {
       if (navigator.share) { await navigator.share({ text }); return; }
       location.href = 'sms:?&body=' + encodeURIComponent(text);
@@ -1553,6 +1565,7 @@
     if (s.driveAt <= now) { set('', 'That time has passed', 'Pick a time later than now.'); return; }
     if (!s.rounds.length) { set('yes', 'Nothing to clear', 'The tab is empty. Make sure you sleep well before a long drive.'); return; }
     const plan = M.drivePlan(opts(), now, s.driveAt, 60, isLive());
+    if (!plan.known) { set('no', 'Not clear in time', "This is more than the model can follow, so it can't give you a clear time. Arrange a lift."); return; }
     const clearTxt = fmtTime(plan.clearAt) + ' ' + dayIn(plan.clearAt);
     if (plan.ok) {
       let d = 'Fully clear around ' + clearTxt + ', with at least an hour to spare.';
@@ -1583,7 +1596,7 @@
     const st = has ? M.outlook(sim, now, limit).status : 'clear';
     const u = has ? M.underLimitAt(sim, limit) : null;
     const L = N.lastDrink(state.session);
-    const clearAt = sim.clear || now;
+    const clearAt = sim.clear || now;          // Infinity when not known: it prints as --:--
     const { h, m } = dur(clearAt - now);
     return {
       has, status: st, bac: b, peak: sim.peak, start: sim.start, clearAt, underAt: u,
@@ -1593,7 +1606,7 @@
       water: state.session.water,
       fmt: {
         bac: fmtBac(b), clear: fmtTime(clearAt), clearedAt: fmtTime(clearAt), clearDay: dayLabel(clearAt),
-        left: h ? h + ' h ' + pad(m) + ' m' : m + ' min', start: fmtTime(sim.start),
+        left: !known(clearAt) ? '--' : h ? h + ' h ' + pad(m) + ' m' : m + ' min', start: fmtTime(sim.start),
         underAt: u ? fmtTime(u) : '--', limit: fmtLimit(limit)
       }
     };
