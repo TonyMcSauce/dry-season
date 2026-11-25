@@ -373,16 +373,18 @@ const checks = [
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.clock.setFixedTime(new Date(2026, 10, 23, 22, 0));
+    // Each newPage is a fresh browser context, so storage starts empty: open the page once, as a new visitor would.
+    // (Loading it, clearing storage and loading again let the first page's timers write into the cleared storage.)
     await page.goto(url);
-    await page.evaluate(() => localStorage.clear());
-    await page.goto(url); await page.waitForTimeout(1400);
-    assert.equal(await page.locator('#tour').isVisible(), true);
+    // Wait for the walkthrough instead of sleeping a fixed time: with the 3D scene drawn in software, a busy
+    // machine can hold its timer past any fixed wait.
+    await page.locator('#tour').waitFor({ state: 'visible', timeout: 8000 });
     assert.equal((await text(page, '#tourStep')).trim(), '1 of 5');
     for (let i = 0; i < 4; i++) await page.click('#tourNext');
     assert.equal((await text(page, '#tourNext')).trim(), 'Got it');
     await page.click('#tourNext');
     assert.equal(await page.locator('#tour').isVisible(), false);
-    await page.reload(); await page.waitForTimeout(1400);
+    await page.reload(); await page.waitForLoadState('load'); await page.waitForTimeout(2500);
     assert.equal(await page.locator('#tour').isVisible(), false, 'only once');
     await page.click('#helpBtn');
     await page.click('#helpTour');
@@ -801,6 +803,24 @@ const checks = [
     assert.match(shared[1], /over the legal limit, so I'm not driving\.$/);
     const body = await page.evaluate(() => document.body.innerText);
     assert.ok(!/NaN|Infinity/.test(body), 'no NaN or Infinity printed anywhere');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }],
+  ['History saved by an older model is worked out again once, and saved that way', async (browser, url) => {
+    // A night saved by 6.1.6: 20 beers on a 45 kg body, cleared at the old 96 hour cut-off. No historyRev in the save.
+    const saved = JSON.parse(JSON.stringify(EMPTY));
+    saved.profile = Object.assign({}, PROFILE, { kg: 45, sex: 'f', beta: 0.010 });
+    const r = { start: local(19, 0, 16), end: local(22, 0, 16), drinks: [hein(20)] };
+    saved.history = [{ start: r.start, clear: r.start + 96 * 3600000, G: 260, peak: 1.0, count: 20, rounds: [r], fed: false }];
+    const { page, errors } = await open(browser, url, saved);
+    const sim = M.simulate({ rounds: [r], kg: 45, sex: 'f', beta: 0.010, fed: false });
+    const hhmm = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    await page.click('[data-go=history]'); await page.waitForTimeout(300);
+    assert.match(await page.locator('#historyList .h-meta').first().textContent(), new RegExp('to ' + hhmm(sim.clear)));
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')));
+    assert.equal(stored.historyRev, 2);
+    assert.equal(stored.history[0].clear, sim.clear, 'the new clear time is saved');
+    assert.equal(stored.history[0].complete, true);
     assert.deepEqual(errors, []);
     await page.close();
   }]

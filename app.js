@@ -28,8 +28,9 @@
     return { v: 5, rounds: [], fed: false, driveAt: null, water: null };
   }
   function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true, theme: 'auto' }, session: newSession(), history: [], stash: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
+    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true, theme: 'auto' }, session: newSession(), history: [], historyRev: N.HISTORY_REV, stash: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
   }
+  let historyRechecked = false;   // set when load() recomputed History with a newer model: save it once
   function load() {
     const d = defaults();
     try {
@@ -39,11 +40,16 @@
         const session = N.migrate(Object.assign({ fed: false, driveAt: null, water: null }, s.session));
         const oldStash = session.stash;
         if (oldStash !== undefined) delete session.stash;
+        const profile = Object.assign(d.profile, s.profile);
+        // History saved by an older model is worked out again, once (see N.HISTORY_REV).
+        let history = Array.isArray(s.history) ? s.history : [];
+        if (s.historyRev !== N.HISTORY_REV) { history = N.recheckHistory(history, profile); historyRechecked = true; }
         return {
-          profile: Object.assign(d.profile, s.profile),
+          profile,
           session,
           stash: N.migrateStash(s.stash, oldStash),
-          history: Array.isArray(s.history) ? s.history : [],
+          history,
+          historyRev: N.HISTORY_REV,
           favs: D.normalizeFavs(Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS)
         };
       }
@@ -53,6 +59,7 @@
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
   let state = N.settle(load(), Date.now());
+  if (historyRechecked) save();
 
   const gramsOf = M.gramsOf;
   const isLive = () => !!N.liveRound(state.session);

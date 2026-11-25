@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.1.8';
+self.DRY_VERSION = '6.1.9';
 self.DRY_CHANGES = [
+  'History catches up: nights you saved before the last two fixes are worked out again with the improved estimate, once, so their peaks and clear times match how the app works now.',
   'Eaten something? The estimate still lowers and delays your peak, but it no longer takes 10% off your drinks. How much food really removes varies a lot from person to person, so your clear time now leans to the safe side and never comes sooner because you ate.',
   'Fixed: a very long night is now followed all the way until you are clear. Before, the estimate stopped after 96 hours and could say Clear while you were still over the limit. If a night is ever more than the model can follow, it now says it can\'t estimate, and never shows a clear time it does not have.',
   'Fixed: a new round after an earlier, bigger one now shows when it will take you back over the limit, instead of saying you are under it. The Live Island and Text a friend tell the same story. Tapping minus on a round now always takes off exactly one drink, editing a round can no longer drag it over another one so nothing is counted twice, and the pacing hint updates the moment you add another of the same drink.',
