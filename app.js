@@ -1148,6 +1148,17 @@
       if (patch.start != null) draft.end = Math.min(now, draft.start + HOUR);
       if (draft.end - draft.start < 15 * MIN) draft.start = draft.end - 15 * MIN;
     }
+    // An edited round stays between its neighbours, so no drink is counted twice.
+    if (editing) {
+      const f = N.fitEdit(state.session, editing.id, draft, now);
+      const room = N.editRoom(state.session, editing.id, now);
+      if (f.start !== draft.start || (!draft.live && f.end !== draft.end)) {
+        toast(f.start !== draft.start && room.lo > -Infinity ? 'This round starts after the one before, at ' + fmtTime(room.lo)
+          : 'This round ends before the next one, at ' + fmtTime(room.hi));
+      }
+      draft.start = f.start;
+      if (!draft.live) draft.end = f.end;
+    }
     renderLate();
   }
   /** Where the draft would go, and the night it would make: what the preview and the button show. */
@@ -1253,7 +1264,8 @@
   function saveEdit() {
     const now = Date.now();
     nightNote = null;
-    state = N.editRound(state, editing.id, { start: draft.start, end: draft.live ? null : Math.min(draft.end, now), drinks: draft.drinks });
+    const f = N.fitEdit(state.session, editing.id, { start: draft.start, end: draft.live ? now : Math.min(draft.end, now) }, now);
+    state = N.editRound(state, editing.id, { start: f.start, end: draft.live ? null : f.end, drinks: draft.drinks });
     save();
     handOff(true);
   }
@@ -1434,7 +1446,9 @@
   // Blackout risk and pacing
   let gapMemo = { key: '', at: 0, val: null };
   function cachedGap(o, now, grams) {
-    const key = JSON.stringify([allDrinks().length, o.rounds.map((r) => r.start), o.fed, o.kg, o.sex, o.beta, grams.toFixed(2)]);
+    // Every drink and its count: one more of the same drink changes the answer straight away.
+    const drinks = o.rounds.map((r) => r.drinks.map((d) => N.keyOf(d) + 'x' + d.qty).join(','));
+    const key = JSON.stringify([drinks, o.rounds.map((r) => r.start), o.fed, o.kg, o.sex, o.beta, grams.toFixed(2)]);
     if (gapMemo.key === key && now - gapMemo.at < 30000) return gapMemo.val;
     gapMemo = { key, at: now, val: M.pacingGap(o, now, grams, M.THRESHOLDS.blackout) };
     return gapMemo.val;

@@ -725,6 +725,24 @@ const checks = [
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('coaster')).visibility), 'hidden', 'a hidden update card is out of the way too');
     assert.deepEqual(errors, []);
     await page.close();
+  }],
+  ['editing a round never drags it over the round before, so nothing counts twice', async (browser, url) => {
+    const saved = JSON.parse(JSON.stringify(EMPTY));
+    saved.session.rounds = [
+      { id: 'a', start: local(18), end: local(19), drinks: [hein(2)], late: true },
+      { id: 'b', start: local(20), end: local(21), drinks: [hein(2)], late: true }];
+    const { page, errors } = await open(browser, url, saved);
+    await page.locator('#rounds li .rc-open').nth(1).click();
+    await page.waitForTimeout(300);
+    for (let i = 0; i < 8; i++) await page.click('#fromDown');
+    assert.equal((await text(page, '#fromVal')).trim(), '19:00');
+    assert.match(await text(page, '#toastMsg'), /starts after the one before, at 19:00/);
+    await page.click('#lateAdd'); await page.waitForTimeout(700);
+    const rounds = await page.evaluate(() => JSON.parse(localStorage.getItem('dryseason.v1')).session.rounds);
+    const b = rounds.find((r) => r.id === 'b');
+    assert.equal(b.start, local(19)); assert.equal(b.end, local(21));
+    assert.deepEqual(errors, []);
+    await page.close();
   }]
 ];
 

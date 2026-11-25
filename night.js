@@ -214,9 +214,9 @@
     if (clash) {
       if (!opts.choice) throw new Error('start choice needed');
       if (opts.choice === 'same') {
-        const drinks = copyDrinks(clash.drinks), last = drinks[drinks.length - 1];
-        if (last && keyOf(last) === keyOf(one)) last.qty += one.qty;
-        else drinks.push(one);
+        // Same drink as one already in that round: count it on its row, never a second row.
+        const drinks = copyDrinks(clash.drinks), same = drinks.find((d) => keyOf(d) === keyOf(one));
+        if (same) { same.qty += one.qty; same.at = now; } else drinks.push(one);
         const rounds = state.session.rounds.map((r) => (r === clash
           ? Object.assign({}, r, { start: Math.min(r.start, start), end: null, drinks, lastAt: now }) : r)).sort(byStart);
         return { state: stamp(state, now, { rounds }), outcome: { action: 'continue', carried: 0, archived: false } };
@@ -402,6 +402,33 @@
     return withSession(state, { closedAt: now, rounds: state.session.rounds.map((r) => (r.end == null ? Object.assign({}, r, { end: now }) : r)) });
   }
 
+  /**
+   * The time a round can take when it is edited: from the end of the round before
+   * to the start of the round after (or now), so an edit never runs over another
+   * round and counts its drinks twice. A round that already shares time with this
+   * one (extra drinks logged on purpose) is left out: that overlap was a choice.
+   */
+  function editRoom(session, id, now) {
+    const r = session.rounds.find((x) => x.id === id);
+    if (!r) return { lo: -Infinity, hi: now };
+    const rEnd = endOf(r, now);
+    let lo = -Infinity, hi = now;
+    for (const o of session.rounds) {
+      if (o === r) continue;
+      const oEnd = endOf(o, now);
+      if (oEnd <= r.start) lo = Math.max(lo, oEnd);
+      else if (o.start >= rEnd) hi = Math.min(hi, o.start);
+    }
+    return { lo, hi };
+  }
+
+  /** An edit's start and end, kept inside the room the round has. */
+  function fitEdit(session, id, times, now) {
+    const { lo, hi } = editRoom(session, id, now);
+    const start = Math.min(Math.max(times.start, lo), hi);
+    return { start, end: Math.max(start, Math.min(times.end, hi)) };
+  }
+
   /** Change a round's times or drinks in place. */
   function editRound(state, id, patch) {
     const rounds = state.session.rounds.map((r) => (r.id === id ? Object.assign({}, r, patch) : r));
@@ -414,7 +441,7 @@
 
   const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
     addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf, saveToHistory: pushHistory,
-    startChoices, startClash, lastFinished, stashOf, stashCount, latestStash, migrateStash, stashAdd, stashSet,
+    startChoices, startClash, lastFinished, editRoom, fitEdit, stashOf, stashCount, latestStash, migrateStash, stashAdd, stashSet,
     stashRemove, clearStash, useStash, openStash, catchUpDue, catchUpSource, catchUpDrink, catchUp, nudgeRound, recentDrinks, lessOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;
