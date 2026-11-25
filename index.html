@@ -7,6 +7,7 @@
 <meta name="description" content="Log tonight's drinks and see when your body should be clear of alcohol.">
 <meta name="theme-color" content="#17212F">
 <script>try{var t=((JSON.parse(localStorage.getItem('dryseason.v1'))||{}).profile||{}).theme;if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('intro')}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,596 +18,17 @@
 <link rel="preload" href="fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/schibsted-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/schibsted-grotesk-700.woff2" as="font" type="font/woff2" crossorigin>
-<style>
-@font-face{font-family:'Alfa Slab One';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/alfa-slab-one-400.woff2) format('woff2')}
-@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/schibsted-grotesk-400.woff2) format('woff2')}
-@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/schibsted-grotesk-500.woff2) format('woff2')}
-@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/schibsted-grotesk-600.woff2) format('woff2')}
-@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/schibsted-grotesk-700.woff2) format('woff2')}
-:root{
-  --sky-top:#17212F; --sky-mid:#2D2926; --sky-low:#7A3F1F; --horizon:#C8742E;
-  --ground:#16120E; --sheet:#211B16;
-  --amber:#F2A93B; --amber-deep:#B8651A; --foam:#F6EDDA; --ink:#2A1A0F;
-  --acacia:#A7B57E; --russet:#E46F48;
-  --text:#F6EDDA; --muted:rgba(246,237,218,.64); --line:rgba(246,237,218,.16);
-  --field:rgba(246,237,218,.07); --receipt:#F6EDDA;
-  --stars:1;
-  --display:'Alfa Slab One', Rockwell, Georgia, serif;
-  --body:'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --gutter:16px;
-  color-scheme:dark;
-}
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){
-    --sky-top:#E9D9BB; --sky-mid:#EFD3A2; --sky-low:#E2A563; --horizon:#C9763A;
-    --ground:#F5EEE1; --sheet:#FBF6EC;
-    --text:#2A1A0F; --muted:rgba(42,26,15,.64); --line:rgba(42,26,15,.15);
-    --field:rgba(42,26,15,.05); --receipt:#FFFBF3; --stars:0;
-    color-scheme:light;
-  }
-  :root:not([data-theme="dark"]) .hero{ --text:#2A1A0F; --muted:rgba(42,26,15,.7); }
-  :root:not([data-theme="dark"]) .glass{ color:#2A1A0F; }
-}
-:root[data-theme="dark"]{ color-scheme:dark; }
-:root[data-theme="light"]{
-  --sky-top:#E9D9BB; --sky-mid:#EFD3A2; --sky-low:#E2A563; --horizon:#C9763A;
-  --ground:#F5EEE1; --sheet:#FBF6EC;
-  --text:#2A1A0F; --muted:rgba(42,26,15,.64); --line:rgba(42,26,15,.15);
-  --field:rgba(42,26,15,.05); --receipt:#FFFBF3; --stars:0;
-  color-scheme:light;
-}
-:root[data-theme="light"] .hero{ --text:#2A1A0F; --muted:rgba(42,26,15,.7); }
-:root[data-theme="light"] .glass{ color:#2A1A0F; }
-/* The 3D hero is a dusk scene in every theme: its tokens and text stay dusk. In light it reads as a dusk card. */
-#hero.three{
-  --sky-top:#17212F; --sky-mid:#2D2926; --sky-low:#7A3F1F; --horizon:#C8742E; --ground:#16120E;
-  --text:#F6EDDA; --muted:rgba(246,237,218,.64); --line:rgba(246,237,218,.16); --field:rgba(246,237,218,.07);
-  color-scheme:dark; border-radius:0 0 28px 28px; color:var(--text);
-}
-
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%}
-body{
-  margin:0; background:var(--ground); color:var(--text);
-  font-family:var(--body); font-size:16px; line-height:1.5;
-  -webkit-font-smoothing:antialiased; overflow-x:hidden;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-body::after{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:50; opacity:.07; mix-blend-mode:overlay;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
-button,input{font:inherit;color:inherit}
-button{cursor:pointer;-webkit-tap-highlight-color:transparent}
-:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:6px}
-.wrap{max-width:560px;margin:0 auto}
-
-/* Hero */
-.hero{
-  position:relative; overflow:hidden; transition:padding-top .5s cubic-bezier(.22,1,.36,1);
-  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 42%,var(--sky-low) 80%,var(--horizon) 100%);
-  padding:calc(env(safe-area-inset-top) + 14px) var(--gutter) 0;
-}
-.stars{position:absolute;inset:0 0 45% 0;opacity:var(--stars);pointer-events:none;
-  background-image:
-    radial-gradient(1.2px 1.2px at 12% 18%,#fff8 50%,transparent 51%),
-    radial-gradient(1px 1px at 28% 8%,#fff7 50%,transparent 51%),
-    radial-gradient(1.4px 1.4px at 47% 22%,#fffa 50%,transparent 51%),
-    radial-gradient(1px 1px at 63% 12%,#fff6 50%,transparent 51%),
-    radial-gradient(1.2px 1.2px at 78% 30%,#fff8 50%,transparent 51%),
-    radial-gradient(1px 1px at 90% 9%,#fff7 50%,transparent 51%),
-    radial-gradient(1px 1px at 36% 36%,#fff5 50%,transparent 51%),
-    radial-gradient(1.3px 1.3px at 6% 42%,#fff6 50%,transparent 51%),
-    radial-gradient(1px 1px at 55% 44%,#fff4 50%,transparent 51%);
-}
-.hero-top{position:relative;display:flex;justify-content:space-between;align-items:center;max-width:560px;margin:0 auto}
-.brand{font-family:var(--display);font-size:1.05rem;letter-spacing:.01em;color:var(--text)}
-.ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:7px 14px;font-size:.9rem;font-weight:600}
-.hero-body{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;gap:8px;max-width:560px;margin:18px auto 0}
-.readout{padding-bottom:12px;min-width:0}
-.kicker{margin:0;font-weight:600;color:var(--muted);font-size:1rem}
-.clear-time{
-  margin:2px 0 6px;font-family:var(--display);font-weight:400;line-height:.88;
-  font-size:clamp(3.2rem,15.5vw,5.8rem);letter-spacing:-.01em;color:var(--text);
-  ;white-space:nowrap;
-  text-shadow:0 2px 24px rgba(242,169,59,.25);
-}
-.clear-day{margin:0;font-size:1rem;color:var(--text);white-space:pre-line}
-.stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:560px;margin:14px auto 0;padding:14px 0 168px;border-top:1px solid var(--line)}
-.stats div{min-width:0}
-.stats dt{font-size:.82rem;color:var(--muted)}
-.stats dd{margin:0;font-weight:700;font-size:1.15rem}
-.glass{width:min(31vw,150px);height:auto;margin-bottom:6px;position:relative;z-index:1;overflow:visible;color:var(--foam);filter:drop-shadow(0 10px 18px rgba(0,0,0,.25)) drop-shadow(0 0 26px var(--glow));transition:filter .8s}
-.liquid{transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
-.bubble{animation:rise 3.2s linear infinite;opacity:.0}
-.bubble:nth-child(2){animation-delay:.8s;animation-duration:2.6s}
-.bubble:nth-child(3){animation-delay:1.7s;animation-duration:3.6s}
-.bubble:nth-child(4){animation-delay:2.3s;animation-duration:2.9s}
-@keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-150px);opacity:0}}
-.horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:150px;display:block;color:var(--ground);overflow:visible}
-.hz-hill,.hz-ground{fill:currentColor}
-/* 3D hero: the canvas fills the hero; the readout sits on top; the drinks stand in the stage strip */
-.scene3d{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:0}
-.hero.three .scene3d{display:block}
-.hero > :not(.scene3d):not(.horizon):not(.stars){position:relative;z-index:1}
-.hero.three .stars,.hero.three .glass,.hero.three .horizon{display:none}
-.hero.three .hero-body{grid-template-columns:1fr}
-.hero.three .stats{padding-bottom:14px}
-.stage-space{height:0}
-.hero.three .stage-space{height:clamp(300px,44svh,380px);pointer-events:none}
-.hero.three.has-another .stage-space{height:clamp(250px,calc(44svh - 70px),320px)}
-.hero.three .another{margin-top:-6px;padding-bottom:6px}
-.hero.three{touch-action:pan-y}
-.hero.three .clear-time,.hero.three .kicker,.hero.three .clear-day{text-shadow:0 1px 14px rgba(0,0,0,.25)}
-.hero.empty .stats{visibility:hidden}
-.hz-hill,.hz-ridge{transition:d .9s cubic-bezier(.22,1,.36,1)}
-.hz-ridge{fill:none;stroke:var(--amber);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(242,169,59,.55))}
-.hz-ghost{fill:none;stroke:var(--text);stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:2 4}
-.hz-bands rect{fill:var(--text);fill-opacity:.07;transition:x .9s cubic-bezier(.22,1,.36,1),width .9s cubic-bezier(.22,1,.36,1)}
-.hz-labels text{font:700 10px var(--body);letter-spacing:.08em;fill:var(--text);fill-opacity:.75}
-.hz-limit{stroke:var(--text);stroke-opacity:.3;stroke-dasharray:3 5}
-.hz-now{fill:var(--russet);stroke:var(--ground);stroke-width:2;transition:cx .9s cubic-bezier(.22,1,.36,1),cy .9s cubic-bezier(.22,1,.36,1)}
-.hz-moon{fill:var(--text);filter:drop-shadow(0 0 6px rgba(246,237,218,.8));transition:cx .9s cubic-bezier(.22,1,.36,1)}
-@media (prefers-reduced-motion: reduce){.hz-hill,.hz-ridge,.hz-bands rect,.hz-now,.hz-moon{transition:none}}
-
-/* Sections */
-.block{padding:30px var(--gutter) 6px}
-h2{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1;margin:0 0 14px;letter-spacing:.005em}
-.hint{color:var(--muted);font-size:.92rem;margin:6px 0 0}
-.times{display:grid;grid-template-columns:1fr;gap:12px}
-.field{display:flex;flex-direction:column;gap:6px;font-size:.88rem;color:var(--muted);min-width:0}
-.field input{
-  width:100%;min-width:0;background:var(--field);border:1px solid var(--line);border-radius:12px;
-  padding:12px;font-size:16px;color:var(--text);-webkit-appearance:none;appearance:none;min-height:48px;
-}
-.field input:disabled{opacity:.55}
-.switch{display:flex;align-items:center;gap:12px;margin-top:16px;font-weight:500}
-.switch input{position:absolute;opacity:0;width:1px;height:1px}
-.track{width:48px;height:28px;border-radius:999px;background:var(--field);border:1px solid var(--line);position:relative;flex:none;transition:background .25s}
-.track::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--text);transition:transform .25s}
-.switch input:checked + .track{background:var(--amber);border-color:var(--amber)}
-.switch input:checked + .track::after{transform:translateX(20px);background:var(--ink)}
-.switch input:focus-visible + .track{outline:2px solid var(--amber);outline-offset:3px}
-.warn{color:var(--russet);font-size:.9rem;margin:10px 0 0;font-weight:600}
-
-/* Tab receipt */
-.tab-wrap{padding:30px var(--gutter) 0}
-.tab{
-  background:var(--receipt);color:var(--ink);padding:22px 18px 30px;border-radius:6px 6px 0 0;
-  transform:rotate(-.6deg);box-shadow:0 18px 30px -18px rgba(0,0,0,.55);
-  -webkit-mask:linear-gradient(#000 0 0) top/100% calc(100% - 10px) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 10px repeat-x;
-  mask:linear-gradient(#000 0 0) top/100% calc(100% - 10px) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 10px repeat-x;
-}
-.tab h2{color:var(--ink);margin-bottom:4px}
-.tab-sub{margin:0 0 14px;font-size:.9rem;color:rgba(42,26,15,.62)}
-.tab ul{list-style:none;margin:0;padding:0}
-.tab li{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:12px 0;border-top:1.5px dashed rgba(42,26,15,.22)}
-.tab li:last-child{border-bottom:1.5px dashed rgba(42,26,15,.22)}
-.tab li.round-h{display:block;padding:14px 0 4px;border-top:0;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber-deep)}
-.tab li.round-h + li{border-top:1.5px dashed rgba(42,26,15,.22)}
-.rounds{list-style:none;margin:0 0 4px;padding:0;display:grid;gap:10px}
-.round-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--field);border:1px solid var(--line)}
-.round-card .rc-body{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:0;background:transparent;color:inherit;padding:0;min-height:44px}
-.rc-when{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
-.rc-what{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rc-meta{font-size:.8rem;color:var(--muted)}
-.round-card .btn-mini,.rc-actions .btn-mini{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600;flex:none}
-.rounds-empty{margin:0 0 4px}
-.round-card{flex-wrap:wrap}
-.rc-adjust{flex-basis:100%;display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
-.rc-row{display:flex;align-items:center;gap:8px}
-.rc-row span{flex:1;font-size:.92rem;color:var(--muted)}
-.rc-row b{color:var(--text)}
-.rc-row button{min-height:44px;min-width:64px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600}
-.stash{margin:0 0 12px;padding:14px 16px;border-radius:20px;background:var(--field);border:1px solid rgba(242,169,59,.45);display:grid;gap:12px}
-.stash-count{margin:0;font-weight:700;font-size:1.05rem}
-.stash-dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.stash-dots i{width:14px;height:22px;border-radius:4px 4px 6px 6px;border:1.5px solid var(--amber)}
-.stash-dots i.open{background:var(--amber)}
-.stash-btns{display:grid;grid-template-columns:3fr 2fr;gap:10px}
-.stash-btns .btn{white-space:nowrap;padding-left:12px;padding-right:12px}
-.rc-actions{display:flex;gap:8px;flex:none}
-.rc-actions.wide{flex-basis:100%}
-.rc-actions.wide .btn-mini{flex:1;white-space:nowrap;padding:0 8px}
-.stash .label{margin:0 0 2px}
-.cfg-ask{display:grid;gap:12px}
-.cu-body{padding:22px var(--gutter) 26px;display:grid;gap:16px}
-.cu-step{justify-content:center}
-.li-name{font-weight:700;line-height:1.25}
-.li-meta{font-size:.86rem;color:rgba(42,26,15,.62)}
-.li-g{font-weight:700;white-space:nowrap}
-.rm{width:34px;height:34px;border-radius:50%;border:1px solid rgba(42,26,15,.2);background:transparent;color:var(--ink);font-size:1.1rem;line-height:1;display:grid;place-items:center}
-.tab-empty{margin:6px 0 0;padding:14px 0;border-top:1.5px dashed rgba(42,26,15,.22);border-bottom:1.5px dashed rgba(42,26,15,.22);color:rgba(42,26,15,.62)}
-.tab-total{margin-top:14px}
-.tab-total span{display:block}
-.tab-total span:first-child{font-size:.86rem;color:rgba(42,26,15,.62)}
-.tab-total span:last-child{font-weight:700;font-size:1.05rem}
-.btn{
-  display:block;width:100%;border:0;border-radius:999px;padding:16px 20px;font-weight:700;font-size:1.02rem;
-  background:var(--amber);color:var(--ink);transition:transform .15s,background .2s;min-height:52px;
-}
-.btn:active{transform:scale(.97)}
-.btn.quiet{background:var(--field);color:var(--text);border:1px solid var(--line)}
-.add-row{padding:20px var(--gutter) 0}
-
-/* Chart */
-.chart{width:100%;height:auto;display:block;overflow:visible}
-.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
-.chart .peak-label{fill:var(--text);font-weight:700}
-.chart-empty{border:1px dashed var(--line);border-radius:14px;padding:26px 16px;color:var(--muted);text-align:center}
-
-/* Settings */
-details.block summary{list-style:none;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-details.block summary::-webkit-details-marker{display:none}
-details.block summary h2{margin:0}
-.chev{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:transform .25s}
-details[open] .chev{transform:rotate(180deg)}
-.settings-body{display:grid;gap:18px;padding-top:18px}
-.seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
-.seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:10px;font-weight:600;color:var(--muted);min-height:44px}
-.seg button[aria-pressed="true"]{background:var(--text);color:var(--ground)}
-.range-row{display:flex;justify-content:space-between;align-items:baseline}
-.range-row b{}
-input[type=range]{width:100%;accent-color:var(--amber);margin:8px 0 0}
-
-/* Safety */
-.safety{margin:30px var(--gutter) 0;padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--field);display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
-.safety svg{width:28px;height:28px;color:var(--acacia)}
-.safety p{margin:0;font-size:.95rem}
-.safety strong{display:block;margin-bottom:4px}
-
-/* History */
-.history{list-style:none;padding:0;margin:0}
-.history li{padding:12px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
-.history li:last-child{border-bottom:1px solid var(--line)}
-.history .h-date{font-weight:700}
-.history .h-meta{color:var(--muted);font-size:.9rem;text-align:right}
-.history li:has(.h-open){padding:0}
-.h-open{display:flex;justify-content:space-between;gap:12px;width:100%;padding:12px 0;border:0;background:transparent;color:inherit;text-align:left;min-height:56px}
-.past-sky{position:relative;height:190px;overflow:hidden;background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--sky-low) 85%,var(--horizon) 100%)}
-.past-sky .horizon{color:var(--sheet)}
-.past-body{padding:0 0 22px}
-.past-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px var(--gutter) 6px}
-.past-stats dt{font-size:.8rem;color:var(--muted)}
-.past-stats dd{margin:0;font-weight:700;font-size:1.1rem}
-.past-body .rounds{padding:0 var(--gutter)}
-.past-note{margin:16px var(--gutter) 0}
-.actions{display:grid;gap:10px;padding:22px var(--gutter) 0}
-footer{padding:36px var(--gutter) 40px;color:var(--muted);font-size:.85rem;text-align:center}
-
-/* Sheet */
-dialog.sheet{
-  margin:auto auto 0;width:100%;max-width:560px;border:0;padding:0;border-radius:24px 24px 0 0;
-  background:var(--sheet);color:var(--text);max-height:88svh;overflow:auto;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-dialog.sheet[open]{animation:sheetUp .34s cubic-bezier(.2,.8,.2,1)}
-dialog.sheet::backdrop{background:rgba(10,8,6,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
-/* Late logging: the dial */
-.late-open{margin-top:12px}
-.late-main{padding:4px var(--gutter) 22px;display:grid;gap:16px}
-.dial-wrap{position:relative;width:min(76vw,290px);aspect-ratio:1;margin:6px auto 0}
-.dial-wrap::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle,rgba(242,169,59,.3),rgba(242,169,59,0) 70%);transition:background .6s}
-.late.history .dial-wrap::before{background:radial-gradient(circle,rgba(143,180,218,.3),rgba(143,180,218,0) 70%)}
-.dial{position:relative;width:100%;height:100%;display:block;overflow:visible}
-.dl-track{fill:none;stroke:var(--line);stroke-width:18}
-.dl-tick{stroke:var(--line);stroke-width:1.4;stroke-linecap:round}
-.dl-tick.major{stroke:var(--muted);stroke-width:2.2}
-.dl-hour{font:700 11px var(--body);fill:var(--muted)}
-.dl-other{fill:none;stroke:var(--text);stroke-opacity:.22;stroke-width:18;stroke-linecap:round}
-.dl-tail{fill:none;stroke:var(--text);stroke-opacity:.6;stroke-width:3;stroke-linecap:round}
-.dl-arc{fill:none;stroke:var(--amber);stroke-width:18;stroke-linecap:round;filter:drop-shadow(0 0 10px rgba(242,169,59,.55))}
-.dial.history .dl-arc{stroke:#8FB4DA;filter:drop-shadow(0 0 10px rgba(143,180,218,.6))}
-.dl-arc,.dl-tail,.dl-other{transition:stroke-dasharray .7s cubic-bezier(.22,1,.36,1),stroke-dashoffset .7s cubic-bezier(.22,1,.36,1),stroke .5s}
-.dl-handle{fill:var(--foam);stroke:var(--sheet);stroke-width:3}
-.dl-moon{fill:var(--text)}
-.dl-now{fill:var(--russet)}
-.dl-handle,.dl-moon,.dl-now{transition:cx .7s cubic-bezier(.22,1,.36,1),cy .7s cubic-bezier(.22,1,.36,1)}
-.dial-centre{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
-#dlKicker{margin:0;font-size:.8rem;font-weight:600;color:var(--muted)}
-.dl-time{margin:0;font-family:var(--display);font-size:2.8rem;line-height:1.05}
-.dl-tag{margin-top:4px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;background:rgba(242,169,59,.2);color:var(--text);transition:background .4s}
-.late.history .dl-tag{background:rgba(143,180,218,.25)}
-.time-row{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
-.tr-label{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.tnudge{justify-self:end;display:flex;align-items:center}
-.tnudge button{width:44px;height:44px;border:0;background:transparent;color:var(--text);font-size:1.4rem;border-radius:12px}
-.tnudge output{min-width:104px;text-align:center;font-weight:700}
-.tr-chips{grid-column:1/-1}
-.tr-chips .chip{transition:background .25s,border-color .25s,color .25s,transform .15s}
-.tr-chips .chip:active{transform:scale(.94)}
-.late.history .tr-chips .chip[aria-pressed="true"]{background:#8FB4DA;border-color:#8FB4DA}
-.late-favs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.fav-card{display:flex;align-items:center;gap:2px;padding:4px 8px 4px 0;border-radius:16px;background:var(--field);border:1px solid var(--line);transition:background .3s,border-color .3s}
-.fav-card.on{background:rgba(242,169,59,.16);border-color:rgba(242,169,59,.55)}
-.fc-less{width:36px;height:44px;flex:none;border:0;background:transparent;font-size:1.3rem;color:inherit}
-.fc-more{flex:1;min-width:0;min-height:44px;border:0;background:transparent;text-align:left;padding:0;color:inherit}
-.fc-name{display:block;font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fc-meta{display:block;font-size:.75rem;color:var(--muted)}
-.fc-count{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);background:var(--field);color:var(--muted);transition:background .3s,color .3s}
-.fav-card.on .fc-count{background:var(--amber);color:var(--ink)}
-.late-extra{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
-.late-extra:empty{display:none}
-.late-extra li{display:flex;align-items:center;gap:4px;padding:0 4px 0 12px;border-radius:999px;background:var(--field);border:1px solid var(--line);font-weight:600;font-size:.9rem}
-.late-extra button{width:40px;height:40px;border:0;background:transparent;color:inherit;font-size:1.1rem}
-.link-btn{margin-top:6px;min-height:44px;border:0;background:transparent;color:var(--text);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0 2px}
-#lateAdd{transition:background .4s,transform .15s}
-.late.history #lateAdd{background:#8FB4DA}
-.late.leaving{transform:translateY(105%);opacity:.6;transition:transform .42s cubic-bezier(.4,0,.2,1),opacity .42s}
-.late-overlap{padding:18px var(--gutter) 24px;display:grid;gap:14px}
-.ov-art{width:120px;height:64px;margin:4px auto 0;display:block}
-.ov-art circle{fill:none;stroke:var(--text);stroke-opacity:.45;stroke-width:2}
-.ov-lens{fill:var(--russet);opacity:.75;animation:lensPulse 1.6s ease-in-out infinite}
-@keyframes lensPulse{0%,100%{opacity:.45}50%{opacity:.9}}
-.ov-title{margin:0;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.15;text-align:center}
-.ov-text{margin:0;color:var(--muted);text-align:center}
-.ov-choice{display:flex;align-items:center;gap:14px;min-height:68px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);text-align:left}
-.ov-choice > span{display:flex;flex-direction:column}
-.ov-choice strong{font-size:1.02rem}
-.ov-choice > span > span{font-size:.86rem;color:var(--muted)}
-.ov-choice svg{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-.ov-choice.primary{background:var(--amber);border-color:var(--amber);color:var(--ink)}
-.ov-choice.primary > span > span{color:rgba(42,26,15,.75)}
-.ov-safe{margin:0;display:flex;gap:8px;align-items:flex-start;font-size:.88rem;color:var(--muted)}
-.ov-safe svg{width:16px;height:16px;flex:none;margin-top:3px;fill:none;stroke:currentColor;stroke-width:1.4}
-.night-note{display:flex;gap:10px;align-items:flex-start;margin:4px 0 0;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,rgba(242,169,59,.2),rgba(228,111,72,.12));border:1px solid rgba(242,169,59,.45);animation:noteIn .6s cubic-bezier(.22,1,.36,1)}
-.night-note svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--amber)}
-.night-note p{margin:0;font-size:.94rem;line-height:1.4}
-@keyframes noteIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.orb{position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:radial-gradient(circle,#FFE3B0 0%,#F2A93B 45%,rgba(242,169,59,0) 72%);pointer-events:none;z-index:60;transition:left .8s cubic-bezier(.22,1,.36,1),top .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1),opacity .45s}
-@media (prefers-reduced-motion: reduce){.ov-lens,.night-note{animation:none}.late.leaving{transition:none}}
-@media (prefers-reduced-motion: reduce){.dl-arc,.dl-tail,.dl-other,.dl-handle,.dl-moon,.dl-now,.dial-wrap::before{transition:none}}
-@keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-.sheet-head{position:sticky;top:0;background:var(--sheet);display:flex;align-items:center;justify-content:space-between;padding:12px var(--gutter);border-bottom:1px solid var(--line);z-index:2}
-.sheet-head h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.2rem}
-.grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:8px auto 0}
-.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;display:grid;place-items:center;font-size:1.2rem}
-.pick-group{padding:14px var(--gutter) 4px}
-.pick-group h4{margin:0 0 6px;font-size:.88rem;color:var(--muted);font-weight:600}
-.pick-row{display:grid;grid-template-columns:1fr auto;align-items:center;border-bottom:1px solid var(--line)}
-.pick{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:14px 2px;min-height:56px}
-.pick-name{font-weight:600}
-.pick-meta{color:var(--muted);font-size:.86rem}
-.abv-pill{font-weight:700;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.9rem}
-.cfg{padding:18px var(--gutter) 22px;display:grid;gap:18px}
-.cfg-note{margin:-8px 0 0;color:var(--amber);font-size:.9rem}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:9px 14px;font-weight:600;font-size:.95rem;min-height:42px}
-.chip[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:var(--ink)}
-.label{font-size:.88rem;color:var(--muted);margin:0 0 8px}
-.stepper{display:flex;align-items:center;gap:14px}
-.stepper button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--field);font-size:1.4rem;line-height:1}
-.stepper output{font-family:var(--display);font-size:2rem;min-width:2ch;text-align:center}
-.preview{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed var(--line);padding-top:14px}
-.preview b{font-size:1.25rem}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;background:var(--text);color:var(--ground);padding:12px 18px;border-radius:999px;font-weight:600;transition:all .3s;z-index:60;pointer-events:none;white-space:nowrap}
-/* Hidden means hidden: a faded toast must never catch a tap meant for what is under it */
-.toast{visibility:hidden;transition:all .3s,visibility 0s linear .3s}
-.toast.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition:all .3s}
-.toast.has-undo{bottom:calc(128px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px}
-.toast.has-undo.show{pointer-events:auto}
-.toast .undo{border:0;border-radius:999px;background:var(--amber);color:var(--ink);font-weight:700;padding:8px 14px;min-height:36px}
-.another{max-width:560px;margin:0 auto;padding:6px 0 14px;display:grid;gap:8px}
-.another-btns{display:flex;gap:10px}
-.another-btns button{flex:1;min-width:0;min-height:52px;border-radius:999px;border:0;background:var(--amber);color:var(--ink);font-weight:700;font-size:1.02rem;padding:0 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 22px rgba(0,0,0,.28)}
-.another-btns button.second{background:rgba(22,18,14,.55);color:#F6EDDA;border:1px solid rgba(246,237,218,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.another-btns button:active{transform:scale(.97)}
-.another-hint{margin:0;text-align:center;font-size:.9rem;font-weight:600;color:var(--text);text-shadow:0 1px 8px rgba(0,0,0,.45)}
-.another-hint::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:8px;vertical-align:1px}
-.hero:not(.three).has-another .stats{padding-bottom:14px}
-.hero:not(.three) .another{padding-bottom:160px}
-.li-step{display:flex;gap:6px}
-.li-step button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(42,26,15,.2);background:transparent;color:var(--ink);font-size:1.1rem;line-height:1;display:grid;place-items:center}
-.li-step button.more{background:var(--ink);color:#F6EDDA;border-color:var(--ink)}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-
-
-/* ---------- V2: status, risk, planner ---------- */
-:root{
-  --over:#E2553F; --impaired:#F2A93B; --ok:#A7B57E;
-  --z1:#F7D57E; --z2:#F2A93B; --z3:#E8803A; --z4:#D9503B; --z5:#8E2430;
-  --glow:rgba(0,0,0,0);
-}
-.hero[data-state="over"]{--glow:rgba(226,85,63,.6)}
-.hero[data-state="impaired"]{--glow:rgba(242,169,59,.45)}
-.hero[data-state="clear"]{--glow:rgba(167,181,126,.5)}
-.status{position:relative;max-width:560px;margin:22px auto 0}
-.pill{display:inline-flex;align-items:center;gap:10px;margin:0;padding:8px 15px 8px 13px;border-radius:999px;font-weight:700;font-size:.95rem;color:var(--ink);background:var(--field);transition:background .5s,color .5s}
-.hero[data-state="over"] .pill{background:var(--over);color:#FFF6EC}
-.hero[data-state="impaired"] .pill{background:var(--impaired)}
-.hero[data-state="clear"] .pill{background:var(--ok)}
-.pill .dot{width:9px;height:9px;border-radius:50%;background:currentColor;position:relative;flex:none}
-.hero[data-state="over"] .pill .dot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid currentColor;animation:ping 1.6s ease-out infinite}
-@keyframes ping{from{transform:scale(.5);opacity:.9}to{transform:scale(1.7);opacity:0}}
-.pill-note{margin:9px 0 0;font-size:.86rem;color:var(--muted);max-width:42ch}
-
-.risk{padding:30px var(--gutter) 6px}
-.risk-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.risk-head h2{margin:0}
-.meter{display:flex;gap:5px}
-.meter i{width:24px;height:8px;border-radius:9px;background:var(--line);transition:background .5s}
-.risk[data-level="low"] .meter i:nth-child(1){background:var(--ok)}
-.risk[data-level="raised"] .meter i:nth-child(-n+2){background:var(--impaired)}
-.risk[data-level="high"] .meter i{background:var(--over)}
-.risk-level{font-family:var(--display);font-size:3.1rem;line-height:1;margin:12px 0 6px;transition:color .5s}
-.risk[data-level="low"] .risk-level{color:var(--ok)}
-.risk[data-level="raised"] .risk-level{color:var(--impaired)}
-.risk[data-level="high"] .risk-level{color:var(--over)}
-.scale{position:relative;padding-top:40px}
-.scale-bar{position:relative;height:16px;border-radius:999px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
-.pin-label{position:absolute;top:0;transform:translateX(-50%);background:var(--text);color:var(--ground);font-weight:700;font-size:.82rem;padding:4px 9px;border-radius:8px;white-space:nowrap;transition:left .9s cubic-bezier(.2,.8,.2,1)}
-.pin-stem{position:absolute;top:26px;width:3px;height:32px;border-radius:3px;background:var(--text);transform:translateX(-50%);z-index:2;transition:left .9s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 0 2px var(--ground)}
-.pin-peak{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;border:3px solid var(--text);transform:translate(-50%,-50%);transition:left .9s cubic-bezier(.2,.8,.2,1)}
-.scale-ticks{position:relative;height:24px}
-.scale-ticks span{position:absolute;top:6px;transform:translateX(-50%);font-size:.74rem;color:var(--muted)}
-.scale-peak{display:flex;align-items:center;gap:8px;margin:2px 0 0;font-size:.9rem;color:var(--muted)}
-.ring{width:12px;height:12px;border-radius:50%;border:2.5px solid var(--text);flex:none}
-.scale-legend{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--muted)}
-.scale-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.reasons{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:8px}
-.reasons li{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:7px 13px;font-size:.9rem;font-weight:600}
-.reasons li.strong{border-color:var(--over);color:var(--over)}
-.nudge{margin-top:16px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:16px;border-radius:16px;background:rgba(242,169,59,.12);border:1px solid rgba(242,169,59,.45)}
-.nudge svg{width:26px;height:26px;color:var(--amber)}
-.nudge p{margin:0;font-weight:500}
-.risk .btn{margin-top:16px}
-
-.danger{margin:26px var(--gutter) 0;padding:22px 18px;border-radius:22px;background:#B3362A;color:#FFF5EA;box-shadow:0 20px 40px -20px rgba(179,54,42,.8)}
-.danger h2{color:#FFF5EA;margin-bottom:8px}
-.danger p{margin:0 0 10px}
-.danger ul{margin:0 0 12px;padding-left:20px}
-.danger li{margin:2px 0}
-.call-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.call{display:flex;flex-direction:column;text-decoration:none;color:#2A1A0F;background:#FFF5EA;border-radius:16px;padding:12px 14px;min-height:64px}
-.call span{font-size:.82rem;font-weight:600;opacity:.7}
-.call b{font-family:var(--display);font-weight:400;font-size:1.7rem;line-height:1.1}
-.call.wide{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}
-
-.ticket{margin-top:16px;display:grid;grid-template-columns:108px 1fr;background:var(--receipt);color:var(--ink);border-radius:16px;border:1px solid rgba(42,26,15,.08);position:relative;box-shadow:0 18px 30px -18px rgba(0,0,0,.55)}
-.ticket::before,.ticket::after{content:"";position:absolute;left:108px;width:22px;height:22px;border-radius:50%;background:var(--ground);transform:translateX(-50%)}
-.ticket::before{top:-11px}.ticket::after{bottom:-11px}
-.stub{padding:18px 14px;border-right:2px dashed rgba(42,26,15,.25);display:flex;flex-direction:column;gap:3px}
-.stub-label{font-size:.8rem;color:rgba(42,26,15,.6)}
-.stub b{font-family:var(--display);font-weight:400;font-size:1.8rem;line-height:1}
-.stub-day{font-size:.85rem;font-weight:600}
-.tk-body{padding:18px 16px}
-.tk-verdict{font-weight:700;font-size:1.15rem;margin:0 0 4px;line-height:1.25}
-.ticket[data-ok="yes"] .tk-verdict{color:#4A6A2A}
-.ticket[data-ok="no"] .tk-verdict{color:#B23A26}
-.ticket[data-ok="no"] .stub{background:repeating-linear-gradient(135deg,rgba(178,58,38,.08) 0 8px,transparent 8px 16px);border-radius:16px 0 0 16px}
-.tk-detail{margin:0;font-size:.92rem;color:rgba(42,26,15,.75)}
-.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:12px 0 0;font-size:.9rem}
-.chart .zone-label{font-size:10px;fill:var(--muted);font-weight:600;paint-order:stroke;stroke:var(--ground);stroke-width:3px;stroke-linejoin:round}
-
-
-/* ---------- V3: offline, updates, favourites ---------- */
-.brand-wrap{display:flex;align-items:center;gap:10px;min-width:0}
-.top-btns{display:flex;align-items:center;gap:8px;flex:none}
-.ghost.round{width:38px;height:38px;padding:0;display:grid;place-items:center;font-size:1.05rem;font-weight:700}
-.ghost.round svg{width:19px;height:19px}
-.set-link{display:flex;width:100%;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);text-align:left;min-height:64px}
-.set-link > span{flex:1;display:flex;flex-direction:column;gap:2px}
-.set-link strong{font-size:1.02rem}
-.set-link .set-sum{font-size:.88rem;color:var(--muted)}
-.set-link svg{width:20px;height:20px;flex:none;color:var(--muted)}
-.set-pad{padding:6px var(--gutter) 26px}
-.set-sec{display:grid;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}
-.set-sec:last-child{border-bottom:0}
-.set-h{margin:0;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
-.help-body{padding:8px var(--gutter) 28px;display:grid;gap:4px}
-.help-body section{padding:16px 0;border-bottom:1px solid var(--line)}
-.help-body section:last-of-type{border-bottom:0}
-.help-body h4{margin:0 0 8px;font-family:var(--display);font-weight:400;font-size:1.25rem}
-.help-body p{margin:0 0 10px;line-height:1.5}
-.help-body ul{margin:0 0 6px;padding-left:20px;display:grid;gap:8px;line-height:1.45}
-.help-body li strong{color:var(--text)}
-.help-body .help-lead{font-size:1.02rem;color:var(--muted)}
-.help-body details{margin-top:6px;padding:12px 14px;border-radius:14px;background:var(--field);border:1px solid var(--line)}
-.help-body summary{font-weight:700;cursor:pointer}
-.help-body details[open] summary{margin-bottom:8px}
-.help-safe{display:flex;gap:10px;padding:14px;border-radius:16px;background:rgba(228,111,72,.12);border:1px solid rgba(228,111,72,.4)}
-.help-safe p{margin:0}
-.tour{position:fixed;inset:0;z-index:1000}
-.tour-ring{position:absolute;border-radius:18px;border:2px solid var(--amber);box-shadow:0 0 0 9999px rgba(10,8,6,.74);transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none}
-.tour-card{position:absolute;left:var(--gutter);right:var(--gutter);bottom:calc(16px + env(safe-area-inset-bottom));max-width:528px;margin:0 auto;background:var(--sheet);color:var(--text);border-radius:22px;padding:18px 18px 16px;box-shadow:0 18px 40px rgba(0,0,0,.4);display:grid;gap:8px}
-.tour-card.top{bottom:auto;top:calc(16px + env(safe-area-inset-top))}
-.tour-card h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.35rem}
-.tour-card p{margin:0;line-height:1.45}
-.tour-step{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
-.tour-btns{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:6px}
-.net{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;animation:netIn .4s ease-out}
-.net i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor}
-@keyframes netIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-
-.star{width:48px;height:48px;border:0;background:transparent;display:grid;place-items:center;color:var(--muted);border-radius:50%}
-.star svg{width:22px;height:22px;transition:transform .2s}
-.star path{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;transition:fill .2s}
-.star[aria-pressed="true"]{color:var(--amber)}
-.star[aria-pressed="true"] path{fill:currentColor}
-.fav-size{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px 0 4px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--text);font-weight:600;text-align:left}
-.fav-size .star{width:36px;height:36px}
-.fav-size .star::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z'/></svg>") center/contain no-repeat;opacity:.45}
-.fav-size[aria-pressed="true"] .star{color:var(--amber)}
-.fav-size[aria-pressed="true"] .star::before{opacity:1}
-.star.pop svg{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
-@keyframes pop{0%{transform:scale(.6) rotate(-20deg)}60%{transform:scale(1.3) rotate(8deg)}100%{transform:none}}
-.pick-group.favs h4{color:var(--amber)}
-.chip[data-fits="1"]:not([aria-pressed="true"]){border-color:rgba(242,169,59,.65)}
-
-.appinfo{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:14px}
-.appinfo-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.appinfo-ver{margin:0;font-weight:700}
-.upd-state{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;font-weight:600;white-space:nowrap;padding-top:2px;color:var(--muted)}
-.upd-state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
-.upd-state[data-state="current"]{color:var(--ok)}
-.upd-state[data-state="found"]{color:var(--amber)}
-.upd-state[data-state="error"]{color:var(--over)}
-.upd-state[data-state="checking"]::before{animation:blink 1s ease-in-out infinite}
-@keyframes blink{50%{opacity:.25}}
-
-.coaster{
-  position:fixed;left:var(--gutter);right:var(--gutter);bottom:calc(16px + env(safe-area-inset-bottom));z-index:70;
-  max-width:528px;margin:0 auto;padding:20px 18px 18px;border-radius:30px;
-  background:
-    radial-gradient(circle at 18% 22%,rgba(42,26,15,.05) 0 1px,transparent 1.5px) 0 0/9px 9px,
-    radial-gradient(circle at 70% 60%,rgba(42,26,15,.04) 0 1px,transparent 1.5px) 0 0/13px 13px,
-    #F6EDDA;
-  color:var(--ink);
-  box-shadow:0 26px 50px -18px rgba(0,0,0,.65),inset 0 0 0 7px #F6EDDA,inset 0 0 0 8.5px rgba(184,101,26,.55);
-  display:grid;grid-template-columns:1fr auto;gap:4px 14px;
-  transform:translateY(140%) rotate(-7deg);transition:transform .7s cubic-bezier(.2,1.25,.4,1);
-}
-.coaster:not(.show){visibility:hidden;transition:transform .7s cubic-bezier(.2,1.25,.4,1),visibility 0s linear .7s}
-.coaster.show{transform:translateY(0) rotate(-1.4deg)}
-.coaster h3{margin:4px 0 4px;font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1.1}
-.coaster p{margin:0;font-size:.95rem;color:rgba(42,26,15,.75)}
-.stamp{width:74px;height:74px;border-radius:50%;background:var(--amber);color:var(--ink);display:grid;place-items:center;align-self:start;
-  font-family:var(--display);font-size:1.25rem;transform:rotate(9deg);box-shadow:inset 0 0 0 4px var(--amber),inset 0 0 0 5.5px rgba(42,26,15,.45)}
-.stamp.long{font-size:1rem}
-.coaster-actions{grid-column:1/-1;display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:14px}
-.coaster .btn{min-height:48px;padding:12px}
-.coaster .btn.quiet{background:transparent;color:var(--ink);border:1.5px solid rgba(42,26,15,.25)}
-
-.pour{position:fixed;inset:0;z-index:100;pointer-events:none;transform:translateY(110%);
-  background:
-    radial-gradient(circle,rgba(255,236,190,.7) 0 2px,transparent 3px) 12% 70%/90px 140px,
-    radial-gradient(circle,rgba(255,236,190,.55) 0 1.5px,transparent 2.5px) 60% 40%/70px 110px,
-    linear-gradient(180deg,#F7B94A 0%,#E8962C 55%,#B8651A 100%)}
-.pour::before{content:"";position:absolute;left:0;right:0;top:-30px;height:46px;
-  background:radial-gradient(circle at 24px 30px,#F6EDDA 23px,transparent 24px) 0 0/48px 46px repeat-x,
-             linear-gradient(#F6EDDA,#F6EDDA) 0 28px/100% 18px no-repeat}
-.pour.full{transform:translateY(0)}
-.pour.fill{transform:translateY(0);transition:transform .8s cubic-bezier(.55,0,.3,1)}
-.pour.drain{transform:translateY(110%);transition:transform .9s cubic-bezier(.6,0,.35,1) .1s}
-
-.news .news-head:focus{outline:none}
-.news .news-head{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:18px var(--gutter) 8px}
-.news-ver{font-family:var(--display);font-size:3.4rem;line-height:.9;color:var(--amber)}
-.news h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.5rem;line-height:1.1}
-.news-head p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
-.news-list{list-style:none;margin:0;padding:8px var(--gutter) 4px;display:grid;gap:14px}
-.news-list li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;line-height:1.45}
-.news-list li::before{content:"";width:14px;height:14px;margin-top:4px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px rgba(242,169,59,.22)}
-.news-foot{padding:18px var(--gutter) 22px}
-
-/* Room for the Live Island hanging below the status bar */
-html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
-
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-}
-</style>
+<link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="island.css">
 </head>
-<body>
+<body data-tab="tonight">
 <div class="pour" id="pour" aria-hidden="true"></div>
 <script>try{if(sessionStorage.getItem('dry-poured'))document.getElementById('pour').classList.add('full')}catch(e){}</script>
 
-<header class="hero" id="hero" data-state="none">
+<header class="hero" id="hero" data-state="none" data-panel="tonight">
   <canvas class="scene3d" id="scene3d" aria-hidden="true"></canvas>
+  <div class="sun-glow" aria-hidden="true"></div>
+  <div class="twinkle" id="twinkle" aria-hidden="true"></div>
   <div class="stars" aria-hidden="true"></div>
   <div class="hero-top">
     <div class="brand-wrap"><span class="brand">Dry Season</span><span class="net" id="net" hidden title="No connection. Everything still works."><i aria-hidden="true"></i>Offline</span></div>
@@ -619,7 +41,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 
   <div class="status" id="statusBlock" hidden>
     <p class="pill"><span class="dot" aria-hidden="true"></span><span id="pillText">Over the legal limit</span></p>
-    <p class="pill-note" id="pillNote">Any alcohol slows your reactions. Get a lift, take a cab, or wait until you're clear.</p>
+    <button class="pill-note" id="pillNote" type="button" aria-expanded="false"><span class="pn-text" id="pillNoteText">Any alcohol slows your reactions. Get a lift, take a cab, or wait until you're clear.</span><span class="pn-more" id="pnMore">More</span></button>
   </div>
 
   <div class="hero-body">
@@ -657,11 +79,27 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     </svg>
   </div>
 
-  <dl class="stats">
-    <div><dt>Right now</dt><dd id="nowBac">0.000%</dd></div>
-    <div><dt>Peak</dt><dd id="peakBac">0.000%</dd></div>
-    <div><dt id="limitLabel">Under 0.05%</dt><dd id="underAt">--</dd></div>
-  </dl>
+  <div class="vitals" id="vitals">
+    <div class="v-card">
+    <div class="gauge" role="img" id="gauge" aria-label="Estimated blood alcohol">
+      <svg viewBox="0 0 200 112" aria-hidden="true">
+        <path class="g-track" d="M14 100A86 86 0 0 1 186 100" pathLength="100"/>
+        <path class="g-zone" id="gZone" d="M14 100A86 86 0 0 1 186 100" pathLength="100"/>
+        <path class="g-fill" id="gFill" d="M14 100A86 86 0 0 1 186 100" pathLength="100"/>
+        <line class="g-limit" id="gLimit" x1="0" y1="0" x2="0" y2="0"/>
+        <g class="g-dotwrap" id="gDot"><circle class="g-halo" cx="14" cy="100" r="8"/><circle class="g-dot" cx="14" cy="100" r="5"/></g>
+      </svg>
+      <div class="g-read"><span class="g-label">Right now</span><b id="nowBac">0.000%</b><span class="g-sub" id="gSub"></span></div>
+    </div>
+    <dl class="stats">
+      <div><dt>Peak</dt><dd id="peakBac">0.000%</dd></div>
+      <div><dt id="limitLabel">Under 0.05%</dt><dd id="underAt">--</dd></div>
+      <div><dt>Session</dt><dd id="sessLen">--</dd></div>
+      <div class="risk-row" id="riskChip" data-level="low"><dt>Blackout risk</dt><dd><i aria-hidden="true"></i><span id="riskChipText">Low</span></dd></div>
+    </dl>
+    <p class="estimate-note">An estimate only, not proof you are sober or fit to drive.</p>
+  </div>
+  </div>
 
   <div class="stage-space" id="stageSpace" aria-hidden="true"></div>
   <div class="another" id="another" hidden>
@@ -681,8 +119,16 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </svg>
 </header>
 
+<section class="quick" data-panel="tonight" aria-label="Quick actions">
+  <button class="btn q-main" id="qaAdd" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Log a drink</button>
+  <div class="q-row">
+    <button class="q-btn" id="qaWater" type="button"><span class="q-t" id="qaWaterT">Water break</span><span class="q-s" id="qaWaterSub">Slows the night</span></button>
+    <button class="q-btn" id="qaLate" type="button"><span class="q-t">Earlier</span><span class="q-s">Log with times</span></button>
+  </div>
+</section>
+
 <main class="wrap">
-  <section class="danger" id="danger" hidden aria-labelledby="dangerH">
+  <section class="danger" id="danger" data-panel="tonight" hidden aria-labelledby="dangerH">
     <h2 id="dangerH">Watch for alcohol poisoning</h2>
     <p>This much alcohol, this fast, can be dangerous. Get help straight away if you or a friend shows any of these:</p>
     <ul>
@@ -700,7 +146,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     </div>
   </section>
 
-  <section class="risk" id="riskSection" data-level="low" hidden aria-labelledby="riskH">
+  <section class="risk" id="riskSection" data-level="low" data-panel="tonight" hidden aria-labelledby="riskH">
     <div class="risk-head">
       <h2 id="riskH">Blackout risk</h2>
       <span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -722,7 +168,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <button class="btn quiet" id="textFriend" type="button">Text a friend my status</button>
   </section>
 
-  <section class="block" aria-labelledby="nightH" id="nightSection">
+  <section class="block" data-panel="tonight" aria-labelledby="nightH" id="nightSection">
     <h2 id="nightH">The night</h2>
     <ul class="rounds" id="rounds"></ul>
     <p class="hint rounds-empty" id="roundsEmpty">Nothing on tonight's tab yet. Had a few already? Log them with the times you drank.</p>
@@ -739,7 +185,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <p class="hint">Food slows how fast alcohol reaches your blood, so your peak is lower and arrives later.</p>
   </section>
 
-  <div class="tab-wrap">
+  <div class="tab-wrap" data-panel="tonight">
     <section class="tab" aria-labelledby="tabH">
       <h2 id="tabH">Tonight's tab</h2>
       <p class="tab-sub" id="tabSub">Drinks in each round are spread evenly between its start and end.</p>
@@ -748,28 +194,28 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <div class="tab-total" id="tabTotal" hidden><span>Pure alcohol</span><span id="tabTotalVal"></span></div>
     </section>
   </div>
-  <div class="add-row">
+  <div class="add-row" data-panel="tonight">
     <div class="stash" id="stash" role="group" aria-labelledby="stashH" hidden>
-      <div>
-        <p class="label" id="stashH">Tonight's stash</p>
-        <p class="stash-count" id="stashCount"></p>
-        <div class="stash-dots" id="stashDots" aria-hidden="true"></div>
-      </div>
-      <div class="stash-btns">
-        <button class="btn" id="stashOpen" type="button">Open next</button>
-        <button class="btn quiet" id="stashClear" type="button">Put away</button>
-      </div>
+      <p class="label" id="stashH">Your stash <span id="stashTotal"></span></p>
+      <ul class="stash-rows" id="stashRows"></ul>
     </div>
     <button class="btn" id="openPicker" type="button">Add a drink</button>
   </div>
 
-  <section class="block" aria-labelledby="curveH">
+  <header class="screen-head" data-panel="plan"><p class="screen-kicker">Ahead of you</p><h1>Plan</h1></header>
+  <section class="block" data-panel="plan" aria-labelledby="planStashH" id="planStash">
+    <h2 id="planStashH">On hand <span class="stash-total" id="planStashTotal"></span></h2>
+    <ul class="plan-stash" id="planStashList"></ul>
+    <p class="hint" id="planStashEmpty">Nothing in your stash yet.</p>
+    <button class="btn quiet" id="planStashBtn" type="button">Edit your stash</button>
+  </section>
+  <section class="block" data-panel="plan" aria-labelledby="curveH">
     <h2 id="curveH">How the night plays out</h2>
     <div id="chartBox"></div>
     <p class="hint">Estimated blood alcohol from your first sip until your body is clear.</p>
   </section>
 
-  <section class="block" aria-labelledby="driveH" id="driveSection">
+  <section class="block" data-panel="plan" aria-labelledby="driveH" id="driveSection">
     <h2 id="driveH">Driving soon?</h2>
     <p class="hint" style="margin:0 0 14px">Set when you next need to drive or start a shift. You'll see whether you're likely to be fully clear, with an hour to spare.</p>
     <label class="field">I need to drive at
@@ -782,30 +228,71 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     <button class="linkbtn" id="driveClear" type="button" hidden>Remove drive time</button>
   </section>
 
-  <section class="block" aria-label="Settings">
+  <header class="screen-head" data-panel="you"><p class="screen-kicker">Settings</p><h1>You</h1></header>
+  <section class="block" data-panel="you" aria-labelledby="favH">
+    <h2 id="favH">Favourites</h2>
+    <ul class="favs-list" id="favList"></ul>
+    <p class="hint" id="favEmpty">Star a drink in the picker and it will live here, ready to log in one tap.</p>
+    <button class="btn quiet" id="favBrowse" type="button">Browse drinks</button>
+  </section>
+  <section class="block" data-panel="you" aria-label="Settings">
     <button class="set-link" id="openSettings" type="button">
       <span><strong>Your body and settings</strong><span class="set-sum" id="setSum"></span></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </button>
   </section>
 
-  <aside class="safety">
+  <aside class="safety" data-panel="tonight">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.4-3.4 8.2-8 9-4.6-.8-8-4.6-8-9V6l8-3z"/><path d="M12 8v5"/><path d="M12 16.5v.01"/></svg>
     <p><strong>An estimate, not a breathalyser.</strong>Food, health, medication and your own metabolism all change the real number. Never use this to decide whether you can drive. Get a lift, take a cab, or stay over.</p>
   </aside>
 
-  <section class="block" aria-labelledby="histH" id="histSection" hidden>
+  <header class="screen-head" data-panel="history"><p class="screen-kicker">Look back</p><h1>History</h1></header>
+  <section class="block" data-panel="history" aria-labelledby="stashMH" id="stashManage">
+    <h2 id="stashMH">Your stash <span class="stash-total" id="stashEditTotal"></span></h2>
+    <p class="hint" style="margin:0 0 12px">Beer you have on hand. Bought more? Add it here, then open it from Tonight. Both show the same numbers.</p>
+    <ul class="stash-edit" id="stashEdit"></ul>
+    <p class="hint" id="stashEditEmpty">Nothing in your stash yet.</p>
+    <button class="btn quiet" id="stashAdd" type="button">Add beer to your stash</button>
+  </section>
+  <section class="block" data-panel="history" aria-labelledby="histH" id="histSection">
+    <button class="now-card" id="histNow" type="button" hidden>
+      <span class="now-dot" aria-hidden="true"></span>
+      <span class="now-body"><span class="now-t" id="histNowTitle">Tonight, in progress</span><span class="now-s" id="histNowSub"></span></span>
+      <span class="now-go" aria-hidden="true">&#8250;</span>
+    </button>
+    <div class="hstats" id="hstats" hidden>
+      <dl>
+        <div><dt>Nights</dt><dd id="hsNights">0</dd></div>
+        <div><dt>Drinks</dt><dd id="hsDrinks">0</dd></div>
+        <div><dt>Average peak</dt><dd id="hsAvg">0.000%</dd></div>
+        <div><dt>Highest peak</dt><dd id="hsMax">0.000%</dd></div>
+      </dl>
+      <p class="hint" id="hsOver"></p>
+    </div>
+    <div class="hchart" id="hchartBox" hidden>
+      <p class="label"><span>Peak blood alcohol, recent nights</span><span class="h-key" id="hLimitKey"></span></p>
+      <svg class="chart" id="hchart" viewBox="0 0 360 156" role="img" aria-label="Peak blood alcohol for each recent night"></svg>
+    </div>
     <h2 id="histH">Past nights</h2>
     <ul class="history" id="historyList"></ul>
+    <p class="hint" id="histEmpty">No saved nights yet. Save a night from Tonight and it will appear here.</p>
   </section>
 
-  <div class="actions">
+  <div class="actions" data-panel="tonight">
     <button class="btn quiet" id="saveNight" type="button">Save this night</button>
     <button class="btn quiet" id="newNight" type="button">Start a new night</button>
   </div>
 
-  <footer>Dry Season. Built by Anthony. Drink water between rounds.</footer>
+  <footer data-panel="you">Dry Season. Built by Anthony. Drink water between rounds.</footer>
 </main>
+
+<nav class="tabbar" id="tabbar" aria-label="Main" style="--i:0">
+  <button type="button" data-go="tonight" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l-1 15a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2L7 3z"/><path d="M7.6 9h8.8"/></svg><span>Tonight</span></button>
+  <button type="button" data-go="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17c3-1 4-9 8-9s4 9 10 9"/><path d="M3 20h18"/></svg><span>Plan</span></button>
+  <button type="button" data-go="history"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></button>
+  <button type="button" data-go="you"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.6-4 3.5-6 7-6s6.4 2 7 6"/></svg><span>You</span></button>
+</nav>
 
 <dialog class="sheet settings" id="settings" aria-labelledby="settingsTitle">
   <div class="grab" aria-hidden="true"></div>
@@ -892,7 +379,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
       <ul>
         <li><strong>Add a drink</strong> when you open one. If nothing is going yet, choose when you started: just now, a little while ago, or right after your last round.</li>
         <li><strong>Rounds</strong> are stretches of drinking. Drinks in a round are spread evenly from its start to its end, so it doesn't matter exactly when each one went down.</li>
-        <li><strong>Got a few on hand?</strong> Add them all with Just now and choose <em>Open 1, save the rest for later</em>. Your stash waits on the main screen. Tap <em>Open next</em> each time you crack one.</li>
+        <li><strong>Got a few on hand?</strong> Add them all with Just now and choose <em>Open 1, save the rest for later</em>. Your stash waits on the main screen, one row for each drink, and it stays after the night ends. Bought more beer? Add it any time under <em>History</em>. Tap <em>Open next</em> each time you crack one.</li>
         <li><strong>Forgot to log?</strong> No problem. When you come back after a while, the app asks how many you've opened since and spreads them across the gap.</li>
         <li><strong>Had drinks before opening the app?</strong> Use <em>Log earlier drinks</em> to set a round with the times you drank.</li>
         <li><strong>Got a time wrong?</strong> Tap <em>Adjust times</em> on any round to move its start or finish by 15 minutes.</li>
@@ -901,7 +388,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
     </section>
     <section aria-labelledby="hFast">
       <h4 id="hFast">Log without opening the app</h4>
-      <p>On Android, long press the Dry Season icon and tap <strong>One more</strong>. It logs the next drink from your stash, or another of your last drink, in a couple of seconds.</p>
+      <p>On Android, long press the Dry Season icon and tap <strong>One more</strong>. It opens the most recent drink in your stash, or adds another of your last drink, in a couple of seconds.</p>
       <details>
         <summary>Setting it up on iPhone</summary>
         <p>iPhones don't show shortcuts on web app icons, but the Shortcuts app can do the same job.</p>
@@ -975,7 +462,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         <button type="button" id="qtyPlus" aria-label="One more">+</button>
       </div>
     </div>
-    <div>
+    <div id="shareBlock">
       <p class="label">How much of each was yours</p>
       <div class="chips" id="shareChips"></div>
     </div>
@@ -987,13 +474,15 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
         <input type="time" id="startCustom">
       </label>
     </div>
-    <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
-    <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
     <div class="cfg-ask" id="cfgAsk" role="group" aria-labelledby="askTitle" hidden>
       <h4 class="ov-title" id="askTitle"></h4>
       <p class="ov-text" id="askText"></p>
       <button class="ov-choice" id="askA" type="button"><span><strong id="askAT"></strong><span id="askAS"></span></span></button>
       <button class="ov-choice primary" id="askB" type="button"><span><strong id="askBT"></strong><span id="askBS"></span></span></button>
+    </div>
+    <div class="cfg-foot">
+      <div class="preview"><span>Pure alcohol</span><b id="cfgGrams">0 g</b></div>
+      <button class="btn" id="cfgAdd" type="button">Add to the tab</button>
     </div>
   </div>
 </dialog>
@@ -1091,7 +580,7 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
   </div>
 </dialog>
 
-<div class="toast" id="toast" role="status"><span id="toastMsg"></span><button class="undo" id="toastUndo" type="button" hidden>Undo</button></div>
+<div class="toast" id="toast" role="status" popover="manual"><span id="toastMsg"></span><button class="undo" id="toastUndo" type="button" hidden>Undo</button></div>
 
 <aside class="coaster" id="coaster" hidden aria-labelledby="coasterH">
   <div>
@@ -1125,1538 +614,6 @@ html.island-hang .hero{padding-top:calc(env(safe-area-inset-top) + 60px)}
 <script src="scene3d.js"></script>
 <script src="mug.js"></script>
 <script src="island.js"></script>
-<script>
-(() => {
-  'use strict';
-  const KEY = 'dryseason.v1';
-  const APP_KEY = 'dryseason.app';
-  const VERSION = self.DRY_VERSION || '0';
-  const hadData = (() => { try { return !!localStorage.getItem(KEY); } catch (e) { return false; } })();
-  const M = window.DryModel;
-  const { STD_G } = M;
-  const MIN = 60000;
-  const SCALE_MAX = 0.35;
-  const LIMIT_PRESETS = [['Botswana 0.05', 0.05], ['0.08', 0.08], ['0.02', 0.02]];
-
-  const D = window.DryDrinks;
-  const N = window.DryNight;
-  const DRINKS = D.GROUPS;
-  const SIZES = D.SIZES;
-  const SHARES = [[1, 'All mine'], [0.5, 'Half'], [1/3, 'A third'], [0.25, 'A quarter']];
-
-  const $ = (s) => document.querySelector(s);
-  const pad = (n) => String(n).padStart(2, '0');
-  const fmtBac = (b) => b.toFixed(3) + '%';
-  const fmtTime = (ms) => { const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
-  const round5 = (ms) => Math.floor(ms / 300000) * 300000;
-
-  function newSession() {
-    return { v: 5, rounds: [], fed: false, driveAt: null, water: null };
-  }
-  function defaults() {
-    return { profile: { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: true, theme: 'auto' }, session: newSession(), history: [], favs: D.DEFAULT_FAVS.map((f) => Object.assign({}, f)) };
-  }
-  function load() {
-    const d = defaults();
-    try {
-      const s = JSON.parse(localStorage.getItem(KEY));
-      if (s && s.profile && s.session && (Array.isArray(s.session.drinks) || Array.isArray(s.session.rounds))) {
-        return {
-          profile: Object.assign(d.profile, s.profile),
-          session: N.migrate(Object.assign({ fed: false, driveAt: null, water: null }, s.session)),
-          history: Array.isArray(s.history) ? s.history : [],
-          favs: D.normalizeFavs(Array.isArray(s.favs) ? s.favs : D.DEFAULT_FAVS)
-        };
-      }
-    } catch (e) {}
-    return d;
-  }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
-
-  let state = N.settle(load(), Date.now());
-
-  const gramsOf = M.gramsOf;
-  const isLive = () => !!N.liveRound(state.session);
-  const allDrinks = () => state.session.rounds.reduce((a, r) => a.concat(r.drinks), []);
-  function opts(extra) {
-    return Object.assign(N.simOpts(state.session, state.profile, Date.now()), extra || {});
-  }
-  const simulate = () => M.simulate(opts());
-  const bacAt = M.bacAt;
-  const fmtLimit = (l) => l.toFixed(2) + '%';
-
-  function dayLabel(ms) {
-    const d = new Date(ms), n = new Date();
-    const strip = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-    const diff = Math.round((strip(d) - strip(n)) / 864e5);
-    if (diff === 0) return 'Today';
-    if (diff === 1) return 'Tomorrow';
-    if (diff === -1) return 'Yesterday';
-    return d.toLocaleDateString(undefined, { weekday: 'long' });
-  }
-  function dayIn(ms) {
-    const l = dayLabel(ms);
-    return ['Today', 'Tomorrow', 'Yesterday'].includes(l) ? l.toLowerCase() : 'on ' + l;
-  }
-  function dur(ms) {
-    const t = Math.max(0, Math.round(ms / 1000));
-    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
-    return { h, m, s };
-  }
-
-  // Hero
-  const els = {
-    kicker: $('#kicker'), time: $('#clearTime'), day: $('#clearDay'),
-    nowBac: $('#nowBac'), peakBac: $('#peakBac'), liquid: $('#liquid')
-  };
-  let lastSim = null;
-  let lastHorizon = null;
-  // The 3D hero. Without WebGL (or three.js) this stays null and the flat glass and SVG horizon remain.
-  const cssToken = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  // The 3D hero is always at dusk, whatever the theme, so it uses the dark palette.
-  const sceneTokens = () => ({ skyTop: '#17212F', skyMid: '#2D2926', skyLow: '#7A3F1F', horizon: '#C8742E',
-    ground: '#16120E', amber: cssToken('--amber'), ink: cssToken('--ink'), stars: '1' });
-  let scene = null, sceneStarted = false;
-  try {
-    scene = window.DryScene ? DryScene.create($('#scene3d'), $('#hero'), { tokens: sceneTokens, reduceMotion: () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches }) : null;
-  } catch (e) { scene = null; }
-  if (scene) {
-    $('#hero').classList.add('three');
-  }
-  function layoutScene() {
-    const hero = $('#hero'), sp = $('#stageSpace');
-    const an = $('#another'), anH = an.hidden ? 0 : an.offsetHeight;
-    scene.setLayout({ top: sp.offsetTop + 8, base: hero.clientHeight - 30 - anH });
-  }
-  function renderHorizon(sim, now) {
-    const o = opts(), rounds = o.rounds;
-    let prevSim = null;
-    if (rounds.length > 1) {
-      const latest = rounds.reduce((a, r) => (r.start > a.start ? r : a), rounds[0]);
-      prevSim = M.simulate(Object.assign({}, o, { rounds: rounds.filter((r) => r !== latest) }));
-    }
-    lastHorizon = window.DryHorizon.render($('#horizon'), { sim, rounds, now, limit: state.profile.limit, prevSim });
-    if (scene) {
-      const has = rounds.length > 0 && sim.G > 0;
-      const view = { has, level: has ? DryScene.glassLevel(sim.start, sim.clear, now) : 0, sim, rounds, now, limit: state.profile.limit, prevSim };
-      layoutScene();
-      if (!sceneStarted) { sceneStarted = true; scene.setNight(view); } else scene.update(view);
-    }
-  }
-  function renderHero(sim) {
-    const now = Date.now();
-    renderHorizon(sim, now);
-    $('#hero').classList.toggle('empty', !sim.G);
-    const bNow = bacAt(sim, now);
-    let frac = 0;
-    if (!sim.G) {
-      els.kicker.textContent = 'Tonight';
-      els.time.textContent = 'Clear';
-      els.day.textContent = 'Nothing on the tab yet. Your first pour starts the clock.';
-    } else if (now < sim.start) {
-      els.kicker.textContent = 'Clear by';
-      els.time.textContent = fmtTime(sim.clear);
-      els.day.textContent = dayLabel(sim.clear) + '. Your start time is still ahead.';
-    } else if (now >= sim.clear) {
-      els.kicker.textContent = "You're";
-      els.time.textContent = 'Clear';
-      els.day.textContent = 'Clear since ' + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Still worth a glass of water.';
-    } else {
-      const { h, m, s } = dur(sim.clear - now);
-      els.kicker.textContent = 'Clear by';
-      els.time.textContent = fmtTime(sim.clear);
-      els.day.textContent = dayLabel(sim.clear) + '\n' + h + ' h ' + pad(m) + ' m ' + pad(s) + ' s to go';
-      frac = sim.peak > 0 ? Math.min(1, bNow / sim.peak) : 0;
-      if (bNow === 0 && now < sim.clear) frac = 0.04;
-    }
-    els.nowBac.textContent = fmtBac(bNow);
-    els.peakBac.textContent = fmtBac(sim.peak);
-    const y = 198 - frac * 182;               // 198 = empty, 16 = brim
-    els.liquid.style.transform = 'translateY(' + y.toFixed(1) + 'px)';
-  }
-
-  // Zones shared by the chart and the risk scale
-  function zones() {
-    const l = state.profile.limit;
-    return [
-      { to: l, c: 'var(--z1)', name: 'Impaired', op: .10 },
-      { to: Math.max(l, 0.08), c: 'var(--z2)', name: 'Over the limit', op: .16 },
-      { to: 0.15, c: 'var(--z3)', name: 'Very high', op: .20 },
-      { to: 0.30, c: 'var(--z4)', name: 'Blackout risk', op: .26 },
-      { to: Infinity, c: 'var(--z5)', name: 'Danger', op: .36 }
-    ];
-  }
-
-  // Chart
-  function renderChart(sim) {
-    const box = $('#chartBox');
-    if (!sim.G) { box.innerHTML = '<div class="chart-empty">Your curve appears once there is something on the tab.</div>'; return; }
-    const W = 340, H = 200, pl = 6, pr = 10, pt = 26, pb = 26;
-    const limit = state.profile.limit;
-    const t0 = sim.start, t1 = sim.clear, span = Math.max(t1 - t0, 60000);
-    const maxB = Math.max(sim.peak * 1.15, limit * 1.8, 0.02);
-    const x = (t) => pl + (t - t0) / span * (W - pl - pr);
-    const y = (b) => pt + (1 - Math.min(b, maxB) / maxB) * (H - pt - pb);
-    const n = sim.points.length, step = Math.max(1, Math.floor(n / 180));
-    let d = 'M' + x(t0).toFixed(1) + ' ' + y(0).toFixed(1);
-    for (let i = 0; i < n; i += step) d += ' L' + x(t0 + (i + 1) * 60000).toFixed(1) + ' ' + y(sim.points[i]).toFixed(1);
-    d += ' L' + x(t1).toFixed(1) + ' ' + y(0).toFixed(1);
-    const area = d + ' Z';
-
-    let bands = '', from = 0;
-    zones().forEach((z, i) => {
-      const lo = from, hi = Math.min(z.to, maxB);
-      from = z.to;
-      if (hi <= lo) return;
-      const y1 = y(hi), y2 = y(lo);
-      bands += '<rect x="' + pl + '" y="' + y1.toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + (y2 - y1).toFixed(1) + '" style="fill:' + z.c + ';opacity:' + z.op + '"/>';
-      if (i > 0 && y2 - y1 >= 15) bands += '<text x="' + (W - pr - 6) + '" y="' + (y1 + 12).toFixed(1) + '" text-anchor="end" class="zone-label">' + z.name + '</text>';
-    });
-    let limitLine = '';
-    if (limit > 0 && limit < maxB) {
-      const ly = y(limit).toFixed(1);
-      limitLine = '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + ly + '" y2="' + ly + '" style="stroke:var(--text);opacity:.55" stroke-dasharray="5 4"/>'
-                + '<text x="' + (pl + 6) + '" y="' + (ly - 5) + '" class="zone-label">Legal limit ' + fmtLimit(limit) + '</text>';
-    }
-
-    const hrs = span / 3600e3;
-    const stepH = hrs <= 6 ? 1 : hrs <= 14 ? 2 : hrs <= 30 ? 4 : 8;
-    const first = new Date(t0); first.setMinutes(0, 0, 0);
-    let ticks = '';
-    for (let t = first.getTime() + 3600e3; t < t1; t += 3600e3) {
-      const hr = new Date(t).getHours();
-      if (hr % stepH !== 0) continue;
-      const xx = x(t);
-      if (xx < 40 || xx > W - 44) continue;
-      ticks += '<line x1="' + xx + '" x2="' + xx + '" y1="' + pt + '" y2="' + (H - pb) + '" style="stroke:var(--line)" stroke-dasharray="2 4"/>'
-             + '<text x="' + xx + '" y="' + (H - 8) + '" text-anchor="middle">' + pad(hr) + ':00</text>';
-    }
-    const now = Date.now();
-    let nowMark = '';
-    if (now > t0 && now < t1) {
-      const nx = x(now), ny = y(bacAt(sim, now));
-      nowMark = '<line x1="' + nx + '" x2="' + nx + '" y1="' + (pt - 8) + '" y2="' + (H - pb) + '" style="stroke:var(--text)" stroke-width="1.5"/>'
-              + '<circle cx="' + nx + '" cy="' + ny + '" r="5" style="fill:var(--text)"/>'
-              + '<text x="' + nx + '" y="' + (pt - 12) + '" text-anchor="middle" class="peak-label">Now</text>';
-    }
-    const px = x(sim.peakAt), py = y(sim.peak);
-    const anchor = px > W * 0.72 ? 'end' : px < W * 0.2 ? 'start' : 'middle';
-    box.innerHTML =
-      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Blood alcohol peaks at ' + fmtBac(sim.peak) + ' around ' + fmtTime(sim.peakAt) + ' and reaches zero at ' + fmtTime(t1) + '">'
-      + '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A93B" stop-opacity=".5"/><stop offset="1" stop-color="#F2A93B" stop-opacity="0"/></linearGradient></defs>'
-      + bands + ticks + limitLine
-      + '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" style="stroke:var(--line)"/>'
-      + '<path d="' + area + '" fill="url(#ag)"/>'
-      + '<path d="' + d + '" fill="none" stroke="#F2A93B" stroke-width="2.5" stroke-linejoin="round"/>'
-      + '<circle cx="' + px + '" cy="' + py + '" r="4" fill="#F2A93B"/>'
-      + (nowMark ? '' : '<text x="' + px + '" y="' + (py - 10) + '" text-anchor="' + anchor + '" class="peak-label">Peak ' + fmtBac(sim.peak) + '</text>')
-      + nowMark
-      + '<text x="' + pl + '" y="' + (H - 8) + '">' + fmtTime(t0) + '</text>'
-      + '<text x="' + (W - pr) + '" y="' + (H - 8) + '" text-anchor="end">' + fmtTime(t1) + '</text>'
-      + '</svg>';
-  }
-
-  // Tab
-  function shareLabel(v) { const f = SHARES.find((s) => Math.abs(s[0] - v) < 1e-6); return f ? f[1].toLowerCase() : Math.round(v * 100) + '%'; }
-  function roundWhen(r) {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const pre = r.start < today.getTime() ? dayLabel(r.start) + ' ' : '';
-    return pre + fmtTime(r.start) + ' to ' + (r.end == null ? 'now' : fmtTime(Math.max(r.start, r.end)));
-  }
-  function roundWhat(r) { return r.drinks.map((d) => d.qty + ' × ' + d.name).join(' + '); }
-  function renderTab() {
-    const list = $('#tabList');
-    const rounds = state.session.rounds;
-    list.innerHTML = '';
-    rounds.forEach((r, ri) => {
-      if (rounds.length > 1) {
-        const h = document.createElement('li'); h.className = 'round-h';
-        h.textContent = 'Round ' + (ri + 1) + ' · ' + roundWhen(r);
-        list.appendChild(h);
-      }
-      r.drinks.forEach((d, i) => {
-        const li = document.createElement('li');
-        const share = d.share < 1 ? ', ' + shareLabel(d.share) + ' each' : '';
-        if (r.end == null) {
-          li.innerHTML = '<div><div class="li-name"></div><div class="li-meta"></div></div><span class="li-g"></span><span class="li-step"><button type="button" class="less">&#8722;</button><button type="button" class="more">+</button></span>';
-          li.querySelector('.li-name').textContent = d.qty + ' × ' + d.name;
-          li.querySelector('.li-meta').textContent = d.ml + ' ml at ' + d.abv + '%' + share;
-          li.querySelector('.li-g').textContent = gramsOf(d).toFixed(1) + ' g';
-          const less = li.querySelector('.less'), more = li.querySelector('.more');
-          less.setAttribute('aria-label', 'One fewer ' + d.name);
-          more.setAttribute('aria-label', 'One more ' + d.name);
-          less.addEventListener('click', () => { nightNote = null; withUndo(() => { state = N.lessOf(state, r.id, N.keyOf(d)); }, 'One fewer ' + d.name); });
-          more.addEventListener('click', () => quickAdd(d));
-          list.appendChild(li);
-          return;
-        }
-        li.innerHTML = '<div><div class="li-name"></div><div class="li-meta"></div></div><span class="li-g"></span><button class="rm" type="button">&#215;</button>';
-        li.querySelector('.li-name').textContent = d.qty + ' × ' + d.name;
-        li.querySelector('.li-meta').textContent = d.ml + ' ml at ' + d.abv + '%' + share;
-        li.querySelector('.li-g').textContent = gramsOf(d).toFixed(1) + ' g';
-        const rm = li.querySelector('.rm');
-        rm.setAttribute('aria-label', 'Remove ' + d.name);
-        rm.addEventListener('click', () => {
-          const drinks = r.drinks.filter((_, j) => j !== i);
-          nightNote = null;
-          state = drinks.length ? N.editRound(state, r.id, { drinks }) : N.removeRound(state, r.id);
-          save(); renderAll(); toast('Removed from the tab');
-        });
-        list.appendChild(li);
-      });
-    });
-    const drinks = allDrinks();
-    const G = drinks.reduce((a, d) => a + gramsOf(d), 0);
-    $('#tabEmpty').hidden = drinks.length > 0;
-    $('#tabTotal').hidden = drinks.length === 0;
-    $('#tabTotalVal').textContent = G.toFixed(1) + ' g, about ' + (G / STD_G).toFixed(1) + ' standard drinks';
-  }
-
-  function toLocalInput(ms) { const d = new Date(ms); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
-  function fromLocalInput(v) {
-    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || '');
-    return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : null;
-  }
-
-  // The night: one card per round
-  function renderNight() {
-    const ul = $('#rounds'), rounds = state.session.rounds;
-    ul.innerHTML = '';
-    rounds.forEach((r) => {
-      const li = document.createElement('li'); li.className = 'round-card'; li.dataset.id = r.id;
-      li.innerHTML = '<button type="button" class="rc-open rc-body"><span class="rc-when"></span><span class="rc-what"></span><span class="rc-meta"></span></button>';
-      li.querySelector('.rc-open').setAttribute('aria-label', 'Edit round ' + roundWhen(r) + ', ' + roundWhat(r));
-      li.querySelector('.rc-open').addEventListener('click', () => openLate(r));
-      li.querySelector('.rc-when').textContent = roundWhen(r);
-      li.querySelector('.rc-what').textContent = roundWhat(r);
-      li.querySelector('.rc-meta').textContent = r.end == null ? 'still going' : r.late ? 'logged late' : 'logged as you went';
-      const acts = document.createElement('div'); acts.className = 'rc-actions' + (r.end == null ? ' wide' : '');
-      if (r.end == null) {
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-mini'; b.textContent = 'Finished drinking';
-        b.addEventListener('click', () => { nightNote = null; state = N.finishLive(state, Date.now()); save(); renderAll(); });
-        acts.appendChild(b);
-      }
-      li.appendChild(acts);
-      const adj = document.createElement('button'); adj.type = 'button'; adj.className = 'btn-mini'; adj.textContent = adjusting === r.id ? 'Done' : 'Adjust times';
-      adj.setAttribute('aria-expanded', String(adjusting === r.id));
-      adj.addEventListener('click', () => { adjusting = adjusting === r.id ? null : r.id; renderNight(); });
-      acts.appendChild(adj);
-      if (adjusting === r.id) li.appendChild(adjustRow(r));
-      ul.appendChild(li);
-    });
-    $('#roundsEmpty').hidden = rounds.length > 0 || !!nightNote;
-    renderNote();
-    $('#fed').checked = !!state.session.fed;
-  }
-  // Adjust times: quick 15 minute nudges on a round's start and end
-  let adjusting = null;
-  function adjustRow(r) {
-    const box = document.createElement('div'); box.className = 'rc-adjust';
-    const row = (edge, label, at) => {
-      const d = document.createElement('div'); d.className = 'rc-row';
-      d.innerHTML = '<span></span><button type="button">&#8722;15</button><button type="button">+15</button>';
-      d.querySelector('span').innerHTML = label + ' <b>' + fmtTime(at) + '</b>';
-      const [minus, plus] = d.querySelectorAll('button');
-      minus.setAttribute('aria-label', label + ' 15 minutes earlier');
-      plus.setAttribute('aria-label', label + ' 15 minutes later');
-      const go = (delta) => { nightNote = null; state = N.nudgeRound(state, r.id, edge, delta, Date.now()); save(); renderAll(); };
-      minus.addEventListener('click', () => go(-15 * 60000));
-      plus.addEventListener('click', () => go(15 * 60000));
-      return d;
-    };
-    box.appendChild(row('start', 'Started', r.start));
-    if (r.end != null) box.appendChild(row('end', 'Finished', r.end));
-    return box;
-  }
-  // The note under the rounds after a late round: what happened and why.
-  let nightNote = null;
-  function renderNote() {
-    const box = $('#nightNote');
-    box.hidden = !nightNote;
-    if (nightNote) { $('#nnTitle').textContent = nightNote[0]; $('#nnText').textContent = nightNote[1]; }
-  }
-  /** Toast for what happened to the night when a drink or round was added. */
-  function announce(outcome) {
-    nightNote = null;
-    if (outcome.action === 'fresh' && outcome.archived) { toast('New night started. The last one is saved in History.'); return true; }
-    return false;
-  }
-
-  // Settings, Help and the first run walkthrough
-  const settingsDlg = $('#settings'), helpDlg = $('#help');
-  function renderSetSum() {
-    const t = { auto: 'Automatic', light: 'Light', dark: 'Dark' }[state.profile.theme || 'auto'];
-    $('#setSum').textContent = state.profile.kg + ' kg · ' + (state.profile.sex === 'f' ? 'Female' : 'Male') + ' · ' + t + ' theme';
-  }
-  function openSettings() { if (helpDlg.open) helpDlg.close(); renderBody(); settingsDlg.showModal(); settingsDlg.scrollTop = 0; }
-  function openHelp() { if (settingsDlg.open) settingsDlg.close(); helpDlg.showModal(); helpDlg.scrollTop = 0; }
-  $('#settingsBtn').addEventListener('click', openSettings);
-  $('#openSettings').addEventListener('click', openSettings);
-  $('#settingsClose').addEventListener('click', () => settingsDlg.close());
-  $('#helpBtn').addEventListener('click', openHelp);
-  $('#setHelp').addEventListener('click', openHelp);
-  $('#helpClose').addEventListener('click', () => helpDlg.close());
-  [settingsDlg, helpDlg].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
-  settingsDlg.addEventListener('close', () => { renderSetSum(); });
-
-  const TOUR = [
-    ['.readout', 'Your clear time', 'This is when your body should be free of alcohol. It counts down live as your night goes on.'],
-    ['#openPicker', 'Log a drink', 'Tap here when you open one and say when you started. Got a few on hand? Save them as a stash and tap Open next as you go.'],
-    ['#nightSection', 'Your night', 'Each round of drinks shows up here. Tap Adjust times to fix when you started or finished, or Log earlier drinks for ones you had before.'],
-    ['#driveSection', 'Driving soon?', 'Set when you need to drive and get a straight answer on whether you\'re likely to be clear in time.'],
-    ['.top-btns', 'Help and settings', 'Tap ? any time for the full guide, and the gear for your body details and Light or Dark mode.']
-  ];
-  let tourAt = -1;
-  const tourEl = $('#tour');
-  function placeTour() {
-    const step = TOUR[tourAt], el = document.querySelector(step[0]);
-    $('#tourStep').textContent = (tourAt + 1) + ' of ' + TOUR.length;
-    $('#tourTitle').textContent = step[1];
-    $('#tourText').textContent = step[2];
-    $('#tourNext').textContent = tourAt === TOUR.length - 1 ? 'Got it' : 'Next';
-    if (!el) return;
-    el.scrollIntoView({ block: 'center', behavior: 'auto' });
-    requestAnimationFrame(() => {
-      const r = el.getBoundingClientRect(), pad = 8, ring = $('#tourRing');
-      const top = Math.max(4, r.top - pad), h = Math.min(window.innerHeight - 8, r.height + pad * 2);
-      Object.assign(ring.style, { left: (r.left - pad) + 'px', top: top + 'px', width: (r.width + pad * 2) + 'px', height: h + 'px' });
-      $('#tourCard').classList.toggle('top', r.top + r.height / 2 > window.innerHeight * 0.55);
-    });
-  }
-  function startTour() {
-    if (helpDlg.open) helpDlg.close();
-    if (settingsDlg.open) settingsDlg.close();
-    setMeta({ toured: true });
-    tourAt = 0; tourEl.hidden = false; placeTour();
-    $('#tourNext').focus();
-  }
-  function endTour() { tourEl.hidden = true; tourAt = -1; window.scrollTo({ top: 0 }); }
-  $('#tourNext').addEventListener('click', () => { if (tourAt >= TOUR.length - 1) endTour(); else { tourAt++; placeTour(); } });
-  $('#tourSkip').addEventListener('click', endTour);
-  $('#helpTour').addEventListener('click', startTour);
-  $('#setTour').addEventListener('click', startTour);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tourAt >= 0) endTour(); });
-  window.addEventListener('resize', () => { if (tourAt >= 0) placeTour(); });
-
-  // Appearance: Automatic follows the phone; Light or Dark is fixed for the whole app
-  function applyTheme() {
-    const t = state.profile.theme;
-    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
-    else document.documentElement.removeAttribute('data-theme');
-  }
-  document.querySelectorAll('#themeSeg [data-theme-choice]').forEach((b) => b.addEventListener('click', () => {
-    state.profile.theme = b.dataset.themeChoice; save(); applyTheme(); renderBody();
-  }));
-  applyTheme();
-
-  // Body settings
-  function renderBody() {
-    if (typeof renderSetSum === 'function') renderSetSum();
-    document.querySelectorAll('#themeSeg [data-theme-choice]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === (state.profile.theme || 'auto'))));
-    $('#kg').value = state.profile.kg;
-    document.querySelectorAll('[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.profile.sex)));
-    $('#beta').value = state.profile.beta;
-    $('#betaVal').textContent = state.profile.beta.toFixed(3) + '% per hour';
-    $('#islandOn').checked = state.profile.island !== false;
-    if (document.activeElement !== $('#limit')) $('#limit').value = state.profile.limit;
-    const lc = $('#limitChips'); lc.innerHTML = '';
-    LIMIT_PRESETS.forEach(([label, v]) => {
-      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
-      c.setAttribute('aria-pressed', String(Math.abs(state.profile.limit - v) < 1e-9));
-      c.addEventListener('click', () => { state.profile.limit = v; save(); renderBody(); buildScale(); renderLive(); });
-      lc.appendChild(c);
-    });
-  }
-  $('#kg').addEventListener('input', (e) => { const v = parseFloat(e.target.value); if (v >= 35 && v <= 250) { state.profile.kg = v; save(); renderLive(); } });
-  document.querySelectorAll('[data-sex]').forEach((b) => b.addEventListener('click', () => { state.profile.sex = b.dataset.sex; save(); renderBody(); renderLive(); }));
-  $('#beta').addEventListener('input', (e) => { state.profile.beta = parseFloat(e.target.value); save(); renderBody(); renderLive(); });
-  $('#limit').addEventListener('input', (e) => {
-    const v = parseFloat(e.target.value);
-    if (v >= 0 && v <= 0.2) { state.profile.limit = v; save(); renderBody(); buildScale(); renderLive(); }
-  });
-  $('#fed').addEventListener('change', (e) => { state.session.fed = e.target.checked; save(); renderLive(); });
-
-  // History
-  function renderHistory() {
-    const h = state.history || [];
-    $('#histSection').hidden = h.length === 0;
-    const ul = $('#historyList'); ul.innerHTML = '';
-    h.slice().reverse().forEach((n) => {
-      const li = document.createElement('li');
-      const { h: hh, m } = dur(n.clear - n.start);
-      const date = new Date(n.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-      const wrap = document.createElement('button');
-      wrap.innerHTML = '<div><div class="h-date"></div><div class="h-meta" style="text-align:left"></div></div><div class="h-meta"></div>';
-      wrap.querySelector('.h-date').textContent = date;
-      wrap.querySelector('.h-meta').textContent = n.count + (n.count === 1 ? ' drink' : ' drinks') + ', ' + n.G.toFixed(0) + ' g';
-      wrap.lastChild.textContent = 'Peak ' + fmtBac(n.peak) + ', clear after ' + hh + ' h ' + pad(m) + ' m';
-      wrap.type = 'button'; wrap.className = 'h-open';
-      wrap.addEventListener('click', () => openPast(n));
-      li.appendChild(wrap);
-      ul.appendChild(li);
-    });
-  }
-  const past = $('#past');
-  function openPast(n) {
-    $('#pastTitle').textContent = new Date(n.start).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' });
-    $('#pastPeak').textContent = fmtBac(n.peak);
-    $('#pastClear').textContent = fmtTime(n.clear);
-    $('#pastCount').textContent = String(n.count);
-    const rounds = Array.isArray(n.rounds) ? n.rounds : [];
-    $('.past-sky').hidden = !rounds.length;
-    $('#pastNote').hidden = rounds.length > 0;
-    const ul = $('#pastRounds'); ul.innerHTML = '';
-    rounds.forEach((r) => {
-      const li = document.createElement('li'); li.className = 'round-card';
-      li.innerHTML = '<span class="rc-body"><span class="rc-when"></span><span class="rc-what"></span></span>';
-      li.querySelector('.rc-when').textContent = fmtTime(r.start) + ' to ' + fmtTime(r.end);
-      li.querySelector('.rc-what').textContent = roundWhat(r);
-      ul.appendChild(li);
-    });
-    past.showModal();
-    if (!rounds.length) return;
-    // Seen from the moment it cleared, so no "now" marker sits on the hills.
-    const o = N.simOpts({ rounds, fed: !!n.fed }, state.profile, n.clear);
-    const sim = M.simulate(o);
-    window.DryHorizon.render($('#pastHorizon'), { sim, rounds: o.rounds, now: n.clear, limit: state.profile.limit, prevSim: null });
-    $('#pastHorizon .hz-now').style.display = 'none';
-  }
-  $('#pastClose').addEventListener('click', () => past.close());
-  past.addEventListener('click', (e) => { if (e.target === past) past.close(); });
-  $('#saveNight').addEventListener('click', () => {
-    const entry = N.summarize(state.session, state.profile, Date.now());
-    if (!entry.G) { toast('Add a drink before saving'); return; }
-    state.history = N.saveToHistory(state.history, entry);
-    save(); renderHistory(); toast('Night saved');
-  });
-  $('#newNight').addEventListener('click', () => {
-    if (state.session.rounds.length && !confirm('Clear the tab and start a new night?')) return;
-    state.session = newSession(); save(); renderAll(); toast('Fresh tab, fresh night');
-  });
-
-  // Share
-  $('#shareBtn').addEventListener('click', async () => {
-    const sim = simulate();
-    let text = 'Tracking my night with Dry Season.';
-    if (sim.G && Date.now() < sim.clear) text = "I'll be clear of alcohol by " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '. Tracked with Dry Season.';
-    else if (sim.G) text = 'Officially clear. Tracked with Dry Season.';
-    try {
-      if (navigator.share) { await navigator.share({ title: 'Dry Season', text, url: location.href }); return; }
-      await copyText(text + ' ' + location.href);
-    } catch (e) { if (e && e.name !== 'AbortError') copyText(text + ' ' + location.href); }
-  });
-  async function copyText(t) {
-    try { await navigator.clipboard.writeText(t); toast('Copied, ready to paste'); }
-    catch (e) { toast("Couldn't copy. Try the share button again."); }
-  }
-
-  // Drink picker
-  const sheet = $('#sheet');
-  let pick = null;
-  let pickFor = 'tab';                 // 'late' when the picker was opened from the dial sheet
-  const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z"/></svg>';
-  // A favourite is a drink in a size, so the same beer can be a favourite as a 330 ml and a 440 ml.
-  const isFav = (id, ml) => (state.favs || []).some((f) => f.id === id && f.ml === ml);
-  const favKey = (it) => it.id + '|' + it.ml;
-  function buildList(popId, popGroup) {
-    const box = $('#pickList'), y = sheet.scrollTop; box.innerHTML = '';
-    const favItems = (state.favs || []).map(D.favOf).filter(Boolean);
-    const groups = (favItems.length ? [{ group: 'Favourites', items: favItems, favs: true }] : []).concat(DRINKS);
-    groups.forEach((g) => {
-      const wrap = document.createElement('div'); wrap.className = 'pick-group' + (g.favs ? ' favs' : '');
-      const h = document.createElement('h4'); h.textContent = g.group; wrap.appendChild(h);
-      g.items.forEach((it) => {
-        const row = document.createElement('div'); row.className = 'pick-row';
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'pick';
-        b.innerHTML = '<span><span class="pick-name"></span><br><span class="pick-meta"></span></span><span class="abv-pill"></span>';
-        b.querySelector('.pick-name').textContent = it.name;
-        b.querySelector('.pick-meta').textContent = it.custom ? 'Wine, spirits, ciders, anything' : 'Usually ' + it.ml + ' ml' + (it.serve ? ' ' + it.serve : '');
-        b.querySelector('.abv-pill').textContent = it.custom ? 'Set it' : it.abv + '%';
-        b.addEventListener('click', () => choose(it));
-        row.appendChild(b);
-        if (!it.custom) {
-          const st = document.createElement('button'); st.type = 'button'; st.className = 'star';
-          st.innerHTML = STAR;
-          const on = isFav(it.id, it.ml);
-          st.dataset.id = favKey(it); st.dataset.group = g.group;
-          st.setAttribute('aria-pressed', String(on));
-          st.setAttribute('aria-label', (on ? 'Remove ' : 'Add ') + it.name + ' ' + it.ml + ' ml' + (on ? ' from favourites' : ' to favourites'));
-          st.addEventListener('click', () => toggleFav(it, g.group));
-          row.appendChild(st);
-        }
-        wrap.appendChild(row);
-      });
-      box.appendChild(wrap);
-    });
-    sheet.scrollTop = y;
-    if (popId) {
-      const el = box.querySelector('.star[data-id="' + popId + '"][data-group="' + popGroup + '"]');
-      if (el) { el.classList.add('pop'); el.focus({ preventScroll: true }); }
-    }
-  }
-  function setFav(id, ml, on) {
-    const favs = (state.favs || []).filter((f) => !(f.id === id && f.ml === ml));
-    state.favs = on ? favs.concat([{ id, ml }]) : favs;
-    save();
-  }
-  function toggleFav(it, group) {
-    const on = !isFav(it.id, it.ml);
-    setFav(it.id, it.ml, on);
-    buildList(favKey(it), group === 'Favourites' && !on ? null : group);
-    toast(on ? it.name + ' ' + it.ml + ' ml pinned to Favourites' : it.name + ' ' + it.ml + ' ml unpinned');
-  }
-  function showList() {
-    $('#pickList').hidden = false; $('#pickCfg').hidden = true; $('#sheetBack').hidden = true;
-    $('#sheetTitle').textContent = 'Pick a drink';
-  }
-  function choose(it) {
-    pick = { id: it.custom ? null : it.id, name: it.custom ? '' : it.name, abv: it.abv, ml: it.ml, qty: 1, share: 1, custom: !!it.custom, sizes: it.sizes || null };
-    $('#pickList').hidden = true; $('#pickCfg').hidden = false; $('#sheetBack').hidden = false;
-    $('#sheetTitle').textContent = it.custom ? 'Your own drink' : it.name;
-    $('#cfgAdd').textContent = pickFor === 'late' ? 'Add to this round' : 'Add to the tab';
-    $('#nameField').hidden = !it.custom;
-    $('#cfgName').value = pick.name;
-    $('#cfgNote').hidden = !it.note; $('#cfgNote').textContent = it.note || '';
-    $('#cfgAbv').value = pick.abv; $('#cfgMl').value = pick.ml;
-    resetStart();
-    renderCfg();
-    sheet.scrollTop = 0;
-  }
-  function renderCfg() {
-    const fb = $('#cfgFav'), favOn = !!pick.id && isFav(pick.id, pick.ml);
-    fb.hidden = !pick.id;
-    fb.setAttribute('aria-pressed', String(favOn));
-    $('#cfgFavText').textContent = favOn ? pick.ml + ' ml is a favourite' : 'Save ' + pick.ml + ' ml as a favourite';
-    const sc = $('#sizeChips'); sc.innerHTML = '';
-    SIZES.forEach((ml) => {
-      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip';
-      c.textContent = ml === 750 ? '750 quart' : ml === 1000 ? '1 litre' : ml + ' ml';
-      if (pick.sizes && pick.sizes.includes(ml)) c.dataset.fits = '1';
-      c.setAttribute('aria-pressed', String(pick.ml === ml));
-      c.addEventListener('click', () => { pick.ml = ml; $('#cfgMl').value = ml; renderCfg(); });
-      sc.appendChild(c);
-    });
-    const sh = $('#shareChips'); sh.innerHTML = '';
-    SHARES.forEach(([v, label]) => {
-      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
-      c.setAttribute('aria-pressed', String(Math.abs(pick.share - v) < 1e-6));
-      c.addEventListener('click', () => { pick.share = v; renderCfg(); });
-      sh.appendChild(c);
-    });
-    $('#qty').textContent = pick.qty;
-    const valid = pick.abv >= 0 && pick.ml > 0;
-    $('#cfgGrams').textContent = valid ? gramsOf(pick).toFixed(1) + ' g' : 'Check the numbers';
-    refreshAsk();
-  }
-  $('#cfgFav').addEventListener('click', () => {
-    if (!pick.id) return;
-    const on = !isFav(pick.id, pick.ml);
-    setFav(pick.id, pick.ml, on);
-    renderCfg();
-    toast(on ? pick.name + ' ' + pick.ml + ' ml pinned to Favourites' : pick.name + ' ' + pick.ml + ' ml unpinned');
-  });
-  $('#cfgAbv').addEventListener('input', (e) => { pick.abv = parseFloat(e.target.value) || 0; renderCfg(); });
-  $('#cfgMl').addEventListener('input', (e) => { pick.ml = parseFloat(e.target.value) || 0; renderCfg(); });
-  $('#cfgName').addEventListener('input', (e) => { pick.name = e.target.value; });
-  $('#qtyMinus').addEventListener('click', () => { pick.qty = Math.max(1, pick.qty - 1); renderCfg(); });
-  $('#qtyPlus').addEventListener('click', () => { pick.qty = Math.min(48, pick.qty + 1); renderCfg(); });
-  $('#cfgAdd').addEventListener('click', () => {
-    if (!(pick.ml > 0) || !(pick.abv >= 0) || pick.abv > 80) { toast('Check the strength and size'); return; }
-    const name = (pick.name || '').trim() || 'Custom drink';
-    if (pickFor === 'late') {
-      pickFor = 'tab';
-      sheet.close();
-      changeDrink({ name, abv: pick.abv, ml: pick.ml, qty: 0, share: pick.share }, pick.qty);
-      return;
-    }
-    askAnswers = {};
-    commitTab(name);
-  });
-
-  // When did you start? Only asked when the drink opens a new round.
-  let startKey = 'now', askAnswers = {}, askKind = null;
-  const AGO = [[15, '15 min ago'], [30, '30 min ago'], [60, '1 hr ago'], [120, '2 hrs ago']];
-  function startOpts(now) {
-    const ch = N.startChoices(N.settle(state, now).session, now);
-    const out = [];
-    if (ch.after != null) out.push(['after', 'Right after your last round (' + fmtTime(ch.after) + ')', ch.after]);
-    out.push(['now', 'Just now', now]);
-    AGO.forEach(([m, l]) => out.push(['m' + m, l, now - m * 60000]));
-    out.push(['custom', 'Custom', null]);
-    return { out, def: ch.after != null ? 'after' : 'now' };
-  }
-  const needsStart = () => pickFor === 'tab' && !N.liveRound(N.settle(state, Date.now()).session);
-  function resetStart() {
-    const now = Date.now();
-    startKey = startOpts(now).def;
-    $('#startCustom').value = fmtTime(round5(now - 30 * 60000));
-    hideAsk();
-    renderStart();
-  }
-  function renderStart() {
-    const show = needsStart();
-    $('#startWrap').hidden = !show;
-    if (!show) return;
-    const box = $('#startChips'); box.innerHTML = '';
-    startOpts(Date.now()).out.forEach(([k, label]) => {
-      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
-      c.setAttribute('aria-pressed', String(startKey === k));
-      c.addEventListener('click', () => { startKey = k; hideAsk(); renderStart(); });
-      box.appendChild(c);
-    });
-    $('#startCustomField').hidden = startKey !== 'custom';
-  }
-  /** The chosen start: a custom time later than now means last night. */
-  function startAtValue(now) {
-    if (startKey === 'custom') {
-      const m = /^(\d{1,2}):(\d{2})/.exec($('#startCustom').value || '');
-      if (!m) return now;
-      const d = new Date(now); d.setHours(+m[1], +m[2], 0, 0);
-      return d.getTime() > now ? d.getTime() - 24 * 3600e3 : d.getTime();
-    }
-    const hit = startOpts(now).out.find((o) => o[0] === startKey);
-    return hit && hit[2] != null ? hit[2] : now;
-  }
-  /** "All 6 right now?" for n drinks. */
-  const manyAsk = (n) => ({ kind: 'many', title: 'All ' + n + ' right now?', text: 'Or is this the first of ' + n + ' for the night? Logging all ' + n + ' at once counts them as drunk already.',
-    a: ['Log all ' + n, 'Already had them, or having them at once', { many: 'all' }],
-    b: ['Open 1, save ' + (n - 1) + ' for later', 'Tap Open next as you go', { many: 'stash' }] });
-  function hideAsk() { askKind = null; askAnswers = {}; $('#cfgAsk').hidden = true; $('#cfgAdd').hidden = false; }
-  /** The question follows the count: new numbers as it changes, gone when it is back to 1. */
-  function refreshAsk() {
-    if (askKind !== 'many' || $('#cfgAsk').hidden) return;
-    if (pick.qty > 1) ask(manyAsk(pick.qty), true); else hideAsk();
-  }
-  function ask(o, quiet) {
-    askKind = o.kind || null;
-    $('#askTitle').textContent = o.title; $('#askText').textContent = o.text;
-    $('#askAT').textContent = o.a[0]; $('#askAS').textContent = o.a[1];
-    $('#askBT').textContent = o.b[0]; $('#askBS').textContent = o.b[1];
-    $('#askA').onclick = () => { Object.assign(askAnswers, o.a[2]); commitTab(); };
-    $('#askB').onclick = () => { Object.assign(askAnswers, o.b[2]); commitTab(); };
-    $('#cfgAdd').hidden = true; $('#cfgAsk').hidden = false;
-    if (!quiet) $('#cfgAsk').scrollIntoView({ block: 'nearest', behavior: reduceMotionPref() ? 'auto' : 'smooth' });
-  }
-  /** Add the picked drink to tonight, asking first when the answer changes the numbers. */
-  function commitTab(nameIn) {
-    const now = Date.now();
-    const name = nameIn || (pick.name || '').trim() || 'Custom drink';
-    state = N.settle(state, now);
-    const drink = { name, abv: pick.abv, ml: pick.ml, qty: pick.qty, share: pick.share };
-    const live = N.liveRound(state.session);
-    const startAt = live ? null : startAtValue(now);
-    if (!live && pick.qty > 1 && startKey === 'now' && !askAnswers.many) {
-      return ask(manyAsk(pick.qty));
-    }
-    if (!live && !askAnswers.clash) {
-      const c = N.startClash(state.session, startAt, now);
-      if (c) return ask({ title: 'That was during your last round', text: 'Your last round ran from ' + fmtTime(c.start) + ' to ' + fmtTime(c.end) + '.',
-        a: ['Add to that round', 'It picks up again and keeps going', { clash: 'same' }],
-        b: ['Start right after it (' + fmtTime(c.end) + ')', 'A new round from ' + fmtTime(c.end), { clash: 'after' }] });
-    }
-    const stash = askAnswers.many === 'stash';
-    const r = N.addLiveDrink(state, Object.assign({}, drink, { qty: stash ? 1 : drink.qty }), now, { startAt, choice: askAnswers.clash });
-    state = r.state;
-    if (stash) state = N.setStash(state, drink, drink.qty, 1);
-    askAnswers = {};
-    save(); sheet.close(); renderAll();
-    if (!announce(r.outcome)) toast(stash ? '1 ' + name + ' opened, ' + (drink.qty - 1) + ' saved for later' : drink.qty + ' × ' + name + ' added');
-    if (island) island.celebrate('pour', { label: '+' + (stash ? 1 : drink.qty) + ' ' + shortName(name) });
-  }
-  $('#startCustom').addEventListener('input', hideAsk);
-
-  // One tap repeats under the bottle: the stash first, else your last two different drinks
-  let paceHint = '';
-  function quickAdd(d) {
-    withUndo(() => {
-      const r = N.addLiveDrink(state, Object.assign({}, d, { qty: 1 }), Date.now(), { startAt: Date.now(), choice: 'after' });
-      state = r.state; return r.outcome;
-    }, d.name + ' added');
-    if (island) island.celebrate('pour', { label: '+1 ' + shortName(d.name) });
-  }
-  function renderAnother() {
-    const box = $('#another'), btns = $('#anotherBtns'), st = state.session.stash;
-    const recent = N.recentDrinks(state.session, 2);
-    const items = [];
-    if (st) {
-      items.push({ label: 'Open next · ' + (st.total - st.opened) + ' left', aria: 'Open the next ' + st.drink.name + ' from your stash', go: () => withUndo(() => { const r = N.openStash(state, Date.now()); state = r.state; return r.outcome; }, 'Opened another ' + st.drink.name) });
-      const other = recent.find((d) => N.keyOf(Object.assign({ qty: 1 }, d)) !== N.keyOf(Object.assign({ qty: 1 }, st.drink)));
-      if (other) items.push({ label: '+ ' + shortName(other.name), aria: 'Add another ' + other.name, go: () => quickAdd(other) });
-    } else {
-      recent.forEach((d) => items.push({ label: '+ ' + (recent.length > 1 ? shortName(d.name) : 'Another ' + shortName(d.name)), aria: 'Add another ' + d.name + ', ' + d.ml + ' ml', go: () => quickAdd(d) }));
-    }
-    const show = items.length > 0;
-    const was = !box.hidden;
-    box.hidden = !show;
-    $('#hero').classList.toggle('has-another', show);
-    btns.innerHTML = '';
-    items.forEach((it, i) => {
-      const b = document.createElement('button'); b.type = 'button';
-      if (i > 0) b.className = 'second';
-      b.textContent = it.label; b.setAttribute('aria-label', it.aria);
-      b.addEventListener('click', it.go);
-      btns.appendChild(b);
-    });
-    renderPaceHint();
-    if (scene && was !== show) layoutScene();
-  }
-  function renderPaceHint() {
-    const h = $('#anotherHint');
-    const show = !!paceHint && !$('#another').hidden;
-    h.hidden = !show;
-    if (show && h.textContent !== paceHint) h.textContent = paceHint;
-  }
-
-  // Tonight's stash
-  function renderStash() {
-    const st = state.session.stash, box = $('#stash');
-    box.hidden = !st;
-    if (!st) return;
-    $('#stashCount').textContent = st.opened + ' of ' + st.total + ' ' + st.drink.name + ' opened';
-    const dots = $('#stashDots'); dots.innerHTML = '';
-    for (let i = 0; i < st.total; i++) { const d = document.createElement('i'); if (i < st.opened) d.className = 'open'; dots.appendChild(d); }
-    $('#stashOpen').textContent = 'Open next (' + (st.total - st.opened) + ' left)';
-  }
-  function openNext() {
-    const st = state.session.stash;
-    if (!st) return false;
-    const r = N.openStash(state, Date.now());
-    state = r.state; save(); renderAll();
-    if (!announce(r.outcome)) toast(r.outcome.stashDone ? 'Last ' + st.drink.name + ' opened. That was the stash.' : 'Opened another ' + st.drink.name);
-    if (island) island.celebrate('pour', { label: '+1 ' + shortName(st.drink.name) });
-    return true;
-  }
-  $('#stashOpen').addEventListener('click', openNext);
-  $('#stashClear').addEventListener('click', () => { state = N.clearStash(state); save(); renderAll(); toast('Stash put away'); });
-
-  // Catch up: one question when you come back after a while
-  const cu = $('#catchup');
-  let cuN = 1;
-  function cuMax() { const left = N.stashLeft(state.session); return left > 0 ? left : 24; }
-  function renderCu() {
-    $('#cuN').textContent = cuN;
-    $('#cuLog').textContent = 'Log ' + cuN;
-  }
-  function maybeCatchUp() {
-    const now = Date.now();
-    if (document.querySelector('dialog[open]')) return;
-    const settled = N.settle(state, now);
-    if (settled !== state) { state = settled; save(); renderAll(); }
-    if (!N.catchUpDue(state.session, now)) return;
-    const d = N.catchUpDrink(state.session);
-    if (!d) return;
-    const last = Math.max(state.session.loggedAt || 0, (N.liveRound(state.session) || {}).lastAt || 0);
-    const st = state.session.stash;
-    $('#cuText').textContent = (last ? 'You last logged at ' + fmtTime(last) + '. ' : '') + 'How many ' + d.name + ' have you opened since?'
-      + (st ? ' (' + (st.total - st.opened) + ' left in your stash)' : '');
-    cuN = 1; renderCu();
-    cu.showModal();
-  }
-  $('#cuMinus').addEventListener('click', () => { cuN = Math.max(1, cuN - 1); renderCu(); });
-  $('#cuPlus').addEventListener('click', () => { cuN = Math.min(cuMax(), cuN + 1); renderCu(); });
-  $('#cuLog').addEventListener('click', () => {
-    const d = N.catchUpDrink(state.session);
-    const r = N.catchUp(state, cuN, Date.now());
-    state = r.state; save(); cu.close(); renderAll();
-    if (!r.outcome || !announce(r.outcome)) toast(cuN + ' × ' + (d ? d.name : 'drink') + ' added, spread since your last log');
-  });
-  $('#cuNone').addEventListener('click', () => { state = N.catchUp(state, 0, Date.now()).state; save(); cu.close(); });
-  cu.addEventListener('cancel', () => { state = N.catchUp(state, 0, Date.now()).state; save(); });
-  sheet.addEventListener('close', () => { if (!late.open) pickFor = 'tab'; });
-  $('#openPicker').addEventListener('click', () => { pickFor = 'tab'; buildList(); showList(); sheet.showModal(); });
-  $('#sheetClose').addEventListener('click', () => sheet.close());
-  $('#sheetBack').addEventListener('click', showList);
-  sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
-
-  // Late logging: set a round you already had on the dial
-  const late = $('#late');
-  const HOUR = 3600e3;
-  let draft = null;
-  function newDraft() {
-    const now = Date.now();
-    const f = (state.favs || []).map(D.favOf).filter(Boolean)[0];
-    const first = f ? { name: f.name, abv: f.abv, ml: f.ml, qty: 1, share: 1 } : { name: 'Heineken', abv: 5, ml: 330, qty: 1, share: 1 };
-    return { start: round5(now - 2 * HOUR), end: now, drinks: [first] };
-  }
-  const atToday = (h) => { const d = new Date(); d.setHours(h, 0, 0, 0); return d.getTime(); };
-  const atYesterday = (h) => atToday(h) - 24 * HOUR;
-  function fromChips(now) {
-    const out = [['2 h ago', round5(now - 2 * HOUR)], ['4 h ago', round5(now - 4 * HOUR)]];
-    if (atToday(13) < now - 15 * MIN) out.push(['Lunch', atToday(13)]);
-    out.push(['Last night', atYesterday(20), atYesterday(23)]);
-    return out;
-  }
-  const untilChips = (now) => [['Just now', now], ['1 h ago', round5(now - HOUR)], ['2 h ago', round5(now - 2 * HOUR)], ['4 h ago', round5(now - 4 * HOUR)]];
-  function setDraft(patch) {
-    const now = Date.now();
-    draft = Object.assign({}, draft, patch);
-    if ('end' in patch && !('live' in patch)) draft.live = false;   // a chosen end time stops a live round
-    draft.end = draft.live ? now : Math.min(draft.end, now);
-    if (draft.end - draft.start < 15 * MIN) {
-      if (patch.start != null) draft.end = Math.min(now, draft.start + HOUR);
-      if (draft.end - draft.start < 15 * MIN) draft.start = draft.end - 15 * MIN;
-    }
-    renderLate();
-  }
-  /** Where the draft would go, and the night it would make: what the preview and the button show. */
-  function lateView() {
-    const now = Date.now();
-    const cand = { start: draft.start, end: draft.end, drinks: draft.drinks };
-    if (editing) {
-      const rounds = state.session.rounds.map((r) => (r.id === editing.id ? cand : r));
-      const sim = M.simulate(N.simOpts({ rounds, fed: state.session.fed }, state.profile, now));
-      return { p: { action: 'continue', carried: 0, overlap: null }, sim, now, soberAt: sim.G > 0 ? sim.clear : draft.end };
-    }
-    const p = N.place(state.session, state.profile, cand, now);
-    const rounds = p.action === 'continue' ? state.session.rounds.concat([cand]) : [cand];
-    const sim = M.simulate(N.simOpts({ rounds, fed: state.session.fed }, state.profile, now));
-    return { p, sim, now, soberAt: sim.G > 0 ? sim.clear : draft.end };
-  }
-  function chipRow(box, list, key) {
-    box.innerHTML = '';
-    list.forEach(([label, v, end]) => {
-      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
-      c.setAttribute('aria-pressed', String(draft[key] === v && (end == null || draft.end === end)));
-      // "Just now" on a round that is still going keeps it going
-      const keepLive = key === 'end' && label === 'Just now' && editing && editing.end == null;
-      c.addEventListener('click', () => setDraft(end != null ? { start: v, end } : keepLive ? { end: v, live: true } : { [key]: v }));
-      box.appendChild(c);
-    });
-  }
-  const dkey = (d) => d.name + '|' + d.ml + '|' + d.abv + '|' + d.share;
-  function changeDrink(d, by) {
-    const drinks = draft.drinks.map((x) => Object.assign({}, x));
-    const i = drinks.findIndex((x) => dkey(x) === dkey(d));
-    if (i < 0 && by > 0) drinks.push(Object.assign({}, d, { qty: by }));
-    else if (i >= 0) drinks[i].qty = Math.min(48, drinks[i].qty + by);
-    const kept = drinks.filter((x) => x.qty > 0);
-    if (!kept.length) return;                     // a round always has at least one drink
-    setDraft({ drinks: kept });
-  }
-  function renderLateDrinks() {
-    const favs = (state.favs || []).map(D.favOf).filter(Boolean).slice(0, 4);
-    const favKeys = favs.map((f) => dkey({ name: f.name, ml: f.ml, abv: f.abv, share: 1 }));
-    const box = $('#lateFavs'); box.innerHTML = '';
-    favs.forEach((f) => {
-      const d = { name: f.name, abv: f.abv, ml: f.ml, qty: 1, share: 1 };
-      const have = draft.drinks.find((x) => dkey(x) === dkey(d));
-      const q = have ? have.qty : 0;
-      const card = document.createElement('div'); card.className = 'fav-card' + (q ? ' on' : '');
-      card.innerHTML = '<button type="button" class="fc-less">&#8722;</button><button type="button" class="fc-more"><span class="fc-name"></span><span class="fc-meta"></span></button><span class="fc-count" aria-live="polite"></span>';
-      const label = f.name + ' ' + f.ml + ' ml';
-      card.querySelector('.fc-less').setAttribute('aria-label', 'Remove one ' + label);
-      card.querySelector('.fc-more').setAttribute('aria-label', 'Add one ' + label);
-      card.querySelector('.fc-name').textContent = f.name;
-      card.querySelector('.fc-meta').textContent = f.ml + ' ml · ' + f.abv + '%';
-      card.querySelector('.fc-count').textContent = q;
-      card.querySelector('.fc-less').addEventListener('click', () => changeDrink(d, -1));
-      card.querySelector('.fc-more').addEventListener('click', () => changeDrink(d, 1));
-      box.appendChild(card);
-    });
-    const ex = $('#lateExtra'); ex.innerHTML = '';
-    draft.drinks.filter((x) => !favKeys.includes(dkey(x))).forEach((x) => {
-      const li = document.createElement('li');
-      li.innerHTML = '<span></span><button type="button">&#215;</button>';
-      li.firstChild.textContent = x.qty + ' × ' + x.name;
-      li.lastChild.setAttribute('aria-label', 'Remove ' + x.name + ' from this round');
-      li.lastChild.addEventListener('click', () => changeDrink(x, -x.qty));
-      ex.appendChild(li);
-    });
-  }
-  function renderLate() {
-    if (draft.live) draft.end = Date.now();          // a live round's end follows the clock
-    const v = lateView(), now = v.now, hist = v.p.action === 'history';
-    late.classList.toggle('history', hist);
-    chipRow($('#fromChips'), fromChips(now), 'start');
-    chipRow($('#untilChips'), untilChips(now), 'end');
-    $('#fromVal').textContent = (draft.start < atToday(0) ? dayLabel(draft.start) + ' ' : '') + fmtTime(draft.start);
-    $('#untilVal').textContent = draft.live || draft.end >= now ? 'Now' : (draft.end < atToday(0) ? dayLabel(draft.end) + ' ' : '') + fmtTime(draft.end);
-    renderLateDrinks();
-    const others = v.p.action === 'continue' ? state.session.rounds.filter((r) => !editing || r.id !== editing.id).map((r) => ({ start: r.start, end: N.endOf(r, now) })) : [];
-    DryDial.render($('#dial'), { round: { start: draft.start, end: draft.end }, others, soberAt: v.soberAt, now, tone: hist ? 'history' : 'amber' });
-    const clear = v.soberAt <= now;
-    $('#dlKicker').textContent = hist ? 'That night, sober at' : clear ? 'Sober since' : 'Fully sober at';
-    $('#dlTime').textContent = fmtTime(v.soberAt);
-    const { h, m } = dur(v.soberAt - now);
-    $('#dlTag').textContent = hist ? dayLabel(draft.start) + ' · History' : clear ? 'Already clear' : dayLabel(v.soberAt) + ' · ' + h + ' h ' + pad(m) + ' m';
-    $('#lateAdd').textContent = editing ? 'Save round' : hist ? 'Save to History'
-      : v.p.action === 'continue' && state.session.rounds.length ? 'Add round · continues tonight' : 'Add round to tonight';
-  }
-  function showLateMain() {
-    $('#lateMain').hidden = false; $('#lateOverlap').hidden = true; $('#lateBack').hidden = true;
-    $('#lateTitle').textContent = editing ? 'Edit round' : 'Log earlier drinks';
-    $('#lateRemove').hidden = !editing;
-  }
-  let editing = null;                   // the round being edited, or null when logging a new one
-  function openLate(round) {
-    editing = round && round.id ? round : null;
-    draft = editing
-      ? { start: editing.start, end: editing.end == null ? Date.now() : editing.end, live: editing.end == null, drinks: editing.drinks.map((d) => Object.assign({}, d)) }
-      : newDraft();
-    late.classList.remove('leaving');
-    showLateMain();
-    renderLate();
-    late.showModal();
-  }
-  function saveEdit() {
-    const now = Date.now();
-    nightNote = null;
-    state = N.editRound(state, editing.id, { start: draft.start, end: draft.live ? null : Math.min(draft.end, now), drinks: draft.drinks });
-    save();
-    handOff(true);
-  }
-  function showOverlap(ov) {
-    const r = state.session.rounds.find((x) => x.id === ov.roundId);
-    const end = r.end == null ? 'now' : fmtTime(Math.max(r.end, draft.end));
-    $('#ovText').textContent = 'Your new round (' + fmtTime(draft.start) + ' to ' + fmtTime(draft.end) + ') overlaps a round already on tonight\'s tab, from '
-      + fmtTime(ov.from) + ' to ' + fmtTime(ov.to) + '. We don\'t want to count anything twice.';
-    $('#ovSameSub').textContent = 'Merge them into one round, ' + fmtTime(Math.min(r.start, draft.start)) + ' to ' + end;
-    $('#lateMain').hidden = true; $('#lateOverlap').hidden = false; $('#lateBack').hidden = false;
-    $('#lateTitle').textContent = 'Check the times';
-    late.scrollTop = 0;
-  }
-  /** Add the draft. choice answers an overlap with a round already on the tab. */
-  function commitLate(choice) {
-    const now = Date.now();
-    const cand = { start: draft.start, end: draft.end, drinks: draft.drinks, late: true };
-    const p = N.place(state.session, state.profile, cand, now);
-    if (p.overlap && !choice) { showOverlap(p.overlap); return; }
-    const hadRounds = state.session.rounds.length > 0;
-    const r = N.addRound(state, cand, now, choice);
-    state = r.state;
-    if (r.outcome.action !== 'history') state.session = Object.assign({}, state.session, { loggedAt: now });
-    save();
-    const o = r.outcome;
-    nightNote = o.action === 'history' ? ['Saved to History.', 'That night does not change tonight\'s numbers.']
-      : o.action === 'fresh' && o.archived ? ['A fresh night.', 'Your earlier drinks had cleared, so that night is saved in History.']
-      : o.action === 'continue' && hadRounds && o.carried >= M.CLEAR ? ['This round continues tonight.', 'At ' + fmtTime(cand.start) + ' you still had ' + fmtBac(o.carried) + ' from earlier, so it counts on top.']
-      : null;
-    handOff(o.action !== 'history');
-  }
-  /**
-   * The sheet glides away, an orb carries the round to its peak on the horizon, and the hills
-   * reshape. No orb when the round went to History: tonight did not change. With Reduce Motion,
-   * a short cross fade instead (Web Animations, which the global no-motion CSS leaves alone).
-   */
-  function handOff(withOrb) {
-    if (reduceMotionPref()) {
-      const fade = late.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out' });
-      fade.onfinish = () => { late.close(); renderAll(); };
-      $('#horizon').animate([{ opacity: 0.25 }, { opacity: 1 }], { duration: 420, easing: 'ease-out' });
-      return;
-    }
-    const box = $('#dial').getBoundingClientRect();
-    const from = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-    window.scrollTo(0, 0);
-    late.classList.add('leaving');
-    setTimeout(() => {
-      late.close();
-      late.classList.remove('leaving');
-      renderAll();
-      if (!withOrb || !lastHorizon || !state.session.rounds.length) return;
-      const hz = $('#horizon').getBoundingClientRect();
-      const to = (scene && scene.peakScreen()) || { x: hz.left + lastHorizon.peakX, y: hz.top + lastHorizon.peakY * hz.height / 150 };
-      const orb = document.createElement('div'); orb.className = 'orb';
-      orb.style.left = from.x + 'px'; orb.style.top = from.y + 'px'; orb.style.transform = 'scale(.5)';
-      document.body.appendChild(orb);
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        orb.style.left = to.x + 'px'; orb.style.top = to.y + 'px'; orb.style.transform = 'scale(1.3)';
-      }));
-      setTimeout(() => { orb.style.opacity = '0'; orb.style.transform = 'scale(3)'; }, 800);
-      setTimeout(() => orb.remove(), 1300);
-    }, 420);
-  }
-  $('#openLate').addEventListener('click', () => openLate());
-  $('#lateClose').addEventListener('click', () => late.close());
-  late.addEventListener('click', (e) => { if (e.target === late) late.close(); });
-  $('#fromDown').addEventListener('click', () => setDraft({ start: draft.start - 15 * MIN }));
-  $('#fromUp').addEventListener('click', () => setDraft({ start: Math.min(draft.start + 15 * MIN, draft.end - 15 * MIN) }));
-  $('#untilDown').addEventListener('click', () => setDraft({ end: Math.max(draft.end - 15 * MIN, draft.start + 15 * MIN) }));
-  $('#untilUp').addEventListener('click', () => setDraft({ end: draft.end + 15 * MIN }));
-  $('#lateAdd').addEventListener('click', () => (editing ? saveEdit() : commitLate()));
-  $('#lateRemove').addEventListener('click', () => {
-    if (!editing || !confirm('Remove this round?')) return;
-    nightNote = null;
-    state = N.removeRound(state, editing.id);
-    save(); late.close(); renderAll(); toast('Round removed');
-  });
-  $('#lateBack').addEventListener('click', showLateMain);
-  $('#ovSame').addEventListener('click', () => commitLate('same'));
-  $('#ovExtra').addEventListener('click', () => commitLate('extra'));
-  $('#lateAll').addEventListener('click', () => { pickFor = 'late'; buildList(); showList(); sheet.showModal(); });
-
-  // Toast
-  let toastT;
-  let undoFn = null;
-  /** A short message. With undo, it stays 5 seconds and offers Undo. */
-  function toast(msg, undo) {
-    const t = $('#toast');
-    $('#toastMsg').textContent = msg;
-    undoFn = undo || null;
-    $('#toastUndo').hidden = !undo;
-    t.classList.toggle('has-undo', !!undo);
-    t.classList.add('show'); clearTimeout(toastT);
-    toastT = setTimeout(() => { t.classList.remove('show'); undoFn = null; setTimeout(() => { if (!t.classList.contains('show')) t.classList.remove('has-undo'); }, 350); }, undo ? 5000 : 2200);
-  }
-  $('#toastUndo').addEventListener('click', () => {
-    const f = undoFn; undoFn = null;
-    $('#toast').classList.remove('show', 'has-undo');
-    if (f) f();
-  });
-  /** Run a one tap change with an Undo that puts everything back exactly as it was. */
-  function withUndo(change, msg) {
-    const before = state;
-    const outcome = change();
-    const after = state;
-    save(); renderAll();
-    if (outcome && announce(outcome)) return;
-    toast(msg, () => {
-      if (state !== after) { toast('Too late to undo that one'); return; }
-      state = before; save(); renderAll(); toast('Undone');
-    });
-  }
-
-  // Status pill and hero stats
-  const hero = $('#hero');
-  function renderStatus(sim) {
-    const now = Date.now(), limit = state.profile.limit;
-    $('#limitLabel').textContent = 'Under ' + fmtLimit(limit);
-    if (!sim.G) {
-      hero.dataset.state = 'none'; $('#statusBlock').hidden = true; $('#underAt').textContent = '--';
-      return;
-    }
-    // Alcohol you have drunk keeps reaching your blood for a while, so the status
-    // follows where you are heading, not only the number right now.
-    const o = M.outlook(sim, now, limit), b = o.b, st = o.status;
-    hero.dataset.state = st;
-    $('#statusBlock').hidden = false;
-    $('#pillNote').hidden = st === 'clear';
-    $('#pillText').textContent = st === 'over'
-      ? (o.overAt ? 'Kicking in: over the limit by ' + fmtTime(o.overAt) : 'Over the legal limit')
-      : st === 'impaired' ? (o.rising && b < limit && b < 0.01 ? 'Kicking in: you\'re impaired' : 'Under the limit, still impaired')
-      : 'Clear, by this estimate';
-    $('#pillNote').textContent = o.rising
-      ? 'What you\'ve drunk is still reaching your blood, so your level will keep climbing to about ' + fmtBac(o.ahead) + '. Get a lift, take a cab, or wait until you\'re clear.'
-      : 'Any alcohol slows your reactions. Get a lift, take a cab, or wait until you\'re clear.';
-    const u = M.underLimitAt(sim, limit);
-    $('#underAt').textContent = u === null ? 'Never over' : (u <= now ? 'Since ' + fmtTime(u) : 'At ' + fmtTime(u));
-  }
-
-  // Risk scale
-  const pct = (v) => Math.max(0, Math.min(100, v / SCALE_MAX * 100));
-  function buildScale() {
-    const z = zones();
-    let from = 0;
-    const parts = [], legend = [];
-    z.forEach((zz) => {
-      const to = Math.min(zz.to, SCALE_MAX);
-      if (to > from) { parts.push(zz.c + ' ' + pct(from).toFixed(2) + '% ' + pct(to).toFixed(2) + '%'); legend.push(zz); }
-      from = Math.max(from, to);
-    });
-    $('#scaleBar').style.background = 'linear-gradient(90deg,' + parts.join(',') + ')';
-    const ticks = [state.profile.limit, 0.08, 0.15, 0.30].filter((v, i, a) => v > 0 && v < SCALE_MAX && a.indexOf(v) === i);
-    $('#scaleTicks').innerHTML = ticks.map((v) => '<span style="left:' + pct(v) + '%">' + v.toFixed(2) + '</span>').join('');
-    $('#scaleLegend').innerHTML = legend.map((zz) => '<li><i style="background:' + zz.c + '"></i>' + zz.name + '</li>').join('');
-  }
-  function renderScale(bNow, sim) {
-    const p = pct(bNow);
-    $('#pinStem').style.left = p + '%';
-    $('#pinLabel').style.left = Math.min(86, Math.max(14, p)) + '%';
-    $('#pinLabel').textContent = 'Now ' + fmtBac(bNow);
-    $('#pinPeak').style.left = pct(sim.peak) + '%';
-    $('#scalePeak').textContent = 'Peak ' + fmtBac(sim.peak) + ' around ' + fmtTime(sim.peakAt);
-  }
-
-  // Blackout risk and pacing
-  let gapMemo = { key: '', at: 0, val: null };
-  function cachedGap(o, now, grams) {
-    const key = JSON.stringify([allDrinks().length, o.rounds.map((r) => r.start), o.fed, o.kg, o.sex, o.beta, grams.toFixed(2)]);
-    if (gapMemo.key === key && now - gapMemo.at < 30000) return gapMemo.val;
-    gapMemo = { key, at: now, val: M.pacingGap(o, now, grams, M.THRESHOLDS.blackout) };
-    return gapMemo.val;
-  }
-  function fmtGap(min) {
-    if (min < 60) return min + ' minutes';
-    const h = Math.floor(min / 60), m = min % 60;
-    return h + (h === 1 ? ' hour' : ' hours') + (m ? ' ' + m + ' minutes' : '');
-  }
-  function renderRisk(sim) {
-    const sec = $('#riskSection');
-    const has = sim.G > 0;
-    const now = Date.now(), o = opts();
-    const bNow = has ? bacAt(sim, now) : 0;
-    const perHour = has ? M.stdLastHour(o, now) : 0;
-    const T = M.THRESHOLDS;
-    $('#danger').hidden = !(has && (bNow >= T.danger || sim.peak >= T.danger || perHour > T.bingeStdPerHour));
-    dangerNow = !$('#danger').hidden;
-    sec.hidden = !has;
-    if (!has) { riskNow = 'low'; return; }
-    const rise = M.riseRate(sim, now);
-    const risk = M.blackoutRisk({ peak: sim.peak, rise, perHour, fed: !!state.session.fed });
-    sec.dataset.level = risk.level;
-    riskNow = risk.level;
-    $('#riskLevel').textContent = { low: 'Low', raised: 'Raised', high: 'High' }[risk.level];
-    renderScale(bNow, sim);
-
-    const ul = $('#reasons'); ul.innerHTML = '';
-    const add = (txt, strong) => { const li = document.createElement('li'); li.textContent = txt; if (strong) li.className = 'strong'; ul.appendChild(li); };
-    risk.reasons.forEach((r) => {
-      if (r.key === 'peak') add(r.strong ? 'Peak ' + fmtBac(sim.peak) + ', in the blackout zone' : 'Peak around ' + fmtBac(sim.peak), r.strong);
-      if (r.key === 'rise') add('Rising ' + rise.toFixed(3) + '% an hour', r.strong);
-      if (r.key === 'pace') add(perHour.toFixed(1) + ' drinks in the last hour', r.strong);
-      if (r.key === 'food') add('Empty stomach', false);
-    });
-    if (!risk.reasons.length) add(state.session.fed ? 'Steady pace, with food' : 'Steady pace so far', false);
-
-    let msg = '';
-    paceHint = '';
-    if (risk.level !== 'low' && bNow > 0) {
-      const last = N.lastDrink(state.session);
-      const name = last ? last.name : 'drink';
-      const live = N.liveRound(state.session);
-      if (!live) {
-        msg = risk.level === 'high'
-          ? 'Tonight peaked in the blackout zone. Stay with people you trust, drink water, and call it a night.'
-          : 'Water and something to eat will help. Stay with people you trust.';
-      } else if (sim.peak >= T.blackout) {
-        msg = 'Switch to water for now. Another ' + name + ' would take you deeper into the blackout zone.';
-        paceHint = 'Water first: you\'re in the blackout zone';
-      } else {
-        const unitG = M.gramsOf(Object.assign({}, last, { qty: 1 }));
-        const peakGap = cachedGap(o, now, unitG);
-        // Wait long enough that the last hour, including the next drink, holds at most 3 standard drinks.
-        const perMinG = live.drinks.reduce((a, d) => a + gramsOf(d), 0) / Math.max(1, (now - live.start) / MIN);
-        const paceGap = Math.min(60, Math.max(0, Math.ceil((60 - (T.fastStdPerHour * STD_G - unitG) / perMinG) / 5) * 5));
-        const gap = peakGap === null ? null : Math.max(peakGap, paceGap);
-        if (gap === null) msg = 'Switch to water for now. Another ' + name + ' would push you into the blackout zone.';
-        else if (gap === 0) msg = "You're drinking fast. If you have another " + name + ', sip it slowly with water alongside.';
-        else msg = "You're drinking fast. Wait about " + fmtGap(gap) + ' before your next ' + name + ', and have some water in between.';
-        paceHint = gap === null ? 'Water first: another would push you into the blackout zone'
-          : gap === 0 ? 'Fast pace: sip slowly, with water alongside'
-          : 'Wait about ' + fmtGap(gap) + ' for a safer pace';
-      }
-    }
-    $('#nudge').hidden = !msg;
-    $('#nudgeText').textContent = msg;
-    renderPaceHint();
-  }
-
-  $('#textFriend').addEventListener('click', async () => {
-    const sim = lastSim || simulate(), now = Date.now();
-    const o = M.outlook(sim, now, state.profile.limit), b = o.b, st = o.status;
-    const text = (!sim.G || st === 'clear')
-      ? "Checking in: my Dry Season estimate says I'm clear."
-      : 'Checking in from Dry Season. My estimate is ' + fmtBac(b) + (o.rising ? ' and still climbing to about ' + fmtBac(o.ahead) : '')
-        + (st === 'over' ? (o.overAt ? ', heading over the legal limit' : ', over the legal limit') : ', under the limit but still impaired')
-        + ", so I'm not driving. I should be fully clear around " + fmtTime(sim.clear) + ' ' + dayIn(sim.clear) + '.';
-    try {
-      if (navigator.share) { await navigator.share({ text }); return; }
-      location.href = 'sms:?&body=' + encodeURIComponent(text);
-    } catch (e) { /* share dismissed */ }
-  });
-
-  // Drive planner
-  function renderPlanner() {
-    const s = state.session, t = $('#ticket');
-    if (document.activeElement !== $('#driveAt')) $('#driveAt').value = s.driveAt ? toLocalInput(s.driveAt) : '';
-    $('#driveClear').hidden = !s.driveAt;
-    const set = (ok, verdict, detail) => { t.dataset.ok = ok; $('#tkVerdict').textContent = verdict; $('#tkDetail').textContent = detail; };
-    if (!s.driveAt) {
-      $('#tkTime').textContent = '--:--'; $('#tkDay').textContent = 'Not set';
-      set('', 'Add a time above', "You'll get a straight answer on whether you're likely to be clear by then.");
-      return;
-    }
-    $('#tkTime').textContent = fmtTime(s.driveAt);
-    $('#tkDay').textContent = dayLabel(s.driveAt);
-    const now = Date.now();
-    if (s.driveAt <= now) { set('', 'That time has passed', 'Pick a time later than now.'); return; }
-    if (!s.rounds.length) { set('yes', 'Nothing to clear', 'The tab is empty. Make sure you sleep well before a long drive.'); return; }
-    const plan = M.drivePlan(opts(), now, s.driveAt, 60, isLive());
-    const clearTxt = fmtTime(plan.clearAt) + ' ' + dayIn(plan.clearAt);
-    if (plan.ok) {
-      let d = 'Fully clear around ' + clearTxt + ', with at least an hour to spare.';
-      if (isLive() && plan.latestStop) d += ' At your current pace, stop drinking by ' + fmtTime(plan.latestStop) + ' to keep it that way.';
-      set('yes', 'Likely clear in time', d);
-    } else {
-      let d = plan.clearAt > s.driveAt
-        ? "You'd still have alcohol in your blood until about " + clearTxt + '. Arrange a lift or move the drive.'
-        : 'Clear around ' + clearTxt + ', less than an hour before you drive. Too close to call, so arrange a lift or give it more time.';
-      if (isLive()) d += ' Stopping now gives you the best chance.';
-      set('no', 'Not clear in time', d);
-    }
-  }
-  $('#driveAt').addEventListener('change', (e) => { state.session.driveAt = fromLocalInput(e.target.value); save(); renderPlanner(); });
-  $('#driveClear').addEventListener('click', () => { state.session.driveAt = null; save(); renderPlanner(); });
-
-  // ---------- Live Island ----------
-  let island = null, riskNow = 'low', dangerNow = false;
-  const keyOf = (d) => d.name + '|' + d.ml + '|' + d.abv;
-  function shortName(name) {
-    const p = D.byName(name);
-    if (p && p.short) return p.short;
-    return name.length > 12 ? name.slice(0, 11).trim() + '\u2026' : name;
-  }
-  function islandSnap(sim) {
-    const now = Date.now(), limit = state.profile.limit, has = sim.G > 0;
-    const b = has ? bacAt(sim, now) : 0;
-    const st = has ? M.outlook(sim, now, limit).status : 'clear';
-    const u = has ? M.underLimitAt(sim, limit) : null;
-    const L = N.lastDrink(state.session);
-    const clearAt = sim.clear || now;
-    const { h, m } = dur(clearAt - now);
-    return {
-      has, status: st, bac: b, peak: sim.peak, start: sim.start, clearAt, underAt: u,
-      risk: riskNow, danger: dangerNow,
-      last: L ? { key: keyOf(L), name: L.name, short: shortName(L.name), ml: L.ml, abv: L.abv, share: L.share } : null,
-      favs: (state.favs || []).map(D.favOf).filter(Boolean).map((x) => ({ key: keyOf(x), name: x.name, short: x.short || x.name, ml: x.ml, abv: x.abv, share: 1 })),
-      water: state.session.water,
-      fmt: {
-        bac: fmtBac(b), clear: fmtTime(clearAt), clearedAt: fmtTime(clearAt), clearDay: dayLabel(clearAt),
-        left: h ? h + ' h ' + pad(m) + ' m' : m + ' min', start: fmtTime(sim.start),
-        underAt: u ? fmtTime(u) : '--', limit: fmtLimit(limit)
-      }
-    };
-  }
-  function addFromIsland(d) {
-    const share = d.share || 1;
-    const r = N.addLiveDrink(state, { name: d.name, abv: d.abv, ml: d.ml, qty: 1, share }, Date.now());
-    state = r.state;
-    save(); renderAll();
-    const g = M.gramsOf({ abv: d.abv, ml: d.ml, qty: 1, share });
-    if (!announce(r.outcome) && (d.toast || !island || island.view === 'gone')) toast('+1 ' + d.name + ', ' + g.toFixed(1) + ' g');
-    if (island) island.celebrate('pour', { label: '+1 ' + shortName(d.name) });
-  }
-  function toggleWater() {
-    const now = Date.now();
-    const w = state.session.water || { until: null, count: 0 };
-    if (w.until && w.until > now) {
-      state.session.water = { until: null, count: w.count };
-      save(); renderLive();
-      island.celebrate('waterOff', { label: 'Break over' });
-      return;
-    }
-    let min = 20;
-    const L = N.lastDrink(state.session);
-    if (L && riskNow !== 'low') {
-      const gap = M.pacingGap(opts(), now, M.gramsOf(Object.assign({}, L, { qty: 1 })), M.THRESHOLDS.blackout);
-      if (gap) min = Math.max(10, Math.min(45, gap));
-    }
-    state.session.water = { until: now + min * 60000, dur: min * 60000, count: (w.count || 0) + 1 };
-    save(); renderLive();
-    island.celebrate('waterOn', { label: 'Water, ' + min + ' min' });
-  }
-
-  // Render loop
-  function renderLive() {
-    lastSim = simulate();
-    renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim); renderChart(lastSim); renderPlanner();
-    if (island) island.update(islandSnap(lastSim));
-  }
-  function renderAll() { renderNight(); renderStash(); renderAnother(); renderTab(); renderBody(); renderSetSum(); renderHistory(); buildScale(); renderLive(); }
-  buildList();
-  renderAll();
-  let ticks = 0;
-  setInterval(() => {
-    ticks++;
-    if (isLive() && ticks % 60 === 0) {
-      const settled = N.settle(state, Date.now());
-      if (settled !== state) { state = settled; save(); renderAll(); }
-    }
-    if (isLive()) lastSim = simulate();
-    renderHero(lastSim); renderStatus(lastSim); renderRisk(lastSim);
-    if (isLive() || ticks % 30 === 0) renderChart(lastSim);
-    if (ticks % 15 === 0) renderPlanner();
-    if (island) island.update(islandSnap(lastSim));
-  }, 1000);
-
-  if (window.DryIsland) {
-    island = DryIsland.create({
-      onAddLast: () => {
-        const L = N.lastDrink(state.session);
-        if (L) addFromIsland(L); else { buildList(); showList(); sheet.showModal(); }
-      },
-      onAdd: addFromIsland,
-      onWater: toggleWater,
-      onWaterDone: () => { const w = state.session.water; state.session.water = { until: null, count: w ? w.count : 0 }; save(); },
-      onText: () => { island.celebrate('cheers'); setTimeout(() => $('#textFriend').click(), 500); },
-      onPicker: () => { buildList(); showList(); sheet.showModal(); },
-      onDanger: () => $('#danger').scrollIntoView({ behavior: reduceMotionPref() ? 'auto' : 'smooth', block: 'start' })
-    });
-    island.setEnabled(state.profile.island !== false);
-    island.update(islandSnap(lastSim));
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((es) => es.forEach((e) => island.setHeroVisible(e.intersectionRatio > 0.25)), { threshold: [0, 0.25, 0.5, 1] }).observe($('.readout'));
-    }
-  }
-  function reduceMotionPref() { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; }
-  $('#islandOn').addEventListener('change', (e) => { state.profile.island = e.target.checked; save(); if (island) island.setEnabled(e.target.checked); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderAll(); maybeCatchUp(); } });
-
-
-  // ---------- Offline and updates ----------
-  const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function appMeta() { try { return JSON.parse(localStorage.getItem(APP_KEY)) || {}; } catch (e) { return {}; } }
-  function setMeta(p) { try { localStorage.setItem(APP_KEY, JSON.stringify(Object.assign(appMeta(), p))); } catch (e) {} }
-  const raceTimeout = (p, ms) => new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('timeout')), ms); p.then((v) => { clearTimeout(t); res(v); }, (e) => { clearTimeout(t); rej(e); }); });
-
-  let reg = null, checkState = 'idle', pouring = false, waitingVersion = null;
-
-  function renderNet() { $('#net').hidden = navigator.onLine; renderAppInfo(); }
-  window.addEventListener('online', () => { renderNet(); checkForUpdate(false); });
-  window.addEventListener('offline', renderNet);
-
-  function renderAppInfo() {
-    $('#appVersion').textContent = 'Version ' + VERSION;
-    const m = appMeta();
-    $('#lastChecked').textContent = m.checkedAt ? 'Last checked ' + fmtTime(m.checkedAt) + ' ' + dayIn(m.checkedAt) : 'Not checked yet';
-    const waiting = reg && reg.waiting;
-    let st = 'current', txt = 'Up to date';
-    if (checkState === 'checking') { st = 'checking'; txt = 'Checking'; }
-    else if (waiting) { st = 'found'; txt = 'Update ready'; }
-    else if (checkState === 'error') { st = 'error'; txt = "Couldn't reach it"; }
-    else if (!navigator.onLine) { st = 'offline'; txt = 'Offline'; }
-    else if (!reg) { st = 'offline'; txt = 'Saved copy off'; }
-    const el = $('#updState'); el.dataset.state = st; el.textContent = txt;
-    $('#checkNow').textContent = waiting ? 'Update now' : 'Check for updates';
-  }
-
-  async function checkForUpdate(manual) {
-    if (!reg) { if (manual) toast('Updates work once the app is on the web'); return; }
-    if (!navigator.onLine) { if (manual) toast("You're offline. The saved copy works fine."); renderAppInfo(); return; }
-    checkState = 'checking'; renderAppInfo();
-    try {
-      await raceTimeout(reg.update(), manual ? 8000 : 3000);
-      setMeta({ checkedAt: Date.now() });
-      checkState = 'idle';
-      if (reg.waiting) showCoaster();
-      else if (manual && !reg.installing) toast("You're on the latest version");
-      else if (manual) toast('Found an update, getting it ready');
-    } catch (e) {
-      checkState = manual ? 'error' : 'idle';
-      if (manual) toast("Couldn't check. Try again with better signal.");
-    }
-    renderAppInfo();
-  }
-
-  function askVersion(worker) {
-    return new Promise((res) => {
-      try {
-        const ch = new MessageChannel();
-        const t = setTimeout(() => res(null), 1500);
-        ch.port1.onmessage = (e) => { clearTimeout(t); res(e.data && e.data.version); };
-        worker.postMessage({ type: 'GET_VERSION' }, [ch.port2]);
-      } catch (e) { res(null); }
-    });
-  }
-  let coasterDismissed = false;
-  async function showCoaster() {
-    if (!reg || !reg.waiting || coasterDismissed || pouring) return;
-    const c = $('#coaster');
-    if ($('#settings').open) $('#settings').close();
-    waitingVersion = await askVersion(reg.waiting);
-    const v = waitingVersion ? (waitingVersion.endsWith('.0') ? waitingVersion.slice(0, -2) : waitingVersion) : 'New';
-    $('#stamp').textContent = v;
-    $('#stamp').classList.toggle('long', v.length > 3);
-    if (!c.hidden) return;
-    c.hidden = false;
-    requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('show')));
-    renderAppInfo();
-  }
-  function hideCoaster() {
-    const c = $('#coaster');
-    c.classList.remove('show');
-    setTimeout(() => { if (!c.classList.contains('show')) c.hidden = true; }, reduceMotion() ? 0 : 450);
-  }
-  function pourIn() {
-    return new Promise((res) => {
-      const p = $('#pour');
-      if (reduceMotion()) { p.classList.add('full'); return res(); }
-      p.classList.add('fill');
-      setTimeout(res, 850);
-    });
-  }
-  async function applyUpdate() {
-    const w = reg && reg.waiting;
-    if (!w) { hideCoaster(); return checkForUpdate(true); }
-    pouring = true;
-    hideCoaster();
-    try { sessionStorage.setItem('dry-poured', '1'); } catch (e) {}
-    await pourIn();
-    w.postMessage({ type: 'SKIP_WAITING' });
-    setTimeout(() => location.reload(), 4000);
-  }
-  $('#updNow').addEventListener('click', applyUpdate);
-  $('#updLater').addEventListener('click', () => { coasterDismissed = true; hideCoaster(); toast("No rush. It'll be waiting in Your body."); });
-  $('#checkNow').addEventListener('click', () => (reg && reg.waiting) ? applyUpdate() : checkForUpdate(true));
-
-  // Drain the pour after an update, then show what's new
-  function drainPour() {
-    const p = $('#pour');
-    let poured = false;
-    try { poured = !!sessionStorage.getItem('dry-poured'); sessionStorage.removeItem('dry-poured'); } catch (e) {}
-    if (!poured && !p.classList.contains('full')) return 0;
-    requestAnimationFrame(() => requestAnimationFrame(() => { p.classList.remove('full', 'fill'); p.classList.add('drain'); }));
-    return reduceMotion() ? 0 : 900;
-  }
-  function showWhatsNew() {
-    const parts = VERSION.split('.');
-    $('#newsVer').textContent = parts.slice(0, 2).join('.');
-    $('#newsSub').textContent = 'Version ' + VERSION;
-    const ul = $('#newsList'); ul.innerHTML = '';
-    (self.DRY_CHANGES || []).forEach((t) => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
-    $('#news').showModal();
-  }
-  $('#newsOk').addEventListener('click', () => { $('#news').close(); setTimeout(maybeCatchUp, 300); });
-  $('#news').addEventListener('click', (e) => { if (e.target === $('#news')) $('#news').close(); });
-
-  const wait = drainPour();
-  const seen = appMeta().seenVersion;
-  if (seen !== VERSION) {
-    if (seen || hadData) setTimeout(showWhatsNew, wait + 150);
-    setMeta({ seenVersion: VERSION });
-  }
-
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => {
-      reg = r;
-      r.addEventListener('updatefound', () => {
-        const w = r.installing;
-        if (!w) return;
-        w.addEventListener('statechange', () => {
-          if (w.state === 'installed' && navigator.serviceWorker.controller) { checkState = 'idle'; renderAppInfo(); showCoaster(); }
-        });
-      });
-      if (r.waiting && navigator.serviceWorker.controller) showCoaster();
-      renderAppInfo();
-      checkForUpdate(false);
-    }).catch(() => renderAppInfo());
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if (pouring) location.reload(); });
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) return;
-      const m = appMeta();
-      if (!m.checkedAt || Date.now() - m.checkedAt > 60000) checkForUpdate(false);
-    });
-  }
-  renderNet();
-
-  // Home screen shortcuts: Add a drink, and One more
-  const action = new URLSearchParams(location.search).get('action');
-  if (action) history.replaceState(null, '', location.pathname);
-  if (action === 'add') {
-    setTimeout(() => { buildList(); showList(); sheet.showModal(); }, wait);
-  } else if (action === 'one') {
-    setTimeout(() => {
-      if (openNext()) return;
-      const L = N.lastDrink(state.session);
-      if (L) addFromIsland(Object.assign({}, L, { toast: true }));
-      else { buildList(); showList(); sheet.showModal(); }
-    }, wait);
-  } else if (!hadData && !appMeta().toured) {
-    setTimeout(() => { if (!document.querySelector('dialog[open]')) startTour(); }, wait + 600);
-  } else {
-    setTimeout(maybeCatchUp, wait + 400);
-  }
-})();
-</script>
+<script src="app.js"></script>
 </body>
 </html>

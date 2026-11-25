@@ -20,7 +20,9 @@
     const has = sim.G > 0 && rounds.length > 0;
     const floorHour = (t) => { const d = new Date(t); d.setMinutes(0, 0, 0); return d.getTime(); };
     const from = has ? floorHour(Math.min.apply(null, rounds.map((r) => r.start))) - HOUR : floorHour(now) - HOUR;
-    const clear = has ? sim.clear : now;
+    // An incomplete night has no clear time: the view runs to where its data ends, with no moon.
+    const known = has && Number.isFinite(sim.clear);
+    const clear = has ? M.dataEnd(sim) : now;
     const to = Math.max(clear + HOUR, now + 2 * HOUR, from + 20 * HOUR);
     const X = (t) => Math.max(0, Math.min(W, (t - from) / (to - from) * W));
     const Y = (b) => H - Math.min(1, b / max) * H;
@@ -36,10 +38,11 @@
     const ps = o.prevSim;
     if (has && ps && ps.G > 0 && rounds.length > 1) {
       const latest = rounds.reduce((a, r) => (r.start > a.start ? r : a), rounds[0]);
-      if (ps.clear > latest.start) {
+      const psEnd = M.dataEnd(ps);
+      if (psEnd > latest.start) {
         ghost = '';
         for (let i = 0; i <= 24; i++) {
-          const t = latest.start + i * (ps.clear - latest.start) / 24;
+          const t = latest.start + i * (psEnd - latest.start) / 24;
           ghost += (i ? 'L' : 'M') + f1(X(t)) + ' ' + f1(Y(M.bacAt(ps, t)));
         }
       }
@@ -48,7 +51,7 @@
     return {
       ridge, area: ridge + 'L' + W + ' ' + H + 'L0 ' + H + 'Z', ghost,
       bands: rounds.map((r, i) => ({ x: X(r.start), w: Math.max(3, X(r.end) - X(r.start)), label: 'ROUND ' + (i + 1) })),
-      nowX: X(now), nowY: Y(bac(now)), moonX: X(clear),
+      nowX: X(now), nowY: Y(bac(now)), moonX: X(clear), moon: known,
       peakX: has ? X(sim.peakAt) : X(now), peakY: has ? Y(sim.peak) : H,
       limitY: Y(o.limit || 0.05), from, to
     };
@@ -97,7 +100,7 @@
     now.style.display = live ? '' : 'none';
     now.setAttribute('cx', f1(g.nowX)); now.setAttribute('cy', f1(g.nowY));
     now.style.cx = f1(g.nowX) + 'px'; now.style.cy = f1(g.nowY) + 'px';
-    moon.style.display = live && view.sim.clear > view.now ? '' : 'none';
+    moon.style.display = live && g.moon && view.sim.clear > view.now ? '' : 'none';
     moon.setAttribute('cx', f1(g.moonX)); moon.setAttribute('cy', H - 7);
     moon.style.cx = f1(g.moonX) + 'px';
     return g;

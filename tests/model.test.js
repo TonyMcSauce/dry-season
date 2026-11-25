@@ -177,3 +177,116 @@ test('after the peak, the outlook is just where you are now', () => {
   assert.equal(o.rising, false);
   assert.equal(M.outlook(sim, sim.clear + MIN, 0.05).status, 'clear');
 });
+
+test('a new round lifts you back over the limit even when an earlier round peaked higher', () => {
+  const b8 = beer(8), b3 = beer(3);
+  const r1 = M.simulate(base([b8], { end: t0 + H }));
+  let now = r1.peakAt;
+  while (M.bacAt(r1, now) > 0.045) now += MIN;
+  const sim = M.simulate(base(null, { rounds: [{ start: t0, end: t0 + H, drinks: [b8] }, { start: now, end: now, drinks: [b3] }] }));
+  const o = M.outlook(sim, now + MIN, 0.05);
+  assert.ok(o.b < 0.05, `starts under, at ${o.b}`);
+  assert.equal(o.status, 'over');
+  assert.equal(o.rising, true);
+  assert.ok(o.ahead > 0.09 && o.ahead < sim.peak, `heads to the second peak, ${o.ahead}`);
+  assert.ok(o.overAt > now, 'says when it crosses');
+});
+
+// ---- The simulation never invents a clear time ----
+// A heavy night for a small body: 20 beers, 45 kg, the slowest elimination setting. The old 96 hour cut-off
+// stopped this one at 0.101% and called it clear.
+const heavySmall = () => base([beer(20)], { kg: 45, sex: 'f', beta: 0.010 });
+// Far beyond anything a living person could drink: 48 litres of 80% spirit. Even 30 days after the last drink
+// the model cannot reach clear, so it must say it does not know.
+const impossible = () => base([{ name: 'x', abv: 80, ml: 1000, qty: 48, share: 1 }]);
+
+test('a normal night clears for real, at the end of its own curve', () => {
+  const sim = M.simulate(base([beer(4)]));
+  assert.equal(sim.complete, true);
+  assert.equal(sim.limitReached, false);
+  assert.ok(Number.isFinite(sim.clear));
+  assert.equal(sim.clear, sim.start + sim.points.length * MIN, 'the clear time is the last simulated minute');
+  assert.ok(sim.points[sim.points.length - 1] < M.CLEAR);
+});
+
+test('a night that takes longer than 96 hours is followed all the way to clear', () => {
+  const sim = M.simulate(heavySmall());
+  assert.equal(sim.complete, true);
+  const hours = (sim.clear - t0) / H;
+  assert.ok(hours > 96, `clears after ${hours.toFixed(1)} h, past the old cut-off`);
+  assert.ok(M.bacAt(sim, t0 + 96 * H) > 0.09, 'still well over the limit at 96 hours');
+  assert.equal(M.outlook(sim, t0 + 96 * H, 0.05).status, 'over');
+});
+
+test('a round spread over several days is followed past its last drink', () => {
+  const sim = M.simulate(base([beer(30)], { start: t0 - 120 * H, end: t0 }));
+  assert.equal(sim.complete, true);
+  assert.ok(sim.clear > t0, 'never clear while the round is still going');
+});
+
+test('when the model cannot reach clear, it says so and never invents a time', () => {
+  const sim = M.simulate(impossible());
+  assert.equal(sim.complete, false);
+  assert.equal(sim.limitReached, true);
+  assert.equal(sim.clear, Infinity, 'clear is "not within reach", so every "is it past clear?" check says no');
+  const last = sim.points[sim.points.length - 1];
+  assert.ok(last > 1, 'the last known level is kept');
+  const after = t0 + (sim.points.length + 100) * MIN;
+  assert.equal(M.bacAt(sim, after), last, 'past the end of the data the level is the last one known, never zero');
+  assert.equal(M.outlook(sim, after, 0.05).status, 'over');
+  assert.equal(M.underLimitAt(sim, 0.05), Infinity, 'no made up time for getting back under the limit');
+});
+
+test('the drive planner never says yes without a real clear time', () => {
+  const o = impossible();
+  const plan = M.drivePlan(o, t0 + 4 * H, t0 + 400 * 24 * H, 60, false);
+  assert.equal(plan.ok, false);
+  assert.equal(plan.known, false);
+  assert.equal(Number.isFinite(plan.clearAt), false);
+  const live = M.drivePlan(o, t0 + 2 * H, t0 + 400 * 24 * H, 60, true);
+  assert.equal(live.ok, false);
+  assert.equal(live.latestStop, null);
+  assert.equal(M.drivePlan(base([beer(2)]), t0 + 4 * H, t0 + 24 * H, 60, false).known, true);
+});
+
+test('an empty night is complete with nothing to clear', () => {
+  const sim = M.simulate(base([]));
+  assert.equal(sim.complete, true);
+  assert.equal(sim.clear, null);
+  assert.equal(M.bacAt(sim, t0 + H), 0);
+});
+
+test('the known end of the data is always a real time', () => {
+  assert.equal(M.dataEnd(M.simulate(base([beer(4)]))), M.simulate(base([beer(4)])).clear);
+  const sim = M.simulate(impossible());
+  assert.equal(M.dataEnd(sim), sim.start + sim.points.length * MIN);
+});
+
+// ---- Food: it slows absorption, it does not make alcohol disappear ----
+// Evidence (see the note on factors() in model.js): a meal delays absorption and lowers the peak, reliably.
+// Any reduction in the total reaching the blood (first-pass metabolism) is small, varies a lot between
+// people and meals, and is disputed, so the model does not count it. The two effects are tested apart.
+
+test('food, absorption: with food the peak is lower and comes later', () => {
+  const empty = M.simulate(base([beer(4)], { end: t0 + 2 * H }));
+  const fed = M.simulate(base([beer(4)], { end: t0 + 2 * H, fed: true }));
+  assert.ok(fed.peak < empty.peak, `fed peak ${fed.peak} under empty ${empty.peak}`);
+  assert.ok(fed.peakAt > empty.peakAt, 'the peak comes later');
+});
+
+test('food, total alcohol: with food the same amount still reaches the blood', () => {
+  // With almost no elimination, once everything has been absorbed the level is the total that got in.
+  const slow = { beta: 0.0001 };
+  const empty = M.simulate(base([beer(4)], Object.assign({ end: t0 + H }, slow)));
+  const fed = M.simulate(base([beer(4)], Object.assign({ end: t0 + H, fed: true }, slow)));
+  const at = (sim) => M.bacAt(sim, t0 + 8 * H);
+  assert.ok(Math.abs(at(fed) - at(empty)) / at(empty) < 0.01, `fed ${at(fed)} vs empty ${at(empty)}: same total`);
+});
+
+test('food never brings the clear time earlier than on an empty stomach', () => {
+  for (const [qty, hrs] of [[2, 1], [4, 2], [8, 4], [12, 5]]) {
+    const empty = M.simulate(base([beer(qty)], { end: t0 + hrs * H }));
+    const fed = M.simulate(base([beer(qty)], { end: t0 + hrs * H, fed: true }));
+    assert.ok(fed.clear >= empty.clear, `${qty} beers: fed clears ${(empty.clear - fed.clear) / MIN} min earlier`);
+  }
+});

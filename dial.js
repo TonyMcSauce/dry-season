@@ -65,7 +65,8 @@
     node.style.strokeDasharray = a.dasharray; node.style.strokeDashoffset = a.dashoffset;
   }
 
-  /** view: { round: {start, end}, others: [{start, end}], soberAt, now, tone: 'amber' | 'history' } */
+  /** view: { round: {start, end}, others: [{start, end}], soberAt, now, tone: 'amber' | 'history' }
+   * soberAt may be Infinity when the model cannot reach a clear time: then there is no tail and no moon. */
   function render(svg, view) {
     if (!svg.dataset.built) build(svg);
     const q = (s) => svg.querySelector(s);
@@ -73,11 +74,13 @@
     const r = view.round;
     dash(q('.dl-arc'), r.start, r.end);
     const tail = q('.dl-tail');
-    tail.style.display = view.soberAt > r.end ? '' : 'none';
-    if (view.soberAt > r.end) dash(tail, r.end, view.soberAt);
+    const known = Number.isFinite(view.soberAt);
+    tail.style.display = known && view.soberAt > r.end ? '' : 'none';
+    if (known && view.soberAt > r.end) dash(tail, r.end, view.soberAt);
     place(q('.dl-handle.start'), r.start, R);
     place(q('.dl-handle.end'), r.end, R);
-    place(q('.dl-moon'), view.soberAt, R);
+    q('.dl-moon').style.display = known ? '' : 'none';
+    if (known) place(q('.dl-moon'), view.soberAt, R);
     place(q('.dl-now'), view.now, 70);
     const others = q('.dl-others');
     others.innerHTML = '';

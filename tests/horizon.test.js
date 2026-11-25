@@ -26,3 +26,14 @@ test('an empty night is a flat horizon', () => {
   const v = Hz.paths(M.simulate({ rounds: [], kg: 75, sex: 'm', beta: 0.015 }), [], local(22), opts);
   assert.ok(v.ridge.split('L').every((p) => p.trim().endsWith(' ' + opts.height.toFixed(1))));
 });
+
+test('a night the model cannot clear still draws finite hills and no moon position from nowhere', () => {
+  const o = { rounds: [{ drinks: [{ name: 'x', abv: 80, ml: 1000, qty: 48, share: 1 }], start: local(20), end: local(23) }], kg: 75, sex: 'm', beta: 0.015, fed: false };
+  const sim = M.simulate(o);
+  assert.equal(sim.complete, false);
+  const g = Hz.paths(sim, o.rounds, local(23, 30), opts);
+  assert.ok(!/NaN|Infinity/.test(g.ridge + g.area), 'the ridge is all real numbers');
+  assert.ok(Number.isFinite(g.moonX) && Number.isFinite(g.to));
+  assert.equal(g.moon, false, 'no moon: there is no sober time to mark');
+  assert.equal(Hz.paths(M.simulate(two), two.rounds, local(23, 30), opts).moon, true);
+});

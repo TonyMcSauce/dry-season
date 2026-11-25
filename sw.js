@@ -20,6 +20,8 @@ const NETWORK_TIMEOUT = 3000;
 const SHELL = [
   './',
   './index.html',
+  './app.css',
+  './app.js',
   './version.js',
   './model.js',
   './night.js',

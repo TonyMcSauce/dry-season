@@ -105,7 +105,9 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 
 | File | What it does |
 | --- | --- |
-| `index.html` | Layout, styles and interface logic |
+| `index.html` | The markup: every screen, sheet and dialog |
+| `app.css` | All the styles, in sections by screen and component |
+| `app.js` | The interface logic: state, rendering, the picker, the stash, History and updates |
 | `version.js` | The app version and the What's new list. Bump it to publish an update |
 | `model.js` | The blood alcohol and risk maths, shared by the app and the tests |
 | `drinks.js` | The built-in drinks, sizes and default favourites |
@@ -114,6 +116,8 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 | `fonts/` | Alfa Slab One and Schibsted Grotesk (SIL Open Font License), so the app needs no outside servers |
 | `screenshots/` | Images shown on the install sheet |
 | `tests/*.test.js` | Tests for the maths and drinks. Run with `node --test tests/*.test.js` |
+| `tests/offline_check.js` | The same offline and update check in Node. Run with `NODE_PATH=$(npm root -g) node tests/offline_check.js` |
+| `tests/visual_check.js` | Saves and compares screenshots of the main screens, so a refactor can prove it changed nothing you can see |
 | `tests/offline_check.py` | End-to-end check of offline use and the update flow. Run with `python3 tests/offline_check.py` |
 | `tests/island_check.py` | Checks the island against Apple's sizes and that it never stretches. Run with `python3 tests/island_check.py` |
 | `manifest.webmanifest` | Lets iPhone and Android install it like an app |
@@ -135,7 +139,7 @@ Add this file as `.gitlab-ci.yml` next to `index.html`, push, and the site appea
 pages:
   stage: deploy
   script:
-    - mkdir .public && cp -r index.html manifest.webmanifest sw.js icons .public
+    - mkdir .public && cp -r *.html *.js *.css manifest.webmanifest vendor fonts icons .public
     - mv .public public
   artifacts:
     paths:
