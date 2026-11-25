@@ -290,3 +290,32 @@ test('food never brings the clear time earlier than on an empty stomach', () => 
     assert.ok(fed.clear >= empty.clear, `${qty} beers: fed clears ${(empty.clear - fed.clear) / MIN} min earlier`);
   }
 });
+
+// ---- A low level: alcohol on board, under 0.02% ----
+test('one beer just opened is a low level: on board, never clear', () => {
+  const sim = M.simulate(base([beer(1)], { end: t0 }));
+  const o = M.outlook(sim, t0 + MIN, 0.05);
+  assert.ok(o.ahead < M.THRESHOLDS.low, `heading to ${o.ahead}`);
+  assert.equal(o.status, 'impaired', 'still not clear');
+  assert.equal(o.low, true);
+});
+
+test('heading to 0.02% or more is not a low level', () => {
+  const sim = M.simulate(base([beer(3)], { end: t0 }));
+  const o = M.outlook(sim, t0 + MIN, 0.05);
+  assert.ok(o.ahead >= M.THRESHOLDS.low);
+  assert.equal(o.low, false);
+  assert.equal(M.outlook(M.simulate(base([beer(8)], { end: t0 })), t0 + MIN, 0.05).low, false, 'over the limit is never low');
+});
+
+test('the low level is judged on where you are heading, not where you are now', () => {
+  // Three beers just opened read about zero now, but will climb past 0.02%: not low.
+  const sim = M.simulate(base([beer(3)], { end: t0 }));
+  const o = M.outlook(sim, t0 + MIN, 0.05);
+  assert.ok(o.b < M.THRESHOLDS.low);
+  assert.equal(o.low, false);
+  // Late in a night, coming down through 0.02% towards clear: low.
+  let t = sim.peakAt; while (M.bacAt(sim, t) >= 0.015) t += MIN;
+  assert.equal(M.outlook(sim, t, 0.05).low, true);
+  assert.equal(M.outlook(sim, sim.clear + MIN, 0.05).low, false, 'clear is clear, not low');
+});

@@ -447,7 +447,7 @@
       let status;
       if (water) status = 'Have a glass of water';
       else if (st === 'over') status = snap.fmt.bac + ', over the limit until ' + snap.fmt.underAt;
-      else if (st === 'impaired') status = snap.fmt.bac + ', under the limit but impaired';
+      else if (st === 'impaired') status = snap.fmt.bac + (snap.low ? ', a low level on board' : ', under the limit but impaired');
       else status = 'Clear, by this estimate';
       vE.querySelector('.ix-status-t').textContent = status;
       const a = primaryAction(snap, now);
