@@ -398,3 +398,34 @@ test('one fewer takes one off, then the row, then the round', () => {
   s = N.lessOf(s, 'a', k);
   assert.equal(s.session.rounds.length, 0);
 });
+
+test('adding to the last round keeps one row per drink, so one fewer takes off exactly one', () => {
+  const castle = (qty) => ({ name: 'Castle Lager', abv: 5, ml: 340, qty, share: 1 });
+  const s0 = st(night({ id: 'a', start: local(20), end: local(21), drinks: [castle(2), hein(1)] }));
+  const r = N.addLiveDrink(s0, castle(1), local(22), { startAt: local(20, 30), choice: 'same' });
+  const live = N.liveRound(r.state.session);
+  assert.deepEqual(live.drinks.map((d) => d.qty + ' ' + d.name), ['3 Castle Lager', '1 Heineken']);
+  const s1 = N.lessOf(r.state, live.id, N.keyOf(castle(1)));
+  assert.deepEqual(N.liveRound(s1.session).drinks.map((d) => d.qty + ' ' + d.name), ['2 Castle Lager', '1 Heineken']);
+});
+
+test('an edited round has room between its neighbours, never over them', () => {
+  const s = night(
+    { id: 'a', start: local(18), end: local(19), drinks: [hein(1)] },
+    { id: 'b', start: local(20), end: local(21), drinks: [hein(1)] },
+    { id: 'c', start: local(22), end: null, drinks: [hein(1)] });
+  assert.deepEqual(N.editRoom(s, 'b', local(23)), { lo: local(19), hi: local(22) });
+  assert.deepEqual(N.editRoom(s, 'a', local(23)), { lo: -Infinity, hi: local(20) });
+  assert.deepEqual(N.editRoom(s, 'c', local(23)), { lo: local(21), hi: local(23) });
+  // A finished round edited back over the one before is clamped to its edges.
+  const e = N.fitEdit(s, 'b', { start: local(18, 30), end: local(22, 30) }, local(23));
+  assert.deepEqual(e, { start: local(19), end: local(22) });
+});
+
+test('a round of extra drinks that overlaps on purpose can still be edited without being moved', () => {
+  const s = night(
+    { id: 'a', start: local(20), end: local(22), drinks: [hein(2)] },
+    { id: 'x', start: local(21), end: local(21, 30), drinks: [hein(1)] });
+  assert.deepEqual(N.fitEdit(s, 'x', { start: local(21), end: local(21, 30) }, local(23)), { start: local(21), end: local(21, 30) });
+  assert.deepEqual(N.fitEdit(s, 'a', { start: local(20), end: local(22) }, local(23)), { start: local(20), end: local(22) });
+});

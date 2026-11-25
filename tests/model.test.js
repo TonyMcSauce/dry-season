@@ -177,3 +177,17 @@ test('after the peak, the outlook is just where you are now', () => {
   assert.equal(o.rising, false);
   assert.equal(M.outlook(sim, sim.clear + MIN, 0.05).status, 'clear');
 });
+
+test('a new round lifts you back over the limit even when an earlier round peaked higher', () => {
+  const b8 = beer(8), b3 = beer(3);
+  const r1 = M.simulate(base([b8], { end: t0 + H }));
+  let now = r1.peakAt;
+  while (M.bacAt(r1, now) > 0.045) now += MIN;
+  const sim = M.simulate(base(null, { rounds: [{ start: t0, end: t0 + H, drinks: [b8] }, { start: now, end: now, drinks: [b3] }] }));
+  const o = M.outlook(sim, now + MIN, 0.05);
+  assert.ok(o.b < 0.05, `starts under, at ${o.b}`);
+  assert.equal(o.status, 'over');
+  assert.equal(o.rising, true);
+  assert.ok(o.ahead > 0.09 && o.ahead < sim.peak, `heads to the second peak, ${o.ahead}`);
+  assert.ok(o.overAt > now, 'says when it crosses');
+});

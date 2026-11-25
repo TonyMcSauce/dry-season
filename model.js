@@ -133,15 +133,20 @@
   /**
    * Where you stand, counting alcohol already drunk but still reaching your blood.
    * Right after a drink the blood level is near zero while the peak is still to
-   * come, so the status follows the higher of now and the peak ahead.
+   * come, so the status follows the higher of now and the highest level ahead.
+   * That is the highest point from now on, not the night's peak: an earlier
+   * round may have peaked higher, and a new one can still lift you back over.
    * overAt: when you will cross the limit, if you are under it now but heading over.
    */
   function outlook(sim, now, limit) {
     const b = bacAt(sim, now);
-    const ahead = sim.G > 0 && sim.peakAt > now ? Math.max(b, sim.peak) : b;
+    const from = Math.max(0, Math.floor((now - sim.start) / MIN) - 1);
+    let ahead = b;
+    if (sim.G > 0 && !(sim.clear && now >= sim.clear)) {
+      for (let i = from; i < sim.points.length; i++) if (sim.points[i] > ahead) ahead = sim.points[i];
+    }
     let overAt = null;
     if (b <= limit && ahead > limit) {
-      const from = Math.max(0, Math.floor((now - sim.start) / MIN) - 1);
       for (let i = from; i < sim.points.length; i++) {
         if (sim.points[i] > limit) { overAt = sim.start + (i + 1) * MIN; break; }
       }

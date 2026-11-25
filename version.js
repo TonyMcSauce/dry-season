@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.1.5';
+self.DRY_VERSION = '6.1.6';
 self.DRY_CHANGES = [
+  'Fixed: a new round after an earlier, bigger one now shows when it will take you back over the limit, instead of saying you are under it. The Live Island and Text a friend tell the same story. Tapping minus on a round now always takes off exactly one drink, editing a round can no longer drag it over another one so nothing is counted twice, and the pacing hint updates the moment you add another of the same drink.',
   'Fixed: History no longer says Tonight, in progress after a night has cleared and been saved. The card now says in progress, still clearing, or not saved yet, and goes away once the night is over and saved.',
   'Messages such as Taken off your stash are now a neat one line pill with the Undo button beside it, instead of wrapping into three lines.',
   'Fixed: pressing - or + quickly no longer zooms the page. Every press counts, taps respond straight away, and pinch to zoom still works.',
