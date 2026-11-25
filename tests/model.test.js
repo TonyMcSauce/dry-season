@@ -261,3 +261,32 @@ test('the known end of the data is always a real time', () => {
   const sim = M.simulate(impossible());
   assert.equal(M.dataEnd(sim), sim.start + sim.points.length * MIN);
 });
+
+// ---- Food: it slows absorption, it does not make alcohol disappear ----
+// Evidence (see the note on factors() in model.js): a meal delays absorption and lowers the peak, reliably.
+// Any reduction in the total reaching the blood (first-pass metabolism) is small, varies a lot between
+// people and meals, and is disputed, so the model does not count it. The two effects are tested apart.
+
+test('food, absorption: with food the peak is lower and comes later', () => {
+  const empty = M.simulate(base([beer(4)], { end: t0 + 2 * H }));
+  const fed = M.simulate(base([beer(4)], { end: t0 + 2 * H, fed: true }));
+  assert.ok(fed.peak < empty.peak, `fed peak ${fed.peak} under empty ${empty.peak}`);
+  assert.ok(fed.peakAt > empty.peakAt, 'the peak comes later');
+});
+
+test('food, total alcohol: with food the same amount still reaches the blood', () => {
+  // With almost no elimination, once everything has been absorbed the level is the total that got in.
+  const slow = { beta: 0.0001 };
+  const empty = M.simulate(base([beer(4)], Object.assign({ end: t0 + H }, slow)));
+  const fed = M.simulate(base([beer(4)], Object.assign({ end: t0 + H, fed: true }, slow)));
+  const at = (sim) => M.bacAt(sim, t0 + 8 * H);
+  assert.ok(Math.abs(at(fed) - at(empty)) / at(empty) < 0.01, `fed ${at(fed)} vs empty ${at(empty)}: same total`);
+});
+
+test('food never brings the clear time earlier than on an empty stomach', () => {
+  for (const [qty, hrs] of [[2, 1], [4, 2], [8, 4], [12, 5]]) {
+    const empty = M.simulate(base([beer(qty)], { end: t0 + hrs * H }));
+    const fed = M.simulate(base([beer(qty)], { end: t0 + hrs * H, fed: true }));
+    assert.ok(fed.clear >= empty.clear, `${qty} beers: fed clears ${(empty.clear - fed.clear) / MIN} min earlier`);
+  }
+});

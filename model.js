@@ -32,11 +32,30 @@
 
   const gramsOf = (d) => d.ml * (d.abv / 100) * ETHANOL * d.qty * d.share;
 
+  /**
+   * Food, and why it only slows absorption here.
+   *
+   * What the research shows:
+   * - A meal holds alcohol in the stomach longer, so it absorbs more slowly and the peak is
+   *   lower and later. This is consistent and large (Jones & Jönsson 1994; Kechagias, Jönsson &
+   *   Jones: fasting peak about 9.5 mmol/L against 3.8 mmol/L an hour after food).
+   * - Food also speeds up elimination (Ramchandani et al. 2001, J Clin Pharmacol 41:1345, about
+   *   45% faster after a meal in an alcohol clamp study), and some of the dose may be removed on
+   *   its first pass through the stomach and liver. How much is disputed (Levitt & Levitt 1994)
+   *   and varies widely with the person, the meal and the timing.
+   *
+   * What the model does: food changes the absorption half-life only (15 min empty, 35 min fed).
+   * Every gram logged reaches the blood, and elimination is the same with or without food.
+   * Until 6.1.7 a fed night also counted only 90% of its alcohol, which brought the clear time
+   * 30 minutes to 2 hours earlier and could turn a night that went over the limit into one that
+   * never did. The real effect of food may well be that large, but it is uncertain and differs
+   * from person to person, and this estimate is used to decide when you are clear. So it leans
+   * to the safe side: it never makes you clear sooner for having eaten.
+   */
   function factors(o) {
     return {
       r: o.sex === 'f' ? 0.55 : 0.68,
-      halfLife: o.fed ? 35 : 15,  // minutes for half of the waiting alcohol to absorb
-      bio: o.fed ? 0.9 : 1        // food lowers how much reaches the blood
+      halfLife: o.fed ? 35 : 15   // minutes for half of the waiting alcohol to absorb
     };
   }
 
@@ -72,7 +91,7 @@
    *   points stop at the safety net and keep the last known level.
    */
   function simulate(o) {
-    const { r, halfLife, bio } = factors(o);
+    const { r, halfLife } = factors(o);
     const vd = r * o.kg * 10;
     const rs = roundsOf(o);
     const G = rs.reduce((a, x) => a + gramsIn(x.drinks), 0);
@@ -94,8 +113,8 @@
 
     const maxM = Math.max(lastEnd, lastExtra) + MAX_AFTER_LAST_DRINK_MIN;
     for (let m = 0; m < maxM; m++) {
-      for (const p of plan) if (m >= p.off && m < p.off + p.dur) pool += p.rate * bio;
-      for (const e of extra) if (Math.round((e.t - start) / MIN) === m) pool += e.g * bio;
+      for (const p of plan) if (m >= p.off && m < p.off + p.dur) pool += p.rate;
+      for (const e of extra) if (Math.round((e.t - start) / MIN) === m) pool += e.g;
       const abs = pool * ka;
       pool -= abs;
       B = B + abs / vd;
