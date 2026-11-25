@@ -127,6 +127,27 @@
     };
   }
 
+  /**
+   * Which model the History numbers were worked out with. Raise it when a change to the model changes
+   * past nights, and the app recomputes them once. 2: 6.1.7 followed long nights past 96 hours, and
+   * 6.1.8 stopped taking 10% off a night with food.
+   */
+  const HISTORY_REV = 2;
+
+  /**
+   * Saved nights worked out again with the current model. A night that kept its rounds gets new numbers
+   * (start, clear, peak, grams, count); one saved before rounds existed is left exactly as it was.
+   * Uses the profile you have now, since older entries did not save the body they were worked out for.
+   */
+  function recheckHistory(history, profile) {
+    return (Array.isArray(history) ? history : []).map((h) => {
+      if (!h || !Array.isArray(h.rounds) || !h.rounds.length) return h;
+      const at = h.rounds.reduce((a, r) => Math.max(a, r.end == null ? r.start : r.end), 0);
+      const fresh = summarize({ rounds: h.rounds, fed: !!h.fed }, profile, at);
+      return fresh.G > 0 ? Object.assign({}, h, fresh) : h;
+    });
+  }
+
   /** Add a night to History. A night already there (same start) is replaced, never listed twice. */
   const pushHistory = (history, entry) =>
     (history || []).filter((h) => h.start !== entry.start).concat([entry]).slice(-HISTORY_MAX);
@@ -442,7 +463,7 @@
 
   const api = { newId, migrate, simOpts, liveRound, lastDrink, endOf, place, mergeRounds, summarize,
     addRound, addLiveDrink, finishLive, editRound, removeRound, settle, keyOf, saveToHistory: pushHistory,
-    startChoices, startClash, lastFinished, editRoom, fitEdit, stashOf, stashCount, latestStash, migrateStash, stashAdd, stashSet,
+    startChoices, startClash, lastFinished, editRoom, fitEdit, HISTORY_REV, recheckHistory, stashOf, stashCount, latestStash, migrateStash, stashAdd, stashSet,
     stashRemove, clearStash, useStash, openStash, catchUpDue, catchUpSource, catchUpDrink, catchUp, nudgeRound, recentDrinks, lessOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryNight = api;

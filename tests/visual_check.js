@@ -101,15 +101,37 @@ const STATES = {
     await p.__ctx.close();
   }
   { const p = await page('impaired', 'dark', 430, 932); await snap(p, 'wide-430-tonight'); await p.__ctx.close(); }
-  await browser.close(); srv.close();
+  // Software rendering can shift a few edge pixels by a shade or two between runs (anti-aliasing on the
+  // floating tab bar's rounded corners), so a screen whose bytes differ is decoded and compared pixel by
+  // pixel: within NOISE on every channel it matches; any pixel further off is a real change.
+  const NOISE = 8;
+  const cmp = await (await browser.newContext()).newPage();
+  const worstDiff = (a, b) => cmp.evaluate(async ([a, b]) => {
+    const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    const [ia, ib] = await Promise.all([load(a), load(b)]);
+    if (ia.width !== ib.width || ia.height !== ib.height) return 255;
+    const px = (img) => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d'); x.drawImage(img, 0, 0); return x.getImageData(0, 0, c.width, c.height).data; };
+    const da = px(ia), db = px(ib);
+    let worst = 0;
+    for (let i = 0; i < da.length; i++) { const d = Math.abs(da[i] - db[i]); if (d > worst) worst = d; }
+    return worst;
+  }, ['data:image/png;base64,' + a.toString('base64'), 'data:image/png;base64,' + b.toString('base64')]);
 
-  let bad = 0;
+  let bad = 0, noisy = 0;
   for (const [name, buf] of taken) {
     const f = path.join(DIR, name + '.png');
     if (MODE === 'save') { fs.writeFileSync(f, buf); continue; }
     if (!fs.existsSync(f)) { console.log('MISSING baseline', name); bad++; continue; }
-    if (Buffer.compare(fs.readFileSync(f), buf) !== 0) { fs.writeFileSync(path.join(DIR, name + '.new.png'), buf); console.log('DIFF   ', name); bad++; }
+    const base = fs.readFileSync(f);
+    if (Buffer.compare(base, buf) === 0) continue;
+    const worst = await worstDiff(base, buf);
+    if (worst <= NOISE) { noisy++; continue; }
+    fs.writeFileSync(path.join(DIR, name + '.new.png'), buf); console.log('DIFF   ', name, '(a pixel is off by ' + worst + ')'); bad++;
   }
-  console.log(MODE === 'save' ? 'saved ' + taken.length + ' screens to ' + DIR : bad ? 'visual_check: ' + bad + ' of ' + taken.length + ' differ' : 'visual_check: ok (' + taken.length + ' screens identical)');
+  await browser.close(); srv.close();
+  const same = taken.length - noisy;
+  console.log(MODE === 'save' ? 'saved ' + taken.length + ' screens to ' + DIR
+    : bad ? 'visual_check: ' + bad + ' of ' + taken.length + ' differ'
+    : 'visual_check: ok (' + same + ' screens identical' + (noisy ? ', ' + noisy + ' within anti-aliasing noise' : '') + ')');
   process.exitCode = bad ? 1 : 0;
 })();

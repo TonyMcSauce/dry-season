@@ -454,3 +454,39 @@ test('a new round never treats an unknown clear time as cleared', () => {
   const p = N.place(s, P, { start: local(20) + 10 * 24 * 3600000, end: local(21) + 10 * 24 * 3600000, drinks: [hein(1)] }, local(22) + 10 * 24 * 3600000);
   assert.equal(p.action, 'continue');
 });
+
+// ---- History saved by older versions is worked out again, once ----
+const small = { kg: 45, sex: 'f', beta: 0.010 };
+const heavyRound = () => ({ start: local(19, 0, 16), end: local(22, 0, 16), drinks: [hein(20)] });
+
+test('a night saved with the old 96 hour cut-off gets its real clear time back', () => {
+  const r = heavyRound();
+  // What 6.1.6 and earlier saved: cleared at the 96 hour cut-off.
+  const old = { start: r.start, clear: r.start + 96 * 3600000, G: 260, peak: 1.0, count: 20, rounds: [r], fed: false };
+  const [fixed] = N.recheckHistory([old], small);
+  assert.ok(fixed.clear > old.clear, 'clears later than the cut-off');
+  assert.equal(fixed.complete, true);
+  assert.equal(fixed.start, old.start);
+  assert.equal(fixed.count, 20);
+});
+
+test('a night saved with food gets the clear time the current model gives it', () => {
+  const r = { start: local(19, 0, 16), end: local(21, 0, 16), drinks: [hein(4)] };
+  const now = N.summarize({ rounds: [r], fed: true }, P, local(12, 0, 17));
+  const old = Object.assign({}, now, { clear: now.clear - 40 * 60000, peak: now.peak - 0.01 });   // as 6.1.7 and earlier saved it
+  const [fixed] = N.recheckHistory([old], P);
+  assert.equal(fixed.clear, now.clear);
+  assert.equal(fixed.peak, now.peak);
+  assert.equal(fixed.fed, true);
+});
+
+test('rechecking keeps nights it cannot recompute, keeps order, and changes nothing the second time', () => {
+  const bare = { start: local(20, 0, 10), clear: local(23, 0, 10), G: 40, peak: 0.05, count: 3 };   // before 5.0: no rounds
+  const r = { start: local(19, 0, 16), end: local(21, 0, 16), drinks: [hein(2)] };
+  const ok = N.summarize({ rounds: [r], fed: false }, P, local(12, 0, 17));
+  const once = N.recheckHistory([bare, ok], P);
+  assert.deepEqual(once[0], bare);
+  assert.deepEqual(once[1], ok);
+  assert.deepEqual(N.recheckHistory(once, P), once);
+  assert.deepEqual(N.recheckHistory(undefined, P), []);
+});
