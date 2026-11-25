@@ -33,3 +33,10 @@ test('framing puts the drinks between the readout and the bottom of the hero', (
   assert.ok(Math.abs(screenY(2.35) - 460) < 1, 'bottle top at the top of the stage');
   assert.ok(Math.abs(screenY(0) - 770) < 1, 'ground at the base of the stage');
 });
+
+test('the glass stays full when the clear time is not known', () => {
+  const S = require('../scene3d.js');
+  const full = S.glassLevel(0, 10, 0);
+  assert.equal(S.glassLevel(0, Infinity, 5), full);
+  assert.equal(S.glassLevel(0, null, 5), 0);
+});

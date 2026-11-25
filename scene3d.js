@@ -13,6 +13,7 @@
   /** How full the glass is: nearly full as the night starts, empty once you are clear. */
   function glassLevel(start, clear, now) {
     if (!(clear > start) || now >= clear) return 0;
+    if (!Number.isFinite(clear)) return FULL;      // clear time not known: the glass stays full
     return FULL * Math.max(0, Math.min(1, (clear - now) / (clear - start)));
   }
 
@@ -344,7 +345,7 @@
       x.stroke(new Path2D(g.ridge)); x.restore();
       x.font = '700 22px "Schibsted Grotesk", sans-serif'; x.fillStyle = 'rgba(246,237,218,.8)';
       if (g.bands.length > 1) g.bands.forEach((b) => x.fillText(b.label, Math.max(6, b.x + 6), Math.max(30, Math.min(g.limitY - 14, 60))));
-      if (view.sim.clear > view.now) { x.save(); x.shadowColor = 'rgba(246,237,218,.9)'; x.shadowBlur = 16; x.fillStyle = '#F6EDDA'; x.beginPath(); x.arc(g.moonX, 288, 9, 0, 7); x.fill(); x.restore(); }
+      if (g.moon && view.sim.clear > view.now) { x.save(); x.shadowColor = 'rgba(246,237,218,.9)'; x.shadowBlur = 16; x.fillStyle = '#F6EDDA'; x.beginPath(); x.arc(g.moonX, 288, 9, 0, 7); x.fill(); x.restore(); }
       x.fillStyle = '#E46F48'; x.strokeStyle = pal.ground; x.lineWidth = 4; x.beginPath(); x.arc(g.nowX, g.nowY, 11, 0, 7); x.fill(); x.stroke();
       bacTex.needsUpdate = true; dirty = true;
     }

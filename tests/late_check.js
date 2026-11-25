@@ -743,6 +743,66 @@ const checks = [
     assert.equal(b.start, local(19)); assert.equal(b.end, local(21));
     assert.deepEqual(errors, []);
     await page.close();
+  }],
+  ['a night longer than 96 hours is followed to the end, never called clear when the old cut-off ran out', async (browser, url) => {
+    // 20 beers on a 45 kg body at the slowest elimination setting: the old model stopped at 96 hours with 0.101% left and said Clear.
+    const saved = JSON.parse(JSON.stringify(EMPTY));
+    saved.profile = Object.assign({}, PROFILE, { kg: 45, sex: 'f', beta: 0.010 });
+    const start = local(22) - 97 * 3600000;
+    saved.session.rounds = [{ id: 'a', start, end: start + 3 * 3600000, drinks: [hein(20)], late: true }];
+    const { page, errors } = await open(browser, url, saved);
+    assert.notEqual((await text(page, '#clearTime')).trim(), 'Clear');
+    assert.match((await text(page, '#kicker')).trim(), /Clear by/);
+    assert.match(await text(page, '#pillText'), /Over the legal limit/);
+    const sim = M.simulate({ rounds: [{ start, end: start + 3 * 3600000, drinks: [hein(20)] }], kg: 45, sex: 'f', beta: 0.010, fed: false });
+    assert.equal(sim.complete, true);
+    const d = new Date(sim.clear);
+    assert.equal((await text(page, '#clearTime')).trim(), String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
+    assert.deepEqual(errors, []);
+    await page.close();
+  }],
+  ['a night the model cannot follow to the end is never clear: not on Tonight, the planner, the dial or History', async (browser, url) => {
+    const spirit = { name: 'Spirit', abv: 80, ml: 1000, qty: 48, share: 1 };
+    const saved = JSON.parse(JSON.stringify(EMPTY));
+    saved.session.rounds = [{ id: 'a', start: local(19), end: local(21), drinks: [spirit], late: true }];
+    saved.session.driveAt = local(22) + 400 * 24 * 3600000;
+    // One saved night from before, which the model could not follow either: it is stored with clear null.
+    saved.history = [{ start: local(19, 0, 16), clear: null, complete: false, G: 30000, peak: 9.9, count: 48, fed: false,
+      rounds: [{ start: local(19, 0, 16), end: local(21, 0, 16), drinks: [spirit] }] }];
+    const { page, errors } = await open(browser, url, saved);
+    assert.equal((await text(page, '#kicker')).trim(), "Can't estimate");
+    assert.equal((await text(page, '#clearTime')).trim(), '--:--');
+    assert.match(await text(page, '#pillText'), /Over the legal limit/);
+    assert.equal((await text(page, '#underAt')).trim(), 'Not known');
+    await page.click('[data-go=plan]'); await page.waitForTimeout(300);
+    assert.equal((await text(page, '#tkVerdict')).trim(), 'Not clear in time');
+    await page.click('[data-go=history]'); await page.waitForTimeout(300);
+    assert.match(await text(page, '#histNowSub'), /clear time not known/);
+    assert.match(await page.locator('#historyList .h-meta').first().textContent(), /clear time not known/);
+    await page.locator('#historyList .h-open').first().click(); await page.waitForTimeout(300);
+    assert.equal((await text(page, '#pastClear')).trim(), '--:--');
+    await page.click('#pastClose');
+    await page.click('[data-go=tonight]'); await page.waitForTimeout(300);
+    await page.locator('#rounds li .rc-open').first().click(); await page.waitForTimeout(300);
+    assert.equal((await text(page, '#dlKicker')).trim(), "Can't estimate");
+    assert.equal((await text(page, '#dlTime')).trim(), '--:--');
+    await page.click('#lateClose');
+    // Share and Text a friend: never a clear claim, never a made up time.
+    const shared = await page.evaluate(async () => {
+      const out = [];
+      navigator.share = async (d) => { out.push(d.text); };
+      document.getElementById('shareBtn').click();
+      document.getElementById('textFriend').click();
+      await new Promise((r) => setTimeout(r, 200));
+      return out;
+    });
+    assert.equal(shared.length, 2);
+    shared.forEach((t) => assert.ok(!/clear (of alcohol )?by|Officially clear|I'm clear|clear around|--:--/.test(t), 'no clear claim: ' + t));
+    assert.match(shared[1], /over the legal limit, so I'm not driving\.$/);
+    const body = await page.evaluate(() => document.body.innerText);
+    assert.ok(!/NaN|Infinity/.test(body), 'no NaN or Infinity printed anywhere');
+    assert.deepEqual(errors, []);
+    await page.close();
   }]
 ];
 

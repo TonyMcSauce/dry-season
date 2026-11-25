@@ -64,6 +64,7 @@
   }
 
   function splitLeft(ms, withSeconds) {
+    if (!Number.isFinite(ms)) return '--:--';   // the clear time is not known
     const t = Math.max(0, Math.round(ms / 1000));
     const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
     const p = (n) => String(n).padStart(2, '0');
