@@ -30,6 +30,7 @@ function serve() {
   });
 }
 
+const VERSION = /DRY_VERSION = '([^']+)'/.exec(fs.readFileSync(path.join(ROOT, 'version.js'), 'utf8'))[1];
 const NOW = new Date(2026, 10, 23, 22, 0).getTime();
 const PROFILE = { kg: 75, sex: 'm', beta: 0.015, limit: 0.05, island: false, theme: 'auto' };
 const cor = { name: 'Corona Extra', abv: 4.5, ml: 355, share: 1 }, sil = { name: 'Heineken Silver', abv: 4, ml: 330, share: 1 };
@@ -55,13 +56,11 @@ const STATES = {
   const taken = [];
   async function page(stateName, scheme, w, h) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce', serviceWorkers: 'block' });
-    await ctx.addInitScript(([s]) => { try { localStorage.setItem('dryseason.v1', JSON.stringify(s)); localStorage.setItem('dryseason.app', JSON.stringify({ seenVersion: self.DRY_VERSION || '*', toured: true, helped: true })); } catch (e) {} }, [STATES[stateName]]);
+    await ctx.addInitScript(([s, v]) => { try { localStorage.setItem('dryseason.v1', JSON.stringify(s)); localStorage.setItem('dryseason.app', JSON.stringify({ seenVersion: v, toured: true, helped: true })); } catch (e) {} }, [STATES[stateName], VERSION]);
     const p = await ctx.newPage();
     await p.clock.setFixedTime(NOW);
     const errs = []; p.on('pageerror', (e) => errs.push(String(e)));
     await p.goto(url);
-    await p.evaluate(() => { try { localStorage.setItem('dryseason.app', JSON.stringify({ seenVersion: self.DRY_VERSION, toured: true, helped: true })); } catch (e) {} });
-    await p.reload();
     await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(1800);
     p.__errs = errs; p.__ctx = ctx;
     return p;
@@ -70,6 +69,7 @@ const STATES = {
   const tapText = (p, sel, text) => p.evaluate(([q, t]) => [...document.querySelectorAll(q)].find((e) => e.textContent.includes(t)).click(), [sel, text]);
   async function snap(p, name) {
     await p.waitForTimeout(350);
+    if (!/^(sheet|dialog)/.test(name) && await p.evaluate(() => !!document.querySelector('dialog[open]'))) throw new Error('a dialog is open over ' + name);
     const buf = await p.screenshot({ mask: [p.locator('#scene3d')], maskColor: '#ff00ff' });
     taken.push([name, buf]);
   }
