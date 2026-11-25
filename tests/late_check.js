@@ -527,6 +527,13 @@ const checks = [
     await corona.locator('.pick-add').click();
     await corona.locator('.pick-add').click();
     assert.match(await text(page, '#pickList .pick-row:has(.pick-stock:not([hidden])) .pick-stock'), /2 in stash/, 'the card shows how many you already have');
+    const stock = await page.evaluate(() => [...document.querySelectorAll('#pickList .pick-row')].map((c) => {
+      const st = c.querySelector('.pick-stock'); if (!st || st.hidden) return null;
+      const pill = c.querySelector('.abv-pill').getBoundingClientRect(), n = st.getBoundingClientRect();
+      return n.top >= pill.bottom - 0.5;
+    }).filter((x) => x !== null));
+    assert.ok(stock.length > 0 && stock.every(Boolean), 'the stock count sits under the strength pill, never on top of it');
+    assert.equal(await page.evaluate(() => { const t = document.getElementById('toast'); return !t.showPopover || t.matches(':popover-open'); }), true, 'the message is in the top layer, above the sheet and its backdrop');
     await page.click('#sheetClose');
     assert.deepEqual(await stashEditRows(page), ['Corona Extra:2']);
     // the options screen adds several at once, and the question about start times never appears
@@ -606,6 +613,17 @@ const checks = [
       assert.ok(m.btnRight <= m.cardRight, 'the button stays inside the card at ' + w + 'px');
     }
     assert.match(await text(page, '#rounds .rc-what'), /4 × Heineken Silver \+ 3 × Heineken/, 'the whole list is still there');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
+  ['History chart: the limit is named in the heading and never printed on a bar', async (browser, url) => {
+    const mk = (k, peak, count) => { const start = local(12) - k * 864e5; return { start, clear: start + 7 * 36e5, G: count * 13, peak, count, fed: false }; };
+    const saved = Object.assign({}, EMPTY, { history: [mk(11, 0.038, 8), mk(10, 0.027, 4), mk(9, 0.07, 9), mk(1, 0.088, 8)] });
+    const { page, errors } = await open(browser, url, saved);
+    await page.click('[data-go=history]');
+    assert.equal((await text(page, '#hLimitKey')).trim(), 'Limit 0.05%');
+    assert.equal(await page.$$eval('#hchart text', (t) => t.filter((x) => /Limit/.test(x.textContent)).length), 0, 'no label inside the plot to collide with a value');
     assert.deepEqual(errors, []);
     await page.close();
   }]

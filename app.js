@@ -590,7 +590,7 @@
       out += '<text x="' + cx.toFixed(1) + '" y="' + (base + 16) + '" text-anchor="middle">' + d.toLocaleDateString(undefined, { weekday: 'short' }) + '</text>';
       out += '<text x="' + cx.toFixed(1) + '" y="' + (base + 29) + '" text-anchor="middle">' + d.getDate() + '</text>';
     });
-    out += '<text class="zone-label" style="stroke:var(--surface)" x="' + left + '" y="' + (y(limit) - 6).toFixed(1) + '">Limit ' + fmtLimit(limit) + '</text>';
+    $('#hLimitKey').textContent = 'Limit ' + fmtLimit(limit);
     svg.innerHTML = out;
   }
   $('#histNow').addEventListener('click', () => setTab('tonight'));
@@ -1337,8 +1337,12 @@
     undoFn = undo || null;
     $('#toastUndo').hidden = !undo;
     t.classList.toggle('has-undo', !!undo);
+    try { if (t.showPopover && !t.matches(':popover-open')) t.showPopover(); } catch (e) {}   // above any open sheet
     t.classList.add('show'); clearTimeout(toastT);
-    toastT = setTimeout(() => { t.classList.remove('show'); undoFn = null; setTimeout(() => { if (!t.classList.contains('show')) t.classList.remove('has-undo'); }, 350); }, undo ? 5000 : 2200);
+    toastT = setTimeout(() => {
+      t.classList.remove('show'); undoFn = null;
+      setTimeout(() => { if (!t.classList.contains('show')) { t.classList.remove('has-undo'); try { if (t.hidePopover) t.hidePopover(); } catch (e) {} } }, 350);
+    }, undo ? 5000 : 2200);
   }
   $('#toastUndo').addEventListener('click', () => {
     const f = undoFn; undoFn = null;

@@ -271,7 +271,7 @@
       <p class="hint" id="hsOver"></p>
     </div>
     <div class="hchart" id="hchartBox" hidden>
-      <p class="label">Peak blood alcohol, recent nights</p>
+      <p class="label"><span>Peak blood alcohol, recent nights</span><span class="h-key" id="hLimitKey"></span></p>
       <svg class="chart" id="hchart" viewBox="0 0 360 156" role="img" aria-label="Peak blood alcohol for each recent night"></svg>
     </div>
     <h2 id="histH">Past nights</h2>
@@ -580,7 +580,7 @@
   </div>
 </dialog>
 
-<div class="toast" id="toast" role="status"><span id="toastMsg"></span><button class="undo" id="toastUndo" type="button" hidden>Undo</button></div>
+<div class="toast" id="toast" role="status" popover="manual"><span id="toastMsg"></span><button class="undo" id="toastUndo" type="button" hidden>Undo</button></div>
 
 <aside class="coaster" id="coaster" hidden aria-labelledby="coasterH">
   <div>
