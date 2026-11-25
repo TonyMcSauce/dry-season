@@ -443,11 +443,18 @@ const checks = [
     await page.close();
   }]
   ,
-  ['one drink just logged reads impaired, not clear', async (browser, url) => {
+  ['one drink just logged reads as a low level, never clear and never alarming', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(22),
       rounds: [{ id: 'a', start: local(22), end: null, lastAt: local(22), drinks: [hein(1)], late: false }] } });
     const { page, errors } = await open(browser, url, saved);
     assert.doesNotMatch(await text(page, '#pillText'), /Clear/);
+    assert.equal((await text(page, '#pillText')).trim(), 'Low level: alcohol on board');
+    // Two at once head past 0.02% (but stay under 0.05%): that is impaired, as before.
+    saved.session.rounds[0].drinks = [hein(2)];
+    const two = await open(browser, url, saved);
+    assert.match(await text(two.page, '#pillText'), /impaired/);
+    assert.deepEqual(two.errors, []);
+    await two.page.close();
     assert.deepEqual(errors, []);
     await page.close();
   }]
