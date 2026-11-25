@@ -628,6 +628,24 @@ const checks = [
     await page.close();
   }]
   ,
+  ['quick taps on + and - are taps, not a double-tap zoom: touch-action is manipulation on the page and the controls', async (browser, url) => {
+    const { page, errors } = await open(browser, url, EMPTY);
+    const ta = (sel) => page.evaluate((q) => getComputedStyle(document.querySelector(q)).touchAction, sel);
+    assert.equal(await ta('html'), 'manipulation');
+    assert.equal(await ta('.tabbar button'), 'manipulation');
+    assert.equal(await ta('#qaAdd'), 'manipulation');
+    await page.click('#qaAdd');
+    await page.locator('#pickList .pick').first().click();
+    assert.equal(await ta('#qtyPlus'), 'manipulation');
+    assert.equal(await ta('#qtyMinus'), 'manipulation');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.stepper')).userSelect), 'none', 'mashing + never highlights the number');
+    for (let i = 0; i < 4; i++) await page.click('#qtyPlus', { delay: 0 });
+    assert.equal((await text(page, '#qty')).trim(), '5', 'every quick press counts');
+    assert.equal(await page.evaluate(() => document.querySelector('meta[name=viewport]').content.includes('user-scalable=no')), false, 'pinch zoom is not switched off');
+    assert.deepEqual(errors, []);
+    await page.close();
+  }]
+  ,
   ['with a stash, the first button opens the next one', async (browser, url) => {
     const saved = Object.assign({}, EMPTY, { session: { v: 5, fed: false, driveAt: null, water: null, loggedAt: local(21, 50),
       stash: { drink: { name: 'Heineken', abv: 5, ml: 330, share: 1 }, total: 6, opened: 1 },

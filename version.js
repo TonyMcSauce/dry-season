@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.1.3';
+self.DRY_VERSION = '6.1.4';
 self.DRY_CHANGES = [
+  'Fixed: pressing - or + quickly no longer zooms the page. Every press counts, taps respond straight away, and pinch to zoom still works.',
   'Fixed: in the add to stash sheet the count no longer prints on top of the strength; the History chart names its limit above the bars; and messages now show above an open sheet instead of dimmed behind it.',
   'Fixed: a round with a long list of drinks no longer runs underneath the Adjust times button. The list wraps onto a second line instead.',
   'Under the hood: the page is now split into separate style and script files. Nothing changes in how it looks or works.',
