@@ -1,0 +1,51 @@
+# Runs every test on each pull request and push to main or v6, so a red cross shows
+# before anything merges. main is what GitHub Pages publishes to everyone's phones.
+name: Tests
+
+on:
+  pull_request:
+    branches: [main, v6]
+  push:
+    branches: [main, v6]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request cancels the run still going.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Model, night, drinks, horizon, dial, 3D scene, island and mug
+        run: node --test tests/*.test.js
+
+  browser:
+    name: Browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # The app has no build step and no package.json; only the tests need Playwright.
+      # Pinned to the version the checks are written against.
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: The whole app in a browser (late_check)
+        run: node tests/late_check.js
+      - name: Offline use and the update flow (offline_check)
+        run: node tests/offline_check.js
