@@ -42,6 +42,14 @@ async function open(browser, url, saved, scheme) {
 }
 
 const text = (page, sel) => page.locator(sel).first().textContent();
+/**
+ * After a tap that closes the Log earlier drinks sheet: wait until it has actually closed (the hand-off glides
+ * for 420 ms, then repaints), instead of sleeping a fixed time that a slower machine can overrun.
+ */
+async function lateClosed(page) {
+  await page.waitForFunction(() => !document.getElementById('late').open, null, { timeout: 15000 });
+  await page.waitForTimeout(150);
+}
 const EMPTY = { profile: PROFILE, session: { v: 5, rounds: [], fed: false, driveAt: null, water: null }, history: [], favs: [{ id: 'hein', ml: 330 }, { id: 'hsil', ml: 330 }] };
 
 /** Open the dial sheet and set a round: a From chip plus 15 minute nudges, an Until chip, and Heinekens. */
@@ -79,7 +87,7 @@ const checks = [
     assert.equal((await text(page, '#dlTime')).trim(), '01:16');
     assert.equal((await text(page, '#lateAdd')).trim(), 'Add round to tonight');
     await page.click('#lateAdd');
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     assert.equal((await text(page, '#clearTime')).trim(), '01:16');
     assert.equal(await page.locator('#rounds li').count(), 1);
     assert.match(await text(page, '#rounds li'), /14:00 to 18:00/);
@@ -94,19 +102,18 @@ const checks = [
     const { page, errors } = await open(browser, url, EMPTY);
     await logRound(page, { from: 'Lunch', fromUp: 4, until: '4 h ago', heineken: 6 });
     await page.click('#lateAdd');
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     await logRound(page, { from: '2 h ago', until: 'Just now', heineken: 3 });
     assert.equal((await text(page, '#lateAdd')).trim(), 'Add round · continues tonight');
     await page.click('#lateAdd');
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     assert.match(await text(page, '#nightNote'), /At 20:00 you still had 0\.070%/);
     assert.equal((await text(page, '#clearTime')).trim(), '06:22');
     await logRound(page, { from: '4 h ago', fromDown: 4, until: '4 h ago', heineken: 2 });
     await page.click('#lateAdd');
-    await page.waitForTimeout(300);
-    assert.equal(await page.getByText('Same drinks, or extra ones?').isVisible(), true);
+    await page.getByText('Same drinks, or extra ones?').waitFor({ state: 'visible', timeout: 15000 });
     await page.getByRole('button', { name: /Extra drinks/ }).click();
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     assert.equal(await page.locator('#rounds li').count(), 3);
     assert.deepEqual(errors, []);
     await page.close();
@@ -120,18 +127,18 @@ const checks = [
     page.on('dialog', (d) => d.accept());
     await logRound(page, { from: 'Lunch', fromUp: 4, until: '4 h ago', heineken: 6 });
     await page.click('#lateAdd');
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     await page.locator('#rounds li .rc-open').first().click();
     await page.waitForTimeout(300);
     assert.equal((await text(page, '#lateTitle')).trim(), 'Edit round');
     await page.click('#untilDown');
     await page.getByRole('button', { name: 'Save round' }).click();
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     assert.match(await text(page, '#rounds li'), /14:00 to 17:45/);
     await page.locator('#rounds li .rc-open').first().click();
     await page.waitForTimeout(300);
     await page.getByRole('button', { name: 'Remove round' }).click();
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     assert.equal(await page.locator('#rounds li').count(), 0);
     assert.equal((await text(page, '#clearTime')).trim(), 'Clear');
     const ridge = await page.locator('#horizon .hz-ridge').getAttribute('d');
@@ -156,7 +163,7 @@ const checks = [
     await page.getByRole('button', { name: 'Add one Heineken 330 ml' }).click();
     assert.equal((await text(page, '#untilVal')).trim(), 'Now');
     await page.getByRole('button', { name: 'Save round' }).click();
-    await page.waitForTimeout(1200);
+    await lateClosed(page);
     assert.match(await text(page, '#rounds li'), /still going/);
     assert.deepEqual(errors, []);
     await page.close();
@@ -449,14 +456,14 @@ const checks = [
     const { page, errors } = await open(browser, url, saved);
     assert.doesNotMatch(await text(page, '#pillText'), /Clear/);
     assert.equal((await text(page, '#pillText')).trim(), 'Low level: alcohol on board');
+    assert.deepEqual(errors, []);
+    await page.close();
     // Two at once head past 0.02% (but stay under 0.05%): that is impaired, as before.
     saved.session.rounds[0].drinks = [hein(2)];
     const two = await open(browser, url, saved);
     assert.match(await text(two.page, '#pillText'), /impaired/);
     assert.deepEqual(two.errors, []);
     await two.page.close();
-    assert.deepEqual(errors, []);
-    await page.close();
   }]
   ,
   ['one tap under the bottle adds another, and Undo takes it back', async (browser, url) => {
@@ -727,7 +734,9 @@ const checks = [
     const { page, errors } = await open(browser, url, saved);
     await page.locator('#anotherBtns button').first().click();
     const box = await page.locator('#toast').boundingBox();
-    await page.waitForTimeout(5800);
+    // The message shows for 5 s, then fades for 350 ms. Wait for it to be gone rather than sleeping a fixed time.
+    await page.waitForTimeout(5000);
+    await page.waitForFunction(() => getComputedStyle(document.getElementById('toast')).visibility === 'hidden', null, { timeout: 10000 });
     const hit = await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return !!(e && e.closest('#toast')); }, [box.x + box.width / 2, box.y + box.height / 2]);
     assert.equal(hit, false, 'the faded toast is out of the way');
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('toast')).visibility), 'hidden');
