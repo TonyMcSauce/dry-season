@@ -845,6 +845,9 @@ const checks = [
     for (const [name, fn] of checks.filter(([n]) => !process.env.ONLY || n.includes(process.env.ONLY))) {
       try { await fn(browser, `http://127.0.0.1:${port}/`); console.log('ok   ' + name); }
       catch (e) { failed++; console.log('FAIL ' + name + '\n     ' + String(e.message).split('\n').slice(0, 6).join('\n     ')); }
+      // A check that fails stops before its own page.close(). Close whatever it left open, so a left-over page
+      // never keeps drawing the 3D scene in the background and slows every check after it.
+      finally { await Promise.all(browser.contexts().map((c) => c.close().catch(() => {}))); }
     }
   } finally {
     await browser.close();
