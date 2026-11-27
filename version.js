@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.1.13';
+self.DRY_VERSION = '6.1.14';
 self.DRY_CHANGES = [
+  'On a computer, the page no longer shows through the gap under the Log a drink dock. A soft fade sits behind it instead.',
   'On a computer, Log a drink now stays pinned to the bottom of the window, with Water break and Earlier beside it, so it is always in reach. On short windows the top of Tonight is a little more compact to make room.',
   'On a computer, the tab bar now sits as a rail at the left edge instead of floating over the bottom of the page, so it no longer covers the Log a drink button.',
   'Fixed: on a computer or any wide window, the night hills no longer stretch across the whole screen. They keep the same size and shape as on a phone, and the tab bar now blurs what passes behind it so the buttons underneath do not show through.',
