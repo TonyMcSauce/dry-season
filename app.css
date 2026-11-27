@@ -813,6 +813,7 @@ html.intro .quick{animation:riseIn .6s 1.05s var(--ease) both}
 .sr-dots i{width:9px;height:16px;border-radius:3px 3px 5px 5px;background:var(--amber)}
 .sr-open{width:auto;flex:none;min-height:46px;padding:0 18px;font-size:.95rem;white-space:nowrap}
 .stash-total{font-family:var(--body);font-size:.9rem;font-weight:500;color:var(--muted)}
+#stashEdit:not(:empty){margin-bottom:12px}
 .stash-edit li{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-radius:var(--r-card);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-soft)}
 .se-main{flex:1;min-width:0;display:flex;flex-direction:column}
 .se-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
