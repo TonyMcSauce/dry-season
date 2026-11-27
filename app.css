@@ -9,7 +9,7 @@
     --ground:#F6F0E4; --sheet:#FFFBF2;
     --text:#1F2A3C; --muted:rgba(31,42,60,.66); --line:rgba(31,42,60,.14);
     --field:rgba(31,42,60,.05); --receipt:#FFFBF3; --stars:0;
-    --nav-bg:rgba(255,251,242,.96); --nav-pill:rgba(31,42,60,.08); --nav-shadow:0 12px 30px -12px rgba(31,42,60,.35),0 2px 6px rgba(31,42,60,.12);
+    --nav-bg:rgb(255,251,242); --nav-pill:rgba(31,42,60,.08); --nav-shadow:0 12px 30px -12px rgba(31,42,60,.35),0 2px 6px rgba(31,42,60,.12);
     --surface:#FFFBF2; --surface-hi:#FFFFFF; --shadow-soft:0 10px 26px -16px rgba(31,42,60,.35);
     --ink-amber:#9A540F; --ink-ok:#52651F; --ink-over:#B83A26;
     color-scheme:light;
@@ -23,7 +23,7 @@
   --ground:#F6F0E4; --sheet:#FFFBF2;
   --text:#1F2A3C; --muted:rgba(31,42,60,.66); --line:rgba(31,42,60,.14);
   --field:rgba(31,42,60,.05); --receipt:#FFFBF3; --stars:0;
-  --nav-bg:rgba(255,251,242,.96); --nav-pill:rgba(31,42,60,.08); --nav-shadow:0 12px 30px -12px rgba(31,42,60,.35),0 2px 6px rgba(31,42,60,.12);
+  --nav-bg:rgb(255,251,242); --nav-pill:rgba(31,42,60,.08); --nav-shadow:0 12px 30px -12px rgba(31,42,60,.35),0 2px 6px rgba(31,42,60,.12);
   --surface:#FFFBF2; --surface-hi:#FFFFFF; --shadow-soft:0 10px 26px -16px rgba(31,42,60,.35);
   --ink-amber:#9A540F; --ink-ok:#52651F; --ink-over:#B83A26;
   color-scheme:light;
@@ -350,7 +350,7 @@ dialog.sheet[open]{animation:sheetUp .34s cubic-bezier(.2,.8,.2,1)}
 
 
 /* ---------- V2: status, risk, planner ---------- */
-:root{--sky-top:#17212F;--sky-mid:#2D2926;--sky-low:#7A3F1F;--horizon:#C8742E;--ground:#0E1522;--sheet:#182234;--amber:#F2A93B;--amber-deep:#B8651A;--foam:#F6EDDA;--ink:#2A1A0F;--acacia:#A7B57E;--russet:#E46F48;--text:#F6EDDA;--muted:rgba(246,237,218,.64);--line:rgba(246,237,218,.16);--field:rgba(246,237,218,.07);--receipt:#F6EDDA;--stars:1;--nav-bg:rgba(22,32,50,.96);--nav-pill:rgba(246,237,218,.10);--nav-shadow:0 14px 34px -10px rgba(0,0,0,.65),0 2px 6px rgba(0,0,0,.35);--surface:#152033;--surface-hi:#1C2A42;--shadow-soft:0 10px 30px -14px rgba(0,0,0,.6);--r-card:20px;--r-pill:999px;--ease:cubic-bezier(.22,1,.36,1);--nav-h:68px;--ink-amber:var(--amber);--ink-ok:var(--ok);--ink-over:var(--over);--display:'Alfa Slab One', Rockwell, Georgia, serif;--body:'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;--gutter:16px;color-scheme:dark;--over:#E2553F;--impaired:#F2A93B;--ok:#A7B57E;--z1:#F7D57E;--z2:#F2A93B;--z3:#E8803A;--z4:#D9503B;--z5:#8E2430;--glow:rgba(0,0,0,0)}
+:root{--sky-top:#17212F;--sky-mid:#2D2926;--sky-low:#7A3F1F;--horizon:#C8742E;--ground:#0E1522;--sheet:#182234;--amber:#F2A93B;--amber-deep:#B8651A;--foam:#F6EDDA;--ink:#2A1A0F;--acacia:#A7B57E;--russet:#E46F48;--text:#F6EDDA;--muted:rgba(246,237,218,.64);--line:rgba(246,237,218,.16);--field:rgba(246,237,218,.07);--receipt:#F6EDDA;--stars:1;--nav-bg:rgb(22,32,50);--nav-pill:rgba(246,237,218,.10);--nav-shadow:0 14px 34px -10px rgba(0,0,0,.65),0 2px 6px rgba(0,0,0,.35);--surface:#152033;--surface-hi:#1C2A42;--shadow-soft:0 10px 30px -14px rgba(0,0,0,.6);--r-card:20px;--r-pill:999px;--ease:cubic-bezier(.22,1,.36,1);--nav-h:68px;--ink-amber:var(--amber);--ink-ok:var(--ok);--ink-over:var(--over);--display:'Alfa Slab One', Rockwell, Georgia, serif;--body:'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;--gutter:16px;color-scheme:dark;--over:#E2553F;--impaired:#F2A93B;--ok:#A7B57E;--z1:#F7D57E;--z2:#F2A93B;--z3:#E8803A;--z4:#D9503B;--z5:#8E2430;--glow:rgba(0,0,0,0)}
 .hero[data-state="over"]{--glow:rgba(226,85,63,.6)}
 .hero[data-state="impaired"]{--glow:rgba(242,169,59,.45)}
 .hero[data-state="clear"]{--glow:rgba(167,181,126,.5)}
@@ -547,7 +547,6 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
   width:min(calc(100vw - 2 * var(--gutter)),400px);height:var(--nav-h);padding:6px;
   transform:translateX(-50%);display:grid;grid-template-columns:repeat(4,1fr);
   border-radius:26px;background:var(--nav-bg);box-shadow:var(--nav-shadow);border:1px solid var(--line);
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
 }
 .tabbar::before{
   content:"";position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 14px) / 4);
