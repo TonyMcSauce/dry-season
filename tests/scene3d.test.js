@@ -40,3 +40,17 @@ test('the glass stays full when the clear time is not known', () => {
   assert.equal(S.glassLevel(0, Infinity, 5), full);
   assert.equal(S.glassLevel(0, null, 5), 0);
 });
+
+test('the night curve keeps phone proportions and never outgrows the content column on a wide window', () => {
+  const tan17 = Math.tan(17 * Math.PI / 180);
+  const dist = 9, height = 735;
+  // Phone: 390 wide. Unchanged from before: the full view width at the plane's depth, with 35% room to tilt.
+  const phone = S.nightSpan({ aspect: 390 / height, height, dist });
+  assert.ok(Math.abs(phone - 2 * (dist + 5) * tan17 * (390 / height) * 1.35) < 1e-9);
+  // Desktop: a 1502 px window must give the same width as a 560 px column, not 1502 px.
+  const wide = S.nightSpan({ aspect: 1502 / height, height, dist });
+  const column = S.nightSpan({ aspect: 560 / height, height, dist });
+  assert.ok(Math.abs(wide - column) < 1e-9);
+  // A wider window never makes it wider still.
+  assert.equal(S.nightSpan({ aspect: 2560 / height, height, dist }), wide);
+});

@@ -547,6 +547,7 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
   width:min(calc(100vw - 2 * var(--gutter)),400px);height:var(--nav-h);padding:6px;
   transform:translateX(-50%);display:grid;grid-template-columns:repeat(4,1fr);
   border-radius:26px;background:var(--nav-bg);box-shadow:var(--nav-shadow);border:1px solid var(--line);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
 }
 .tabbar::before{
   content:"";position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 14px) / 4);
@@ -563,6 +564,43 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
 .tabbar button[aria-current="page"] svg{transform:translateY(-1px) scale(1.06)}
 .tabbar button:active svg{transform:scale(.92)}
 :root[data-theme="light"] .tabbar button[aria-current="page"]{color:#B8651A}
+/* Wide windows: dock the tab bar as a rail beside the content, so it never floats over the Log a drink button or the screens' last lines */
+@media (min-width:1000px){
+  .tabbar{
+    left:24px;top:50%;bottom:auto;width:76px;height:auto;transform:translateY(-50%);
+    grid-template-columns:1fr;grid-template-rows:repeat(4,64px);
+  }
+  .tabbar::before{
+    top:6px;left:6px;right:6px;bottom:auto;width:auto;height:64px;
+    transform:translateY(calc(var(--i,0) * 100%));
+  }
+  .tabbar button{min-height:64px}
+  body{padding-bottom:40px}
+  /* The quick actions become a dock fixed to the bottom of the window: Log a drink is always in reach, and the
+     spare width holds Water break and Earlier beside it instead of under it. */
+  .quick{
+    position:fixed;left:0;right:0;bottom:16px;z-index:35;width:min(720px,calc(100vw - 280px));max-width:none;margin:0 auto;padding:10px;
+    display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:10px;align-items:stretch;
+    border-radius:26px;background:var(--nav-bg);border:1px solid var(--line);box-shadow:var(--nav-shadow);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  }
+  .quick .q-row{display:contents}
+  .quick .q-main{min-height:60px}
+  .quick .q-btn{min-height:60px}
+  .wrap{padding-bottom:96px}
+}
+/* Short desktop windows: a slimmer hero so the dock sits below the drink buttons instead of on top of them */
+@media (min-width:1000px) and (max-height:900px){
+  .clear-time{font-size:clamp(3rem,9svh,5.8rem)}
+  .gauge{max-width:min(100%,calc(20svh + 40px))}
+  .hero.three .stage-space,.hero.three.has-another .stage-space,.hero.three[data-state="over"].has-another .stage-space{height:clamp(110px,14svh,150px)}
+}
+@media (min-width:1000px) and (max-height:760px){
+  .clear-time{font-size:clamp(2.8rem,8svh,5rem)}
+  .hero.three .stage-space,.hero.three.has-another .stage-space,.hero.three[data-state="over"].has-another .stage-space{height:96px}
+  .vitals{margin-top:6px}
+  .hero-body{margin-top:4px}
+}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .tabbar button[aria-current="page"]{color:#B8651A}}
 
 /* Drink picker sheet */

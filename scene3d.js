@@ -47,6 +47,17 @@
     return { dist, lookY };
   }
 
+  /**
+   * World width of the night's hills at their depth: the view width there, with 35% room to slide when tilting.
+   * The page keeps its content in a 560 px column, so the view is capped to that column. Without the cap a wide
+   * desktop window stretches the curve (and its height) across the whole screen, far outside the column.
+   */
+  const COLUMN = 560;
+  function nightSpan(o) {
+    const aspect = Math.min(o.aspect, COLUMN / o.height);
+    return 2 * (o.dist + 5) * Math.tan(17 * Math.PI / 180) * aspect * 1.35;
+  }
+
   // ------------------------------------------------------------------ the scene
   function create(canvas, host, opts) {
     const THREE = root.THREE;
@@ -371,7 +382,7 @@
       const f = frame({ height: Hh, top: layout.top || Hh * 0.55, base: layout.base || Hh * 0.92, objectTop: 2.4, fov: 34 });
       dist = f.dist; LOOK.y = f.lookY;
       // The night's hills span the view at their depth, with room to slide when tilting
-      const vw = 2 * (dist + 5) * Math.tan(17 * Math.PI / 180) * camera.aspect * 1.35;
+      const vw = nightSpan({ aspect: camera.aspect, height: Hh, dist });
       bacPlane.scale.set(vw, vw * 320 / 1024, 1);
       // The night's hills sit lower, behind the drinks, so the instrument card above them has clean sky.
       bacPlane.position.set(LOOK.x, bacPlane.scale.y * (300 / 320 - 0.5) - 0.9, -5);
@@ -465,7 +476,7 @@
     return api;
   }
 
-  const api = { glassLevel, palette, frame, create, mix };
+  const api = { glassLevel, palette, frame, nightSpan, create, mix };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DryScene = api;
 })(typeof self !== 'undefined' ? self : this);
