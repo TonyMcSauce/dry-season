@@ -587,6 +587,12 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
   .quick .q-row{display:contents}
   .quick .q-main{min-height:60px}
   .quick .q-btn{min-height:60px}
+  /* A soft fade behind the dock, so the page does not show through the gap beneath it. Absolute, not fixed: the dock's blur makes it the containing block. */
+  .quick::before{
+    content:"";position:absolute;z-index:-1;pointer-events:none;
+    left:50%;width:100vw;transform:translateX(-50%);bottom:-20px;height:calc(100% + 20px + 28px);
+    background:linear-gradient(to top,var(--ground) 0,var(--ground) 20px,transparent 100%);
+  }
   .wrap{padding-bottom:96px}
 }
 /* Short desktop windows: a slimmer hero so the dock sits below the drink buttons instead of on top of them */
