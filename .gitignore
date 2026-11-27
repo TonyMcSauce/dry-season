@@ -1,0 +1,2 @@
+# Playwright for the tests (see .github/workflows/tests.yml); the app itself has no dependencies.
+node_modules/
