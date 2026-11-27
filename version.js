@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.1.15';
+self.DRY_VERSION = '6.1.16';
 self.DRY_CHANGES = [
+  'In History, the Add beer to your stash button no longer sits right against the stash card above it.',
   'The tab bar is now a solid bar, so nothing on the page shows through it.',
   'On a computer, the page no longer shows through the gap under the Log a drink dock. A soft fade sits behind it instead.',
   'On a computer, Log a drink now stays pinned to the bottom of the window, with Water break and Earlier beside it, so it is always in reach. On short windows the top of Tonight is a little more compact to make room.',
