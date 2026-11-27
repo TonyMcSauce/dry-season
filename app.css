@@ -547,6 +547,7 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
   width:min(calc(100vw - 2 * var(--gutter)),400px);height:var(--nav-h);padding:6px;
   transform:translateX(-50%);display:grid;grid-template-columns:repeat(4,1fr);
   border-radius:26px;background:var(--nav-bg);box-shadow:var(--nav-shadow);border:1px solid var(--line);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
 }
 .tabbar::before{
   content:"";position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 14px) / 4);
