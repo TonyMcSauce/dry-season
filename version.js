@@ -3,8 +3,9 @@
  * Bump VERSION (and add a line to CHANGES) every time you publish a change:
  * that is what tells installed copies a new version is ready.
  */
-self.DRY_VERSION = '6.1.11';
+self.DRY_VERSION = '6.1.12';
 self.DRY_CHANGES = [
+  'On a computer, the tab bar now sits as a rail at the left edge instead of floating over the bottom of the page, so it no longer covers the Log a drink button.',
   'Fixed: on a computer or any wide window, the night hills no longer stretch across the whole screen. They keep the same size and shape as on a phone, and the tab bar now blurs what passes behind it so the buttons underneath do not show through.',
   'One beer no longer reads as impaired. When you are heading for less than 0.02%, the status now says Low level: alcohol on board. From 0.02% it says impaired as before, and it still never says Clear until you are at 0.000%.',
   'History catches up: nights you saved before the last two fixes are worked out again with the improved estimate, once, so their peaks and clear times match how the app works now.',

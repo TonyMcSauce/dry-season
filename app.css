@@ -564,6 +564,19 @@ html.island-hang .screen-head{padding-top:calc(env(safe-area-inset-top) + 72px)}
 .tabbar button[aria-current="page"] svg{transform:translateY(-1px) scale(1.06)}
 .tabbar button:active svg{transform:scale(.92)}
 :root[data-theme="light"] .tabbar button[aria-current="page"]{color:#B8651A}
+/* Wide windows: dock the tab bar as a rail beside the content, so it never floats over the Log a drink button or the screens' last lines */
+@media (min-width:1000px){
+  .tabbar{
+    left:24px;top:50%;bottom:auto;width:76px;height:auto;transform:translateY(-50%);
+    grid-template-columns:1fr;grid-template-rows:repeat(4,64px);
+  }
+  .tabbar::before{
+    top:6px;left:6px;right:6px;bottom:auto;width:auto;height:64px;
+    transform:translateY(calc(var(--i,0) * 100%));
+  }
+  .tabbar button{min-height:64px}
+  body{padding-bottom:40px}
+}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .tabbar button[aria-current="page"]{color:#B8651A}}
 
 /* Drink picker sheet */
