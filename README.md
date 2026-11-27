@@ -137,6 +137,7 @@ Everything runs in the browser. Nothing leaves your phone: your tab, settings an
 | `mug.js` | The animated 3D mug inside the island |
 | `fonts/` | Alfa Slab One and Schibsted Grotesk (SIL Open Font License), so the app needs no outside servers |
 | `screenshots/` | Images shown on the install sheet |
+| `.github/workflows/tests.yml` | Runs the unit tests, browser checks and offline check on GitHub for every pull request and push to `main` or `v6` |
 | `tests/*.test.js` | Tests for the maths and drinks. Run with `node --test tests/*.test.js` |
 | `tests/late_check.js` | Browser checks of the whole app: rounds, the stash, History, the status and more. Run with `NODE_PATH=$(npm root -g) node tests/late_check.js` |
 | `tests/offline_check.js` | The same offline and update check in Node. Run with `NODE_PATH=$(npm root -g) node tests/offline_check.js` |
